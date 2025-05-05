@@ -12,6 +12,8 @@ import CRM from "./pages/CRM";
 import Sales from "./pages/Sales";
 import Inventory from "./pages/Inventory";
 import Manufacturing from "./pages/Manufacturing";
+import Accounting from "./pages/Accounting";
+import HumanResources from "./pages/HumanResources";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/apps/sales" element={<Sales />} />
           <Route path="/apps/inventory" element={<Inventory />} />
           <Route path="/apps/manufacturing" element={<Manufacturing />} />
+          <Route path="/apps/accounting" element={<Accounting />} />
+          <Route path="/apps/hr" element={<HumanResources />} />
           {/* Other app routes will be added here */}
           <Route path="*" element={<NotFound />} />
         </Routes>
