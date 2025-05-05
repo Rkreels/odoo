@@ -1,15 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '@/components/navigation/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import AppStats from '@/components/dashboard/AppStats';
+import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
 import LeadsList from '@/components/crm/LeadsList';
-import VoiceTrainer from '@/components/voice/VoiceTrainer';
 
 const CRM = () => {
-  const [sidebarVisible, setSidebarVisible] = useState(true);
-  const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
   const navigate = useNavigate();
 
   // Check authentication
@@ -20,53 +15,35 @@ const CRM = () => {
     }
   }, [navigate]);
 
-  const handleAppSelect = (app: string) => {
-    if (app !== 'CRM') {
-      if (app === 'Dashboard') {
-        navigate('/dashboard');
-      } else {
-        navigate(`/apps/${app.toLowerCase()}`);
-      }
-    }
-  };
-
-  const toggleSidebar = () => {
-    setSidebarVisible(!sidebarVisible);
-  };
-
   return (
-    <div className="flex h-screen bg-odoo-light overflow-hidden">
-      {sidebarVisible && (
-        <div className="flex-shrink-0">
-          <Sidebar onAppSelect={handleAppSelect} />
+    <TopbarDashboardLayout currentApp="CRM">
+      <div className="p-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+          <h2 className="text-xl font-bold text-odoo-dark mb-4">Pipeline Overview</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { name: 'New', count: 12, color: 'bg-blue-500' },
+              { name: 'Qualified', count: 8, color: 'bg-yellow-500' },
+              { name: 'Proposition', count: 5, color: 'bg-green-500' },
+              { name: 'Won', count: 3, color: 'bg-purple-500' },
+            ].map((stage) => (
+              <div key={stage.name} className="p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center">
+                  <div className={`w-3 h-3 rounded-full ${stage.color} mr-2`}></div>
+                  <h3 className="font-medium text-odoo-dark">{stage.name}</h3>
+                </div>
+                <p className="text-2xl font-bold mt-2 text-odoo-dark">{stage.count}</p>
+                <p className="text-sm text-odoo-gray">Opportunities</p>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader 
-          title="Customer Relationship Management" 
-          toggleSidebar={toggleSidebar} 
-        />
         
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="app-stats">
-            <AppStats appName="CRM" />
-          </div>
-          
-          <div className="mt-6 leads-list">
-            <LeadsList />
-          </div>
-        </main>
+        <div className="bg-white rounded-lg shadow-sm">
+          <LeadsList />
+        </div>
       </div>
-      
-      {showVoiceTrainer && (
-        <VoiceTrainer 
-          isOpen={showVoiceTrainer} 
-          onClose={() => setShowVoiceTrainer(false)} 
-          currentScreen="crm"
-        />
-      )}
-    </div>
+    </TopbarDashboardLayout>
   );
 };
 

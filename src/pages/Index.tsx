@@ -4,6 +4,7 @@ import Navbar from '@/components/navigation/Navbar';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
 import ModulesDisplay from '@/components/landing/ModulesDisplay';
+import AppModules from '@/components/landing/AppModules';
 import Testimonials from '@/components/landing/Testimonials';
 import CallToAction from '@/components/landing/CallToAction';
 import Footer from '@/components/landing/Footer';
@@ -14,6 +15,7 @@ const Index = () => {
       <Navbar isLandingPage={true} />
       <Hero />
       <ModulesDisplay />
+      <AppModules />
       <Features />
       <Testimonials />
       <CallToAction />

@@ -99,6 +99,45 @@ const AppModules = () => {
         'Payroll integration'
       ],
       image: 'https://www.odoo.com/web/image/website.s_three_columns_default_image_3'
+    },
+    {
+      id: 'manufacturing',
+      title: 'Manufacturing',
+      description: 'Plan, execute and monitor your production processes with our integrated manufacturing solution.',
+      features: [
+        'Bill of materials management',
+        'Production planning and scheduling',
+        'Work order execution',
+        'Quality control integration',
+        'Machine and work center management'
+      ],
+      image: 'https://www.odoo.com/web/image/website.s_three_columns_default_image_1'
+    },
+    {
+      id: 'marketing',
+      title: 'Marketing',
+      description: 'Create, track and optimize marketing campaigns across multiple channels with our marketing automation solution.',
+      features: [
+        'Email marketing campaigns',
+        'Social media integration',
+        'Marketing automation workflows',
+        'Campaign performance analytics',
+        'Lead generation and scoring'
+      ],
+      image: 'https://www.odoo.com/web/image/website.s_three_columns_default_image_2'
+    },
+    {
+      id: 'service',
+      title: 'Service',
+      description: 'Deliver exceptional customer service with our helpdesk and support ticket management system.',
+      features: [
+        'Ticket management and routing',
+        'SLA monitoring and enforcement',
+        'Knowledge base integration',
+        'Customer portal for self-service',
+        'Live chat and chatbot support'
+      ],
+      image: 'https://www.odoo.com/web/image/website.s_three_columns_default_image_3'
     }
   ];
 
@@ -113,7 +152,7 @@ const AppModules = () => {
         </div>
         
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2 bg-odoo-light p-1 rounded-lg mb-8">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 bg-odoo-light p-1 rounded-lg mb-8 overflow-x-auto">
             {modules.map((module) => (
               <TabsTrigger 
                 key={module.id} 
