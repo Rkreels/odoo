@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '@/components/navigation/Navbar';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
-import AppModules from '@/components/landing/AppModules';
+import ModulesDisplay from '@/components/landing/ModulesDisplay';
 import Testimonials from '@/components/landing/Testimonials';
 import CallToAction from '@/components/landing/CallToAction';
 import Footer from '@/components/landing/Footer';
@@ -13,8 +13,8 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar isLandingPage={true} />
       <Hero />
+      <ModulesDisplay />
       <Features />
-      <AppModules />
       <Testimonials />
       <CallToAction />
       <Footer />

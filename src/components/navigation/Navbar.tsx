@@ -13,7 +13,7 @@ const Navbar = ({ isAuthenticated = false, isLandingPage = false }: NavbarProps)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className={`w-full ${isLandingPage ? 'bg-white' : 'bg-odoo-primary'} shadow-md z-50`}>
+    <nav className={`w-full ${isLandingPage ? 'bg-white' : 'bg-odoo-primary'} shadow-sm z-50`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -25,24 +25,27 @@ const Navbar = ({ isAuthenticated = false, isLandingPage = false }: NavbarProps)
                   alt="Odoo Logo"
                 />
                 <span className={`ml-2 font-bold text-xl ${isLandingPage ? 'text-odoo-primary' : 'text-white'}`}>
-                  OdooEcho
+                  odoo
                 </span>
               </Link>
             </div>
             
             {isLandingPage && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link to="/features" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-odoo-dark hover:text-odoo-primary">
-                  Features
+                <Link to="/apps" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-odoo-dark hover:text-odoo-primary">
+                  Apps
                 </Link>
                 <Link to="/pricing" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-odoo-dark hover:text-odoo-primary">
                   Pricing
                 </Link>
+                <Link to="/community" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-odoo-dark hover:text-odoo-primary">
+                  Community
+                </Link>
+                <Link to="/services" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-odoo-dark hover:text-odoo-primary">
+                  Services
+                </Link>
                 <Link to="/about" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-odoo-dark hover:text-odoo-primary">
                   About
-                </Link>
-                <Link to="/contact" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-odoo-dark hover:text-odoo-primary">
-                  Contact
                 </Link>
               </div>
             )}
@@ -73,14 +76,12 @@ const Navbar = ({ isAuthenticated = false, isLandingPage = false }: NavbarProps)
             <div className="flex items-center">
               {isLandingPage ? (
                 <>
-                  <Link to="/login">
-                    <Button variant="outline" className="mr-2">
-                      Sign in
-                    </Button>
+                  <Link to="/login" className="text-odoo-gray hover:text-odoo-primary mr-4">
+                    Sign in
                   </Link>
                   <Link to="/signup">
-                    <Button className="bg-odoo-primary hover:bg-odoo-primary/90">
-                      Sign up
+                    <Button className="bg-odoo-secondary hover:bg-odoo-secondary/90 text-white">
+                      Try now
                     </Button>
                   </Link>
                 </>
@@ -108,17 +109,20 @@ const Navbar = ({ isAuthenticated = false, isLandingPage = false }: NavbarProps)
           <div className="pt-2 pb-3 space-y-1">
             {isLandingPage && (
               <>
-                <Link to="/features" className="block pl-3 pr-4 py-2 text-base font-medium text-odoo-dark hover:bg-odoo-light">
-                  Features
+                <Link to="/apps" className="block pl-3 pr-4 py-2 text-base font-medium text-odoo-dark hover:bg-odoo-light">
+                  Apps
                 </Link>
                 <Link to="/pricing" className="block pl-3 pr-4 py-2 text-base font-medium text-odoo-dark hover:bg-odoo-light">
                   Pricing
                 </Link>
+                <Link to="/community" className="block pl-3 pr-4 py-2 text-base font-medium text-odoo-dark hover:bg-odoo-light">
+                  Community
+                </Link>
+                <Link to="/services" className="block pl-3 pr-4 py-2 text-base font-medium text-odoo-dark hover:bg-odoo-light">
+                  Services
+                </Link>
                 <Link to="/about" className="block pl-3 pr-4 py-2 text-base font-medium text-odoo-dark hover:bg-odoo-light">
                   About
-                </Link>
-                <Link to="/contact" className="block pl-3 pr-4 py-2 text-base font-medium text-odoo-dark hover:bg-odoo-light">
-                  Contact
                 </Link>
               </>
             )}
@@ -137,7 +141,7 @@ const Navbar = ({ isAuthenticated = false, isLandingPage = false }: NavbarProps)
                     Sign in
                   </Link>
                   <Link to="/signup" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                    Sign up
+                    Try now
                   </Link>
                 </div>
               </div>
