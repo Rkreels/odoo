@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -104,6 +103,92 @@ const VoiceTrainer = ({ isOpen, onClose, currentScreen }: VoiceTrainerProps) => 
         ];
         break;
       
+      case 'blog':
+        steps = [
+          {
+            id: 'blog-welcome',
+            title: 'Blog Module',
+            description: 'Welcome to the Blog module! Here you can create and manage blog posts, organize them into categories, and engage with your audience.',
+            completed: false,
+          },
+          {
+            id: 'blog-create-post',
+            title: 'Create Posts',
+            description: 'Use the "Create New Post" button to start writing new articles. You can use a rich text editor, add images, and set publication dates.',
+            completed: false,
+          },
+          {
+            id: 'blog-manage',
+            title: 'Manage Content',
+            description: 'View your existing posts, edit them, or manage categories to keep your blog organized.',
+            completed: false,
+          },
+        ];
+        break;
+      
+      case 'forum':
+        steps = [
+          {
+            id: 'forum-welcome',
+            title: 'Forum Module',
+            description: 'Welcome to the Community Forum! This is the place to foster discussions, create topics, and build an active community.',
+            completed: false,
+          },
+          {
+            id: 'forum-create-topic',
+            title: 'Start Discussions',
+            description: 'Click "Create New Topic" to initiate new discussions. Users can reply, and you can moderate conversations.',
+            completed: false,
+          },
+          {
+            id: 'forum-categories',
+            title: 'Organize Content',
+            description: 'Manage forum categories to structure discussions and help users find relevant topics easily.',
+            completed: false,
+          },
+        ];
+        break;
+      
+      case 'accounting':
+        steps = [
+          { id: 'acc-welcome', title: 'Accounting Module', description: 'Welcome to Accounting. Manage invoices, expenses, and financial reports.', completed: false },
+          { id: 'acc-charts', title: 'Charts & Reports', description: 'View financial summaries and generate reports.', completed: false },
+          { id: 'acc-transactions', title: 'Transactions', description: 'Record and track all financial transactions.', completed: false },
+        ];
+        break;
+      
+      case 'humanresources':
+        steps = [
+          { id: 'hr-welcome', title: 'Human Resources', description: 'Manage employees, recruitment, and payroll in the HR module.', completed: false },
+          { id: 'hr-employees', title: 'Employee Directory', description: 'Access and manage employee information.', completed: false },
+          { id: 'hr-payroll', title: 'Payroll Processing', description: 'Process payroll and manage compensations.', completed: false },
+        ];
+        break;
+      
+      case 'website':
+        steps = [
+          { id: 'web-welcome', title: 'Website Builder', description: 'Welcome to the Website builder. Create and customize your online presence.', completed: false },
+          { id: 'web-pages', title: 'Manage Pages', description: 'Add new pages or edit existing ones using a drag-and-drop interface.', completed: false },
+          { id: 'web-themes', title: 'Themes & SEO', description: 'Customize themes and manage SEO settings for better visibility.', completed: false },
+        ];
+        break;
+      
+      case 'ecommerce':
+        steps = [
+          { id: 'ecom-welcome', title: 'eCommerce Management', description: 'Manage your online store, products, orders, and customers.', completed: false },
+          { id: 'ecom-products', title: 'Product Catalog', description: 'Add, edit, and organize your products.', completed: false },
+          { id: 'ecom-orders', title: 'Order Processing', description: 'Track and fulfill customer orders efficiently.', completed: false },
+        ];
+        break;
+      
+      case 'discuss':
+        steps = [
+          { id: 'disc-welcome', title: 'Discuss App', description: 'Communicate with your team, manage channels, and stay updated.', completed: false },
+          { id: 'disc-channels', title: 'Channels', description: 'Join or create channels for specific topics or teams.', completed: false },
+          { id: 'disc-messages', title: 'Direct Messages', description: 'Send direct messages to your colleagues.', completed: false },
+        ];
+        break;
+      
       default:
         steps = [
           {
@@ -121,40 +206,21 @@ const VoiceTrainer = ({ isOpen, onClose, currentScreen }: VoiceTrainerProps) => 
 
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
-      // Create a new SpeechSynthesisUtterance
       const utterance = new SpeechSynthesisUtterance(text);
       speechSynthesisRef.current = utterance;
-      
-      // Get available voices
       const voices = window.speechSynthesis.getVoices();
-      
-      // Try to find a good English voice
       const preferredVoice = voices.find(voice => 
         voice.lang.includes('en') && (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.name.includes('Samantha'))
       );
-      
       if (preferredVoice) {
         utterance.voice = preferredVoice;
       }
-      
       utterance.rate = 1;
       utterance.pitch = 1;
-      
-      utterance.onstart = () => {
-        setSpeaking(true);
-      };
-      
-      utterance.onend = () => {
-        setSpeaking(false);
-      };
-      
-      utterance.onerror = () => {
-        setSpeaking(false);
-      };
-      
+      utterance.onstart = () => setSpeaking(true);
+      utterance.onend = () => setSpeaking(false);
+      utterance.onerror = () => setSpeaking(false);
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -167,20 +233,13 @@ const VoiceTrainer = ({ isOpen, onClose, currentScreen }: VoiceTrainerProps) => 
   };
 
   const nextStep = () => {
-    if (speaking) {
-      stopSpeaking();
-    }
-    
+    if (speaking) stopSpeaking();
     if (currentStep < trainingSteps.length - 1) {
-      // Mark current step as completed
       const updatedSteps = [...trainingSteps];
       updatedSteps[currentStep].completed = true;
       setTrainingSteps(updatedSteps);
-      
-      // Move to next step
       setCurrentStep(prevStep => prevStep + 1);
     } else {
-      // Complete all steps and close the trainer
       const updatedSteps = trainingSteps.map(step => ({ ...step, completed: true }));
       setTrainingSteps(updatedSteps);
       onClose();
@@ -188,20 +247,14 @@ const VoiceTrainer = ({ isOpen, onClose, currentScreen }: VoiceTrainerProps) => 
   };
 
   const prevStep = () => {
-    if (speaking) {
-      stopSpeaking();
-    }
-    
+    if (speaking) stopSpeaking();
     if (currentStep > 0) {
       setCurrentStep(prevStep => prevStep - 1);
     }
   };
 
   const resetTutorial = () => {
-    if (speaking) {
-      stopSpeaking();
-    }
-    
+    if (speaking) stopSpeaking();
     const resetSteps = trainingSteps.map(step => ({ ...step, completed: false }));
     setTrainingSteps(resetSteps);
     setCurrentStep(0);
@@ -212,20 +265,15 @@ const VoiceTrainer = ({ isOpen, onClose, currentScreen }: VoiceTrainerProps) => 
     if (isOpen && trainingSteps[currentStep]) {
       speakText(trainingSteps[currentStep].description);
     }
-    
     return () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     };
   }, [currentStep, isOpen, trainingSteps]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     };
   }, []);
 

@@ -19,7 +19,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { Search, Bell, MessageSquare, Plus, HelpCircle, Settings, ChevronDown, LogOut, User, Globe, ShoppingCart } from 'lucide-react';
+import { Search, Bell, MessageSquare, Plus, HelpCircle, Settings, ChevronDown, LogOut, User, Globe, ShoppingCart, FileText, MessagesSquare as MessagesSquareIcon } from 'lucide-react';
 import VoiceTrainer from '@/components/voice/VoiceTrainer';
 
 interface TopbarDashboardLayoutProps {
@@ -53,10 +53,11 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
     { name: 'Accounting', icon: '💵', path: '/apps/accounting' },
     { name: 'Human Resources', icon: '👥', path: '/apps/hr' },
     { name: 'Marketing', icon: '📧', path: '/apps/marketing' },
-    { name: 'Manufacturing', icon: '🏭', path: '/apps/manufacturing' },
     { name: 'Services', icon: '🎫', path: '/apps/services' },
     { name: 'Website', icon: '🌐', path: '/apps/website' },
-    { name: 'eCommerce', icon: '🛍️', path: '/apps/ecommerce' }
+    { name: 'eCommerce', icon: '🛍️', path: '/apps/ecommerce' },
+    { name: 'Blog', icon: '📝', path: '/apps/blog' },
+    { name: 'Forum', icon: '💬', path: '/apps/forum' }
   ];
 
   // Handle notification read
@@ -150,7 +151,9 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
                           <div className="text-3xl mb-1">
                             {app.icon === '🌐' && <Globe className="h-7 w-7 text-odoo-primary" />}
                             {app.icon === '🛍️' && <ShoppingCart className="h-7 w-7 text-odoo-primary" />}
-                            {app.icon !== '🌐' && app.icon !== '🛍️' && app.icon}
+                            {app.name === 'Blog' && app.icon === '📝' && <FileText className="h-7 w-7 text-odoo-primary" />} 
+                            {app.name === 'Forum' && app.icon === '💬' && <MessagesSquareIcon className="h-7 w-7 text-odoo-primary" />}
+                            {app.icon !== '🌐' && app.icon !== '🛍️' && !(app.name === 'Blog' && app.icon === '📝') && !(app.name === 'Forum' && app.icon === '💬') && app.icon}
                           </div>
                           <span className="text-xs text-center text-odoo-dark font-medium">{app.name}</span>
                         </MenubarItem>
@@ -310,7 +313,7 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
         <VoiceTrainer 
           isOpen={showVoiceTrainer} 
           onClose={() => setShowVoiceTrainer(false)} 
-          currentScreen={typeof currentApp === 'string' ? currentApp.toLowerCase() : 'unknown'}
+          currentScreen={typeof currentApp === 'string' ? currentApp.toLowerCase().replace(/\s+/g, '') : 'unknown'}
         />
       )}
     </div>

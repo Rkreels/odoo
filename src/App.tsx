@@ -17,6 +17,8 @@ import HumanResources from "./pages/HumanResources";
 import Discuss from "./pages/Discuss";
 import Website from "./pages/Website";
 import Ecommerce from "./pages/Ecommerce";
+import Blog from "./pages/Blog";
+import Forum from "./pages/Forum";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/apps/discuss" element={<Discuss />} />
           <Route path="/apps/website" element={<Website />} />
           <Route path="/apps/ecommerce" element={<Ecommerce />} />
+          <Route path="/apps/blog" element={<Blog />} />
+          <Route path="/apps/forum" element={<Forum />} />
           {/* Other app routes will be added here */}
           <Route path="*" element={<NotFound />} />
         </Routes>
