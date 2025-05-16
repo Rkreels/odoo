@@ -1,4 +1,3 @@
-
 import { useState, ReactNode, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -20,7 +19,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { Search, Bell, MessageSquare, Plus, HelpCircle, Settings, ChevronDown, LogOut, User } from 'lucide-react';
+import { Search, Bell, MessageSquare, Plus, HelpCircle, Settings, ChevronDown, LogOut, User, Globe, ShoppingCart } from 'lucide-react';
 import VoiceTrainer from '@/components/voice/VoiceTrainer';
 
 interface TopbarDashboardLayoutProps {
@@ -55,7 +54,9 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
     { name: 'Human Resources', icon: '👥', path: '/apps/hr' },
     { name: 'Marketing', icon: '📧', path: '/apps/marketing' },
     { name: 'Manufacturing', icon: '🏭', path: '/apps/manufacturing' },
-    { name: 'Services', icon: '🎫', path: '/apps/services' }
+    { name: 'Services', icon: '🎫', path: '/apps/services' },
+    { name: 'Website', icon: '🌐', path: '/apps/website' },
+    { name: 'eCommerce', icon: '🛍️', path: '/apps/ecommerce' }
   ];
 
   // Handle notification read
@@ -119,17 +120,17 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
             
             <Menubar className="border-none bg-transparent">
               <MenubarMenu>
-                <MenubarTrigger className="text-white flex items-center">
+                <MenubarTrigger className="text-white flex items-center hover:bg-white/10 data-[state=open]:bg-white/10 px-3 py-1.5 rounded-md">
                   <span className="mr-1">{currentApp}</span>
                   <ChevronDown className="h-4 w-4" />
                 </MenubarTrigger>
-                <MenubarContent className="max-h-[70vh] overflow-y-auto">
+                <MenubarContent className="max-h-[80vh] overflow-y-auto w-96">
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
                       <input 
                         type="text" 
-                        placeholder="Search..." 
+                        placeholder="Search apps..." 
                         className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-odoo-primary"
                       />
                     </div>
@@ -139,15 +140,19 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
                   
                   <div className="p-2">
                     <h3 className="text-xs font-semibold text-gray-500 mb-2 px-2">APPS</h3>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       {apps.map((app) => (
                         <MenubarItem 
                           key={app.name} 
-                          className={`flex flex-col items-center justify-center p-2 rounded hover:bg-gray-100 cursor-pointer ${isCurrentApp(app.path) ? 'bg-gray-100' : ''}`}
+                          className={`flex flex-col items-center justify-center p-2 rounded hover:bg-gray-100 cursor-pointer h-20 ${isCurrentApp(app.path) ? 'bg-odoo-primary/10 ring-1 ring-odoo-primary' : ''}`}
                           onClick={() => navigate(app.path)}
                         >
-                          <div className="text-2xl mb-1">{app.icon}</div>
-                          <span className="text-xs text-center">{app.name}</span>
+                          <div className="text-3xl mb-1">
+                            {app.icon === '🌐' && <Globe className="h-7 w-7 text-odoo-primary" />}
+                            {app.icon === '🛍️' && <ShoppingCart className="h-7 w-7 text-odoo-primary" />}
+                            {app.icon !== '🌐' && app.icon !== '🛍️' && app.icon}
+                          </div>
+                          <span className="text-xs text-center text-odoo-dark font-medium">{app.name}</span>
                         </MenubarItem>
                       ))}
                     </div>
@@ -283,12 +288,12 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" className="rounded-full text-odoo-primary border-odoo-primary">
+            <Button variant="outline" size="sm" className="rounded-full text-odoo-primary border-odoo-primary hover:bg-odoo-primary/5">
               <Plus className="h-4 w-4 mr-1" />
               New
             </Button>
             
-            <Button variant="outline" size="sm" className="rounded-full">
+            <Button variant="outline" size="sm" className="rounded-full hover:bg-gray-100">
               <Settings className="h-4 w-4 mr-1" />
               Settings
             </Button>
@@ -305,7 +310,7 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
         <VoiceTrainer 
           isOpen={showVoiceTrainer} 
           onClose={() => setShowVoiceTrainer(false)} 
-          currentScreen={currentApp.toLowerCase()}
+          currentScreen={typeof currentApp === 'string' ? currentApp.toLowerCase() : 'unknown'}
         />
       )}
     </div>

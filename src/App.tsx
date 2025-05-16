@@ -14,6 +14,9 @@ import Inventory from "./pages/Inventory";
 import Manufacturing from "./pages/Manufacturing";
 import Accounting from "./pages/Accounting";
 import HumanResources from "./pages/HumanResources";
+import Discuss from "./pages/Discuss";
+import Website from "./pages/Website";
+import Ecommerce from "./pages/Ecommerce";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +39,9 @@ const App = () => (
           <Route path="/apps/manufacturing" element={<Manufacturing />} />
           <Route path="/apps/accounting" element={<Accounting />} />
           <Route path="/apps/hr" element={<HumanResources />} />
+          <Route path="/apps/discuss" element={<Discuss />} />
+          <Route path="/apps/website" element={<Website />} />
+          <Route path="/apps/ecommerce" element={<Ecommerce />} />
           {/* Other app routes will be added here */}
           <Route path="*" element={<NotFound />} />
         </Routes>
