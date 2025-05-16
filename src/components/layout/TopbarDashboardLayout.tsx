@@ -19,7 +19,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { Search, Bell, MessageSquare, Plus, HelpCircle, Settings, ChevronDown, LogOut, User, Globe, ShoppingCart, FileText, MessagesSquare as MessagesSquareIcon } from 'lucide-react';
+import { Search, Bell, MessageSquare, Plus, HelpCircle, Settings, ChevronDown, LogOut, User, Globe, ShoppingCart, FileText, MessagesSquare as MessagesSquareIcon, GraduationCap, Store, Receipt } from 'lucide-react';
 import VoiceTrainer from '@/components/voice/VoiceTrainer';
 
 interface TopbarDashboardLayoutProps {
@@ -49,15 +49,20 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
     { name: 'Discuss', icon: '💬', path: '/apps/discuss' },
     { name: 'CRM', icon: '🤝', path: '/apps/crm' },
     { name: 'Sales', icon: '💰', path: '/apps/sales' },
-    { name: 'Inventory', icon: '📦', path: '/apps/inventory' },
+    { name: 'Point of Sale', icon: '🛒', path: '/apps/point-of-sale' }, // New: Point of Sale (using emoji from Apps.tsx)
     { name: 'Accounting', icon: '💵', path: '/apps/accounting' },
+    { name: 'Invoicing', icon: '💰', path: '/apps/invoicing' },      // New: Invoicing (using emoji from Apps.tsx)
+    { name: 'Inventory', icon: '📦', path: '/apps/inventory' },
+    { name: 'Purchase', icon: '🛒', path: '/apps/purchase' },        // New: Purchase (using emoji from Apps.tsx)
+    { name: 'Manufacturing', icon: '🏭', path: '/apps/manufacturing' }, // Matched icon to common representation for Manufacturing
     { name: 'Human Resources', icon: '👥', path: '/apps/hr' },
-    { name: 'Marketing', icon: '📧', path: '/apps/marketing' },
-    { name: 'Services', icon: '🎫', path: '/apps/services' },
+    { name: 'Marketing', icon: '📧', path: '/apps/marketing' }, // Assuming future path
+    { name: 'Services', icon: '🎫', path: '/apps/services' },   // Assuming future path
     { name: 'Website', icon: '🌐', path: '/apps/website' },
     { name: 'eCommerce', icon: '🛍️', path: '/apps/ecommerce' },
     { name: 'Blog', icon: '📝', path: '/apps/blog' },
-    { name: 'Forum', icon: '💬', path: '/apps/forum' }
+    { name: 'Forum', icon: '💬', path: '/apps/forum' },
+    { name: 'eLearning', icon: '🎓', path: '/apps/elearning' }, // New: eLearning (using emoji from Apps.tsx)
   ];
 
   // Handle notification read
@@ -149,11 +154,13 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
                           onClick={() => navigate(app.path)}
                         >
                           <div className="text-3xl mb-1">
-                            {app.icon === '🌐' && <Globe className="h-7 w-7 text-odoo-primary" />}
-                            {app.icon === '🛍️' && <ShoppingCart className="h-7 w-7 text-odoo-primary" />}
-                            {app.name === 'Blog' && app.icon === '📝' && <FileText className="h-7 w-7 text-odoo-primary" />} 
-                            {app.name === 'Forum' && app.icon === '💬' && <MessagesSquareIcon className="h-7 w-7 text-odoo-primary" />}
-                            {app.icon !== '🌐' && app.icon !== '🛍️' && !(app.name === 'Blog' && app.icon === '📝') && !(app.name === 'Forum' && app.icon === '💬') && app.icon}
+                            {app.path === '/apps/website' && <Globe className="h-7 w-7 text-odoo-primary" />}
+                            {app.path === '/apps/ecommerce' && <ShoppingCart className="h-7 w-7 text-odoo-primary" />}
+                            {app.path === '/apps/blog' && <FileText className="h-7 w-7 text-odoo-primary" />}
+                            {app.path === '/apps/forum' && <MessagesSquareIcon className="h-7 w-7 text-odoo-primary" />}
+                            {/* For newly added apps, we rely on their emoji for now, matching Apps.tsx */}
+                            {/* If a specific Lucide icon is preferred for new apps in switcher, this logic would expand */}
+                            {app.path !== '/apps/website' && app.path !== '/apps/ecommerce' && app.path !== '/apps/blog' && app.path !== '/apps/forum' && app.icon}
                           </div>
                           <span className="text-xs text-center text-odoo-dark font-medium">{app.name}</span>
                         </MenubarItem>

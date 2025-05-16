@@ -189,6 +189,98 @@ const VoiceTrainer = ({ isOpen, onClose, currentScreen }: VoiceTrainerProps) => 
         ];
         break;
       
+      case 'elearning':
+        steps = [
+          {
+            id: 'elearning-welcome',
+            title: 'eLearning Module',
+            description: 'Welcome to the eLearning module! Manage online courses, enroll students, and track their progress.',
+            completed: false,
+          },
+          {
+            id: 'elearning-create-course',
+            title: 'Create Courses',
+            description: 'Use the "Create New Course" button to design and publish educational content.',
+            completed: false,
+          },
+          {
+            id: 'elearning-manage-students',
+            title: 'Manage Students',
+            description: 'Oversee student enrollments, track learning paths, and issue certificates.',
+            completed: false,
+          },
+        ];
+        break;
+      
+      case 'pointofsale':
+        steps = [
+          {
+            id: 'pos-welcome',
+            title: 'Point of Sale Module',
+            description: 'Welcome to the Point of Sale (PoS) module! Handle in-store transactions, manage sessions, and integrate with inventory.',
+            completed: false,
+          },
+          {
+            id: 'pos-new-session',
+            title: 'Open Session',
+            description: 'Start a new PoS session to begin processing sales. Each session tracks transactions independently.',
+            completed: false,
+          },
+          {
+            id: 'pos-reports',
+            title: 'Sales Reports',
+            description: 'Access detailed sales reports to analyze performance and track revenue from your physical store operations.',
+            completed: false,
+          },
+        ];
+        break;
+      
+      case 'invoicing':
+        steps = [
+          {
+            id: 'invoicing-welcome',
+            title: 'Invoicing Module',
+            description: 'Welcome to the Invoicing module! Create, send, and track customer invoices and payments.',
+            completed: false,
+          },
+          {
+            id: 'invoicing-create-invoice',
+            title: 'Create Invoices',
+            description: 'Generate professional invoices for your products or services using the "Create New Invoice" button.',
+            completed: false,
+          },
+          {
+            id: 'invoicing-track-payments',
+            title: 'Track Payments',
+            description: 'Monitor the payment status of your invoices and manage outstanding balances.',
+            completed: false,
+          },
+        ];
+        break;
+      
+      case 'purchase':
+        steps = [
+          {
+            id: 'purchase-welcome',
+            title: 'Purchase Module',
+            description: 'Welcome to the Purchase module! Manage your procurement process, from purchase orders to supplier management.',
+            completed: false,
+          },
+          {
+            id: 'purchase-create-po',
+            title: 'Create Purchase Orders',
+            description: 'Use the "Create Purchase Order" button to request goods or services from your suppliers.',
+            completed: false,
+          },
+          {
+            id: 'purchase-manage-suppliers',
+            title: 'Manage Suppliers',
+            description: 'Keep a directory of your suppliers and track your purchasing history with them.',
+            completed: false,
+          },
+        ];
+        break;
+      
       default:
         steps = [
           {

@@ -20,6 +20,10 @@ import Ecommerce from "./pages/Ecommerce";
 import Blog from "./pages/Blog";
 import Forum from "./pages/Forum";
 import NotFound from "./pages/NotFound";
+import Elearning from "./pages/Elearning";
+import PointOfSale from "./pages/PointOfSale";
+import Invoicing from "./pages/Invoicing";
+import Purchase from "./pages/Purchase";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +50,10 @@ const App = () => (
           <Route path="/apps/ecommerce" element={<Ecommerce />} />
           <Route path="/apps/blog" element={<Blog />} />
           <Route path="/apps/forum" element={<Forum />} />
+          <Route path="/apps/elearning" element={<Elearning />} />
+          <Route path="/apps/point-of-sale" element={<PointOfSale />} />
+          <Route path="/apps/invoicing" element={<Invoicing />} />
+          <Route path="/apps/purchase" element={<Purchase />} />
           {/* Other app routes will be added here */}
           <Route path="*" element={<NotFound />} />
         </Routes>
