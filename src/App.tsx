@@ -24,6 +24,16 @@ import Elearning from "./pages/Elearning";
 import PointOfSale from "./pages/PointOfSale";
 import Invoicing from "./pages/Invoicing";
 import Purchase from "./pages/Purchase";
+import LiveChat from "./pages/LiveChat";
+import Subscriptions from "./pages/Subscriptions";
+import Rental from "./pages/Rental";
+import Expenses from "./pages/Expenses";
+import Documents from "./pages/Documents";
+import Spreadsheets from "./pages/Spreadsheets";
+import Sign from "./pages/Sign";
+import PLM from "./pages/PLM";
+import Maintenance from "./pages/Maintenance";
+import Quality from "./pages/Quality";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +64,19 @@ const App = () => (
           <Route path="/apps/point-of-sale" element={<PointOfSale />} />
           <Route path="/apps/invoicing" element={<Invoicing />} />
           <Route path="/apps/purchase" element={<Purchase />} />
-          {/* Other app routes will be added here */}
+          
+          {/* New App Routes */}
+          <Route path="/apps/live-chat" element={<LiveChat />} />
+          <Route path="/apps/subscriptions" element={<Subscriptions />} />
+          <Route path="/apps/rental" element={<Rental />} />
+          <Route path="/apps/expenses" element={<Expenses />} />
+          <Route path="/apps/documents" element={<Documents />} />
+          <Route path="/apps/spreadsheets" element={<Spreadsheets />} />
+          <Route path="/apps/sign" element={<Sign />} />
+          <Route path="/apps/plm" element={<PLM />} />
+          <Route path="/apps/maintenance" element={<Maintenance />} />
+          <Route path="/apps/quality" element={<Quality />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

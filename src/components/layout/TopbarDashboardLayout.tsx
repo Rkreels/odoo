@@ -1,109 +1,57 @@
-import { useState, ReactNode, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Menubar, 
-  MenubarMenu, 
-  MenubarTrigger, 
-  MenubarContent, 
-  MenubarItem,
-  MenubarSeparator
-} from '@/components/ui/menubar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+
+import { useState, ReactNode } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
-import { Search, Bell, MessageSquare, Plus, HelpCircle, Settings, ChevronDown, LogOut, User, Globe, ShoppingCart, FileText, MessagesSquare as MessagesSquareIcon, GraduationCap, Store, Receipt } from 'lucide-react';
+import { Search, HelpCircle } from 'lucide-react';
 import VoiceTrainer from '@/components/voice/VoiceTrainer';
+import AppSwitcher from './AppSwitcher';
+import NotificationMenu from './NotificationMenu';
+import MessageMenu from './MessageMenu';
+import UserMenu from './UserMenu';
+import SecondaryNavbar from './SecondaryNavbar';
 
 interface TopbarDashboardLayoutProps {
   children: ReactNode;
   currentApp?: string;
 }
 
+// Define structure for notifications and messages if not already globally available
+interface NotificationItem {
+  id: string; title: string; message: string; time: string; read: boolean;
+}
+interface MessageItem {
+  id: string; sender: string; message: string; time: string; read: boolean;
+}
+
+
 const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDashboardLayoutProps) => {
   const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
-  const [notifications, setNotifications] = useState<Array<{id: string, title: string, message: string, time: string, read: boolean}>>([
+  
+  // Initial notifications state
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
     {id: '1', title: 'New Invoice', message: 'Invoice #INV001 has been created', time: '5 mins ago', read: false},
     {id: '2', title: 'Meeting Reminder', message: 'Meeting with Client XYZ in 30 minutes', time: '30 mins ago', read: false},
     {id: '3', title: 'Task Completed', message: 'Project milestone #3 completed', time: '2 hours ago', read: true},
     {id: '4', title: 'System Update', message: 'System will be updated tonight at 2 AM', time: 'Yesterday', read: true},
   ]);
-  const [messages, setMessages] = useState<Array<{id: string, sender: string, message: string, time: string, read: boolean}>>([
+
+  // Initial messages state
+  const [messages, setMessages] = useState<MessageItem[]>([
     {id: '1', sender: 'John Doe', message: 'Can you review the latest proposal?', time: '10 mins ago', read: false},
     {id: '2', sender: 'Sarah Brown', message: 'The client approved the design', time: '1 hour ago', read: false},
     {id: '3', sender: 'Technical Support', message: 'Your ticket #45678 has been resolved', time: '3 hours ago', read: true},
   ]);
   
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const apps = [
-    { name: 'Dashboard', icon: '📊', path: '/dashboard' },
-    { name: 'Discuss', icon: '💬', path: '/apps/discuss' },
-    { name: 'CRM', icon: '🤝', path: '/apps/crm' },
-    { name: 'Sales', icon: '💰', path: '/apps/sales' },
-    { name: 'Point of Sale', icon: '🛒', path: '/apps/point-of-sale' }, // New: Point of Sale (using emoji from Apps.tsx)
-    { name: 'Accounting', icon: '💵', path: '/apps/accounting' },
-    { name: 'Invoicing', icon: '💰', path: '/apps/invoicing' },      // New: Invoicing (using emoji from Apps.tsx)
-    { name: 'Inventory', icon: '📦', path: '/apps/inventory' },
-    { name: 'Purchase', icon: '🛒', path: '/apps/purchase' },        // New: Purchase (using emoji from Apps.tsx)
-    { name: 'Manufacturing', icon: '🏭', path: '/apps/manufacturing' }, // Matched icon to common representation for Manufacturing
-    { name: 'Human Resources', icon: '👥', path: '/apps/hr' },
-    { name: 'Marketing', icon: '📧', path: '/apps/marketing' }, // Assuming future path
-    { name: 'Services', icon: '🎫', path: '/apps/services' },   // Assuming future path
-    { name: 'Website', icon: '🌐', path: '/apps/website' },
-    { name: 'eCommerce', icon: '🛍️', path: '/apps/ecommerce' },
-    { name: 'Blog', icon: '📝', path: '/apps/blog' },
-    { name: 'Forum', icon: '💬', path: '/apps/forum' },
-    { name: 'eLearning', icon: '🎓', path: '/apps/elearning' }, // New: eLearning (using emoji from Apps.tsx)
-  ];
-
-  // Handle notification read
   const markNotificationAsRead = (id: string) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? {...notification, read: true} : notification
-    ));
-    toast({
-      title: "Notification marked as read",
-      description: "The notification has been marked as read.",
-    });
+    setNotifications(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
+    // Toast is now handled within NotificationMenu
   };
 
-  // Handle message read
   const markMessageAsRead = (id: string) => {
-    setMessages(messages.map(message => 
-      message.id === id ? {...message, read: true} : message
-    ));
-    toast({
-      title: "Message marked as read",
-      description: "The message has been marked as read.",
-    });
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    navigate('/login');
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of your account.",
-    });
-  };
-
-  // Count unread notifications and messages
-  const unreadNotifications = notifications.filter(n => !n.read).length;
-  const unreadMessages = messages.filter(m => !m.read).length;
-
-  // Check if current path matches app path
-  const isCurrentApp = (path: string) => {
-    return location.pathname === path;
+    setMessages(prev => prev.map(m => m.id === id ? {...m, read: true} : m));
+    // Toast is now handled within MessageMenu
   };
   
   return (
@@ -123,53 +71,7 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
                 odoo
               </span>
             </Link>
-            
-            <Menubar className="border-none bg-transparent">
-              <MenubarMenu>
-                <MenubarTrigger className="text-white flex items-center hover:bg-white/10 data-[state=open]:bg-white/10 px-3 py-1.5 rounded-md">
-                  <span className="mr-1">{currentApp}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </MenubarTrigger>
-                <MenubarContent className="max-h-[80vh] overflow-y-auto w-96">
-                  <div className="p-2">
-                    <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                      <input 
-                        type="text" 
-                        placeholder="Search apps..." 
-                        className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-odoo-primary"
-                      />
-                    </div>
-                  </div>
-                  
-                  <MenubarSeparator />
-                  
-                  <div className="p-2">
-                    <h3 className="text-xs font-semibold text-gray-500 mb-2 px-2">APPS</h3>
-                    <div className="grid grid-cols-4 gap-2">
-                      {apps.map((app) => (
-                        <MenubarItem 
-                          key={app.name} 
-                          className={`flex flex-col items-center justify-center p-2 rounded hover:bg-gray-100 cursor-pointer h-20 ${isCurrentApp(app.path) ? 'bg-odoo-primary/10 ring-1 ring-odoo-primary' : ''}`}
-                          onClick={() => navigate(app.path)}
-                        >
-                          <div className="text-3xl mb-1">
-                            {app.path === '/apps/website' && <Globe className="h-7 w-7 text-odoo-primary" />}
-                            {app.path === '/apps/ecommerce' && <ShoppingCart className="h-7 w-7 text-odoo-primary" />}
-                            {app.path === '/apps/blog' && <FileText className="h-7 w-7 text-odoo-primary" />}
-                            {app.path === '/apps/forum' && <MessagesSquareIcon className="h-7 w-7 text-odoo-primary" />}
-                            {/* For newly added apps, we rely on their emoji for now, matching Apps.tsx */}
-                            {/* If a specific Lucide icon is preferred for new apps in switcher, this logic would expand */}
-                            {app.path !== '/apps/website' && app.path !== '/apps/ecommerce' && app.path !== '/apps/blog' && app.path !== '/apps/forum' && app.icon}
-                          </div>
-                          <span className="text-xs text-center text-odoo-dark font-medium">{app.name}</span>
-                        </MenubarItem>
-                      ))}
-                    </div>
-                  </div>
-                </MenubarContent>
-              </MenubarMenu>
-            </Menubar>
+            <AppSwitcher currentApp={currentApp} />
           </div>
           
           {/* Right Side Icons */}
@@ -177,139 +79,20 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
             <button className="p-1.5 rounded-md text-white hover:bg-white/10">
               <Search className="h-5 w-5" />
             </button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-1.5 rounded-md text-white hover:bg-white/10 relative">
-                  <Bell className="h-5 w-5" />
-                  {unreadNotifications > 0 && (
-                    <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-odoo-primary"></span>
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {notifications.length > 0 ? (
-                  notifications.map((notification) => (
-                    <DropdownMenuItem 
-                      key={notification.id} 
-                      className={`cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
-                      onClick={() => markNotificationAsRead(notification.id)}
-                    >
-                      <div className="flex flex-col w-full">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{notification.title}</span>
-                          <span className="text-xs text-gray-500">{notification.time}</span>
-                        </div>
-                        <span className="text-sm text-gray-600">{notification.message}</span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))
-                ) : (
-                  <div className="text-center p-4 text-gray-500">No notifications</div>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer justify-center text-blue-600">
-                  View all notifications
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-1.5 rounded-md text-white hover:bg-white/10 relative">
-                  <MessageSquare className="h-5 w-5" />
-                  {unreadMessages > 0 && (
-                    <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-odoo-primary"></span>
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80">
-                <DropdownMenuLabel>Messages</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {messages.length > 0 ? (
-                  messages.map((message) => (
-                    <DropdownMenuItem 
-                      key={message.id} 
-                      className={`cursor-pointer ${!message.read ? 'bg-blue-50' : ''}`}
-                      onClick={() => markMessageAsRead(message.id)}
-                    >
-                      <div className="flex flex-col w-full">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{message.sender}</span>
-                          <span className="text-xs text-gray-500">{message.time}</span>
-                        </div>
-                        <span className="text-sm text-gray-600 truncate">{message.message}</span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))
-                ) : (
-                  <div className="text-center p-4 text-gray-500">No messages</div>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer justify-center text-blue-600">
-                  View all messages
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
+            <NotificationMenu notifications={notifications} onMarkAsRead={markNotificationAsRead} />
+            <MessageMenu messages={messages} onMarkAsRead={markMessageAsRead} />
             <button 
               className="p-1.5 rounded-md text-white hover:bg-white/10"
               onClick={() => setShowVoiceTrainer(true)}
             >
               <HelpCircle className="h-5 w-5" />
             </button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="h-8 w-8 bg-white/30 cursor-pointer">
-                  <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="text-white">JD</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>John Doe</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserMenu />
           </div>
         </div>
       </header>
       
-      {/* Secondary Navigation */}
-      <div className="bg-white border-b">
-        <div className="px-4 flex h-10 items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="font-medium text-odoo-dark">{currentApp}</div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" className="rounded-full text-odoo-primary border-odoo-primary hover:bg-odoo-primary/5">
-              <Plus className="h-4 w-4 mr-1" />
-              New
-            </Button>
-            
-            <Button variant="outline" size="sm" className="rounded-full hover:bg-gray-100">
-              <Settings className="h-4 w-4 mr-1" />
-              Settings
-            </Button>
-          </div>
-        </div>
-      </div>
+      <SecondaryNavbar currentApp={currentApp} />
       
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-odoo-light">
@@ -328,3 +111,4 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
 };
 
 export default TopbarDashboardLayout;
+
