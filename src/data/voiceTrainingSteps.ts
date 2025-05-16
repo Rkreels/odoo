@@ -170,6 +170,20 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
         { id: 'qual-checks', title: 'Perform Checks', description: 'Conduct quality checks and record results.', completed: false },
       ];
       break;
+    case 'marketing':
+      steps = [
+        { id: 'marketing-welcome', title: 'Marketing Module', description: 'Welcome to the Marketing Automation module! This is where you can plan, execute, and track your marketing campaigns.', completed: false },
+        { id: 'marketing-campaigns', title: 'Campaign Management', description: 'Use the "Create Campaign" button to start a new marketing initiative. You can define target audiences, set goals, and manage different marketing channels.', completed: false },
+        { id: 'marketing-analytics', title: 'Track Performance', description: 'Monitor the performance of your campaigns using the "View Analytics" section. This will help you understand engagement and ROI.', completed: false },
+      ];
+      break;
+    case 'services':
+      steps = [
+        { id: 'services-welcome', title: 'Services Module', description: 'Welcome to Services Management! Here you can manage client projects, track tasks, and monitor billable hours.', completed: false },
+        { id: 'services-projects', title: 'Project Creation', description: 'Click on "Create Project" to set up new service projects. You can assign team members, define milestones, and set budgets.', completed: false },
+        { id: 'services-tasks', title: 'Task Management', description: 'Use the "Manage Tasks" area to oversee individual tasks within projects, track their progress, and manage deadlines.', completed: false },
+      ];
+      break;
     default:
       steps = [
         { id: 'default', title: 'Welcome to OdooEcho', description: "Welcome to OdooEcho! I'm your voice assistant and I'll help you learn how to use this platform. Navigate to different sections to get specific guidance.", completed: false },

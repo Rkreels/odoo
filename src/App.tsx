@@ -34,6 +34,8 @@ import Sign from "./pages/Sign";
 import PLM from "./pages/PLM";
 import Maintenance from "./pages/Maintenance";
 import Quality from "./pages/Quality";
+import Marketing from "./pages/Marketing";
+import Services from "./pages/Services";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +78,8 @@ const App = () => (
           <Route path="/apps/plm" element={<PLM />} />
           <Route path="/apps/maintenance" element={<Maintenance />} />
           <Route path="/apps/quality" element={<Quality />} />
+          <Route path="/apps/marketing" element={<Marketing />} />
+          <Route path="/apps/services" element={<Services />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

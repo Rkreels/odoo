@@ -35,8 +35,8 @@ const apps: AppItem[] = [
   { name: 'Purchase', icon: '🛒', path: '/apps/purchase' },
   { name: 'Manufacturing', icon: '🏭', path: '/apps/manufacturing' },
   { name: 'Human Resources', icon: '👥', path: '/apps/hr' },
-  { name: 'Marketing', icon: '📧', path: '/apps/marketing' }, // Future path
-  { name: 'Services', icon: '🎫', path: '/apps/services' },   // Future path
+  { name: 'Marketing', icon: '📧', path: '/apps/marketing' },
+  { name: 'Services', icon: '🎫', path: '/apps/services' },
   { name: 'Website', icon: <Globe className="h-7 w-7 text-odoo-primary" />, path: '/apps/website' },
   { name: 'eCommerce', icon: <ShoppingCart className="h-7 w-7 text-odoo-primary" />, path: '/apps/ecommerce' },
   { name: 'Blog', icon: <FileText className="h-7 w-7 text-odoo-primary" />, path: '/apps/blog' },
