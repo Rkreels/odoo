@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,82 +10,87 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
+import { Lead, LeadStatus } from '@/types/crm';
+import CreateLeadForm from './CreateLeadForm';
 
-interface Lead {
-  id: string;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  status: 'New' | 'Qualified' | 'Proposition' | 'Won' | 'Lost';
-  assignedTo: string;
-  lastActivity: string;
-  expectedRevenue: string;
-}
+const initialLeadsData: Lead[] = [
+  {
+    id: '1',
+    name: 'John Smith',
+    company: 'Acme Corporation',
+    email: 'john.smith@acme.com',
+    phone: '+1 (555) 123-4567',
+    status: 'New',
+    assignedTo: 'Jane Doe',
+    lastActivity: '1 day ago',
+    expectedRevenue: '$5,000',
+    address: { city: 'New York', country: 'USA' },
+    leadSource: 'Website',
+    priority: 'High',
+  },
+  {
+    id: '2',
+    name: 'Sarah Johnson',
+    company: 'XYZ Industries',
+    email: 'sarah.j@xyz.com',
+    phone: '+1 (555) 987-6543',
+    status: 'Qualified',
+    assignedTo: 'Mike Wilson',
+    lastActivity: '3 days ago',
+    expectedRevenue: '$12,000',
+    priority: 'Medium',
+  },
+  {
+    id: '3',
+    name: 'Robert Davis',
+    company: 'Globex Corporation',
+    email: 'rdavis@globex.com',
+    phone: '+1 (555) 456-7890',
+    status: 'Proposition',
+    assignedTo: 'Jane Doe',
+    lastActivity: '2 hours ago',
+    expectedRevenue: '$8,750',
+    priority: 'Medium',
+  },
+  {
+    id: '4',
+    name: 'Emily Chen',
+    company: 'Tech Innovators',
+    email: 'emily@techinnovators.com',
+    phone: '+1 (555) 234-5678',
+    status: 'Won',
+    assignedTo: 'Mike Wilson',
+    lastActivity: '1 week ago',
+    expectedRevenue: '$15,000',
+    priority: 'Low',
+  },
+  {
+    id: '5',
+    name: 'Michael Brown',
+    company: 'Summit Enterprises',
+    email: 'mbrown@summit.com',
+    phone: '+1 (555) 345-6789',
+    status: 'Lost',
+    assignedTo: 'Jane Doe',
+    lastActivity: '5 days ago',
+    expectedRevenue: '$0',
+    priority: 'Medium',
+  },
+];
 
 const LeadsList = () => {
+  const [leads, setLeads] = useState<Lead[]>(initialLeadsData);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  
-  const leads: Lead[] = [
-    {
-      id: '1',
-      name: 'John Smith',
-      company: 'Acme Corporation',
-      email: 'john.smith@acme.com',
-      phone: '+1 (555) 123-4567',
-      status: 'New',
-      assignedTo: 'Jane Doe',
-      lastActivity: '1 day ago',
-      expectedRevenue: '$5,000',
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      company: 'XYZ Industries',
-      email: 'sarah.j@xyz.com',
-      phone: '+1 (555) 987-6543',
-      status: 'Qualified',
-      assignedTo: 'Mike Wilson',
-      lastActivity: '3 days ago',
-      expectedRevenue: '$12,000',
-    },
-    {
-      id: '3',
-      name: 'Robert Davis',
-      company: 'Globex Corporation',
-      email: 'rdavis@globex.com',
-      phone: '+1 (555) 456-7890',
-      status: 'Proposition',
-      assignedTo: 'Jane Doe',
-      lastActivity: '2 hours ago',
-      expectedRevenue: '$8,750',
-    },
-    {
-      id: '4',
-      name: 'Emily Chen',
-      company: 'Tech Innovators',
-      email: 'emily@techinnovators.com',
-      phone: '+1 (555) 234-5678',
-      status: 'Won',
-      assignedTo: 'Mike Wilson',
-      lastActivity: '1 week ago',
-      expectedRevenue: '$15,000',
-    },
-    {
-      id: '5',
-      name: 'Michael Brown',
-      company: 'Summit Enterprises',
-      email: 'mbrown@summit.com',
-      phone: '+1 (555) 345-6789',
-      status: 'Lost',
-      assignedTo: 'Jane Doe',
-      lastActivity: '5 days ago',
-      expectedRevenue: '$0',
-    },
-  ];
+  const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
 
+  const handleLeadCreate = (newLead: Lead) => {
+    setLeads(prevLeads => [newLead, ...prevLeads]);
+    console.log('New Lead Created:', newLead);
+    // Future: Add toast notification for success
+  };
+  
   const filteredLeads = filterStatus === 'all' 
     ? leads 
     : leads.filter(lead => lead.status.toLowerCase() === filterStatus.toLowerCase());
@@ -107,7 +111,7 @@ const LeadsList = () => {
     }
   };
 
-  const getStatusColor = (status: Lead['status']) => {
+  const getStatusColor = (status: LeadStatus) => {
     switch (status) {
       case 'New':
         return 'bg-blue-100 text-blue-800';
@@ -128,7 +132,12 @@ const LeadsList = () => {
     <div className="bg-white rounded-lg shadow-sm">
       <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center">
-          <Button variant="outline" className="mr-2">
+          <Button 
+            variant="outline" 
+            className="mr-2 bg-odoo-primary text-white hover:bg-odoo-primary/90"
+            onClick={() => setIsCreateLeadModalOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
             Create
           </Button>
           <Button variant="outline" className="mr-2" disabled={selectedLeads.length === 0}>
@@ -192,6 +201,8 @@ const LeadsList = () => {
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead>Lead Source</TableHead>
               <TableHead>Assigned To</TableHead>
               <TableHead>Last Activity</TableHead>
               <TableHead>Expected Revenue</TableHead>
@@ -217,6 +228,8 @@ const LeadsList = () => {
                       {lead.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>{lead.priority || '-'}</TableCell>
+                  <TableCell>{lead.leadSource || '-'}</TableCell>
                   <TableCell>{lead.assignedTo}</TableCell>
                   <TableCell>{lead.lastActivity}</TableCell>
                   <TableCell>{lead.expectedRevenue}</TableCell>
@@ -224,7 +237,7 @@ const LeadsList = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={11} className="text-center py-8 text-gray-500">
                   No leads found matching your filters. Try adjusting your search criteria.
                 </TableCell>
               </TableRow>
@@ -246,6 +259,12 @@ const LeadsList = () => {
           </Button>
         </div>
       </div>
+
+      <CreateLeadForm 
+        isOpen={isCreateLeadModalOpen}
+        onClose={() => setIsCreateLeadModalOpen(false)}
+        onLeadCreate={handleLeadCreate}
+      />
     </div>
   );
 };
