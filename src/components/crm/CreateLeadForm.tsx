@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Lead, LeadPriority, LeadStatus } from '@/types/crm'; // Using the new type
+import { Lead, LeadPriority, LeadStatus } from '@/types/crm';
 
 // Define the Zod schema for lead creation
 const leadFormSchema = z.object({
@@ -38,8 +38,8 @@ const leadFormSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   phone: z.string().min(7, { message: "Phone number seems too short." }),
   status: z.enum(['New', 'Qualified', 'Proposition', 'Won', 'Lost'] as [LeadStatus, ...LeadStatus[]]).default('New'),
-  assignedTo: z.string().optional(), // For now, simple text
-  expectedRevenue: z.string().optional(), // For now, simple text, ideally number
+  assignedTo: z.string().optional(), 
+  expectedRevenue: z.string().optional(), 
   address: z.object({
     street: z.string().optional(),
     city: z.string().optional(),
@@ -84,9 +84,19 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
 
   const onSubmit = (data: LeadFormData) => {
     const newLead: Lead = {
-      ...data,
+      // Explicitly map fields to ensure conformance with the Lead type
       id: Date.now().toString(), // Simple ID generation for now
+      name: data.name, // Zod ensures data.name is a string
+      company: data.company, // Zod ensures data.company is a string
+      email: data.email, // Zod ensures data.email is a string
+      phone: data.phone, // Zod ensures data.phone is a string
+      status: data.status, // Zod ensures data.status is LeadStatus (with default)
+      assignedTo: data.assignedTo ?? '', // Provide default if optional form field is empty
+      expectedRevenue: data.expectedRevenue ?? '', // Provide default if optional form field is empty
       lastActivity: new Date().toLocaleDateString(), // Placeholder
+      address: data.address, // Optional in Lead, maps from optional form field
+      leadSource: data.leadSource, // Optional in Lead, maps from optional form field
+      priority: data.priority, // Optional in Lead, maps from optional form field
     };
     onLeadCreate(newLead);
     form.reset();
@@ -104,6 +114,9 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Lead</DialogTitle>
+          <DialogDescription>
+            Fill in the details below to create a new lead. Required fields are marked with an asterisk (*).
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-1">
@@ -195,7 +208,7 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
                   <FormItem>
                     <FormLabel>Street</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="123 Main St, Apt 4B" {...field} />
+                      <Textarea placeholder="123 Main St, Apt 4B" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,7 +222,7 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
                   <FormItem>
                     <FormLabel>City</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., New York" {...field} />
+                      <Input placeholder="e.g., New York" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -222,7 +235,7 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
                   <FormItem>
                     <FormLabel>State / Province</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., NY" {...field} />
+                      <Input placeholder="e.g., NY" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,7 +250,7 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
                   <FormItem>
                     <FormLabel>ZIP / Postal Code</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 10001" {...field} />
+                      <Input placeholder="e.g., 10001" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,7 +263,7 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
                   <FormItem>
                     <FormLabel>Country</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., USA" {...field} />
+                      <Input placeholder="e.g., USA" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -313,7 +326,7 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
                     <FormItem>
                         <FormLabel>Assigned To</FormLabel>
                         <FormControl>
-                        <Input placeholder="e.g., Jane Doe" {...field} />
+                        <Input placeholder="e.g., Jane Doe" {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -326,7 +339,7 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
                     <FormItem>
                         <FormLabel>Expected Revenue</FormLabel>
                         <FormControl>
-                        <Input placeholder="e.g., $10,000" {...field} />
+                        <Input placeholder="e.g., $10,000" {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -351,4 +364,3 @@ const CreateLeadForm: React.FC<CreateLeadFormProps> = ({ isOpen, onClose, onLead
 };
 
 export default CreateLeadForm;
-
