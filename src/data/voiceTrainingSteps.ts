@@ -119,9 +119,9 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
       break;
     case 'spreadsheets':
       steps = [
-        { id: 'spread-welcome', title: 'Spreadsheets Module', description: 'Welcome to Spreadsheets! Create and collaborate on spreadsheets integrated with your data.', completed: false },
-        { id: 'spread-create', title: 'Create New Spreadsheet', description: 'Start a new spreadsheet for data analysis, reporting, or planning.', completed: false },
-        { id: 'spread-integrate', title: 'Data Integration', description: 'Link spreadsheets with other Odoo apps for real-time data.', completed: false },
+        { id: 'spreadsheets-welcome', title: 'Spreadsheets Module', description: 'Welcome to Spreadsheets! Create collaborative spreadsheets integrated with your business data for analysis and reporting.', completed: false },
+        { id: 'spreadsheets-create', title: 'Create New Spreadsheet', description: 'Start a new spreadsheet for data analysis, reporting, or planning using the "Create New Spreadsheet" button.', completed: false },
+        { id: 'spreadsheets-collaborate', title: 'Share & Collaborate', description: 'Share spreadsheets with team members and collaborate in real-time on business data and analysis.', completed: false },
       ];
       break;
     case 'sign':
