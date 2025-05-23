@@ -1,5 +1,4 @@
-
-import { TrainingStep } from '@/types/voiceTrainer'; // Assuming TrainingStep type is defined or will be defined
+import { TrainingStep } from '@/types/voiceTrainer';
 
 export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[] => {
   let steps: TrainingStep[] = [];
@@ -26,7 +25,40 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
       steps = [
         { id: 'blog-welcome', title: 'Blog Module', description: 'Welcome to the Blog module! Here you can create and manage blog posts, organize them into categories, and engage with your audience.', completed: false },
         { id: 'blog-create-post', title: 'Create Posts', description: 'Use the "Create New Post" button to start writing new articles. You can use a rich text editor, add images, and set publication dates.', completed: false },
-        { id: 'blog-manage', title: 'Manage Content', description: 'View your existing posts, edit them, or manage categories to keep your blog organized.', completed: false },
+        { id: 'blog-manage', title: 'Manage Content', description: 'View your existing posts, edit them, or manage categories to keep your blog organized. Use the search and filter options to find specific content.', completed: false },
+        { id: 'blog-publishing', title: 'Publishing Options', description: 'You can save posts as drafts or publish them immediately. Published posts will be visible to your audience.', completed: false },
+      ];
+      break;
+    case 'discuss':
+      steps = [
+        { id: 'discuss-welcome', title: 'Discuss Module', description: 'Welcome to the Discuss module! This is your team communication hub where you can chat in channels and send direct messages.', completed: false },
+        { id: 'discuss-channels', title: 'Channel Navigation', description: 'On the left sidebar, you can see all available channels. Public channels are marked with # and private channels with a lock icon.', completed: false },
+        { id: 'discuss-messaging', title: 'Send Messages', description: 'Type your message in the input field at the bottom and press Enter to send. You can also attach files and use emojis.', completed: false },
+        { id: 'discuss-create', title: 'Create Channels', description: 'Click the plus button next to Channels to create new discussion spaces for different topics or teams.', completed: false },
+      ];
+      break;
+    case 'documents':
+      steps = [
+        { id: 'docs-welcome', title: 'Documents Module', description: 'Welcome to Document Management! Organize, share, and secure your company files in a centralized system.', completed: false },
+        { id: 'docs-upload', title: 'Upload Files', description: 'Click the Upload button to add documents to your workspace. You can organize them by workspace and add tags for easy searching.', completed: false },
+        { id: 'docs-manage', title: 'Manage Documents', description: 'Each document card shows file details, size, and owner. You can view, download, share, or delete documents using the action buttons.', completed: false },
+        { id: 'docs-search', title: 'Search & Filter', description: 'Use the search bar to find documents by name, and filter by workspace to organize your view.', completed: false },
+      ];
+      break;
+    case 'elearning':
+      steps = [
+        { id: 'elearning-welcome', title: 'eLearning Module', description: 'Welcome to the eLearning platform! Create, manage, and sell online courses to students.', completed: false },
+        { id: 'elearning-courses', title: 'Course Management', description: 'View all available courses with details like enrollment numbers, ratings, and pricing. Each course card shows key information at a glance.', completed: false },
+        { id: 'elearning-create', title: 'Create Courses', description: 'Click "Create New Course" to start building educational content. You can set pricing, add lessons, and publish when ready.', completed: false },
+        { id: 'elearning-enrollment', title: 'Student Enrollment', description: 'Students can enroll in courses directly from the course cards. Track enrollment numbers and student progress.', completed: false },
+      ];
+      break;
+    case 'expenses':
+      steps = [
+        { id: 'expenses-welcome', title: 'Expenses Module', description: 'Welcome to Expense Management! Track, submit, and approve employee expense reports efficiently.', completed: false },
+        { id: 'expenses-overview', title: 'Expense Overview', description: 'The dashboard shows pending approvals, approved amounts, and total reports. Get a quick view of your expense status.', completed: false },
+        { id: 'expenses-submit', title: 'Submit Expenses', description: 'Click "Submit Expense Report" to add new expenses. Include receipts, categorize expenses, and add detailed descriptions.', completed: false },
+        { id: 'expenses-approve', title: 'Approval Process', description: 'Managers can approve or reject pending expenses directly from the expense cards. Add notes for feedback when needed.', completed: false },
       ];
       break;
     case 'forum':
@@ -64,42 +96,6 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
         { id: 'ecom-orders', title: 'Order Processing', description: 'Track and fulfill customer orders efficiently.', completed: false },
       ];
       break;
-    case 'discuss':
-      steps = [
-        { id: 'disc-welcome', title: 'Discuss App', description: 'Communicate with your team, manage channels, and stay updated.', completed: false },
-        { id: 'disc-channels', title: 'Channels', description: 'Join or create channels for specific topics or teams.', completed: false },
-        { id: 'disc-messages', title: 'Direct Messages', description: 'Send direct messages to your colleagues.', completed: false },
-      ];
-      break;
-    case 'elearning':
-      steps = [
-        { id: 'elearning-welcome', title: 'eLearning Module', description: 'Welcome to the eLearning module! Manage online courses, enroll students, and track their progress.', completed: false },
-        { id: 'elearning-create-course', title: 'Create Courses', description: 'Use the "Create New Course" button to design and publish educational content.', completed: false },
-        { id: 'elearning-manage-students', title: 'Manage Students', description: 'Oversee student enrollments, track learning paths, and issue certificates.', completed: false },
-      ];
-      break;
-    case 'pointofsale':
-      steps = [
-        { id: 'pos-welcome', title: 'Point of Sale Module', description: 'Welcome to the Point of Sale (PoS) module! Handle in-store transactions, manage sessions, and integrate with inventory.', completed: false },
-        { id: 'pos-new-session', title: 'Open Session', description: 'Start a new PoS session to begin processing sales. Each session tracks transactions independently.', completed: false },
-        { id: 'pos-reports', title: 'Sales Reports', description: 'Access detailed sales reports to analyze performance and track revenue from your physical store operations.', completed: false },
-      ];
-      break;
-    case 'invoicing':
-      steps = [
-        { id: 'invoicing-welcome', title: 'Invoicing Module', description: 'Welcome to the Invoicing module! Create, send, and track customer invoices and payments.', completed: false },
-        { id: 'invoicing-create-invoice', title: 'Create Invoices', description: 'Generate professional invoices for your products or services using the "Create New Invoice" button.', completed: false },
-        { id: 'invoicing-track-payments', title: 'Track Payments', description: 'Monitor the payment status of your invoices and manage outstanding balances.', completed: false },
-      ];
-      break;
-    case 'purchase':
-      steps = [
-        { id: 'purchase-welcome', title: 'Purchase Module', description: 'Welcome to the Purchase module! Manage your procurement process, from purchase orders to supplier management.', completed: false },
-        { id: 'purchase-create-po', title: 'Create Purchase Orders', description: 'Use the "Create Purchase Order" button to request goods or services from your suppliers.', completed: false },
-        { id: 'purchase-manage-suppliers', title: 'Manage Suppliers', description: 'Keep a directory of your suppliers and track your purchasing history with them.', completed: false },
-      ];
-      break;
-    // Newly added modules
     case 'livechat':
       steps = [
         { id: 'livechat-welcome', title: 'Live Chat Module', description: 'Welcome to Live Chat! Connect with your website visitors in real-time.', completed: false },
@@ -119,20 +115,6 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
         { id: 'rental-welcome', title: 'Rental Module', description: 'Welcome to Rental Management! Rent out products and manage your rental operations.', completed: false },
         { id: 'rental-add-product', title: 'Add Rental Products', description: 'List products available for rent, set pricing, and availability.', completed: false },
         { id: 'rental-manage-bookings', title: 'Manage Bookings', description: 'Track rental orders, schedules, and returns.', completed: false },
-      ];
-      break;
-    case 'expenses':
-      steps = [
-        { id: 'exp-welcome', title: 'Expenses Module', description: 'Welcome to Expense Management! Streamline employee expense reporting.', completed: false },
-        { id: 'exp-submit', title: 'Submit Expenses', description: 'Employees can submit expense reports for approval.', completed: false },
-        { id: 'exp-approve', title: 'Approve Reports', description: 'Managers can review and approve expense submissions.', completed: false },
-      ];
-      break;
-    case 'documents':
-      steps = [
-        { id: 'docs-welcome', title: 'Documents Module', description: 'Welcome to Document Management! Organize, share, and secure your files.', completed: false },
-        { id: 'docs-upload', title: 'Upload Files', description: 'Upload various types of documents to a centralized repository.', completed: false },
-        { id: 'docs-share', title: 'Share & Collaborate', description: 'Share documents with team members and control access permissions.', completed: false },
       ];
       break;
     case 'spreadsheets':
@@ -184,6 +166,27 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
         { id: 'services-tasks', title: 'Task Management', description: 'Use the "Manage Tasks" area to oversee individual tasks within projects, track their progress, and manage deadlines.', completed: false },
       ];
       break;
+    case 'pointofsale':
+      steps = [
+        { id: 'pos-welcome', title: 'Point of Sale Module', description: 'Welcome to the Point of Sale (PoS) module! Handle in-store transactions, manage sessions, and integrate with inventory.', completed: false },
+        { id: 'pos-new-session', title: 'Open Session', description: 'Start a new PoS session to begin processing sales. Each session tracks transactions independently.', completed: false },
+        { id: 'pos-reports', title: 'Sales Reports', description: 'Access detailed sales reports to analyze performance and track revenue from your physical store operations.', completed: false },
+      ];
+      break;
+    case 'invoicing':
+      steps = [
+        { id: 'invoicing-welcome', title: 'Invoicing Module', description: 'Welcome to the Invoicing module! Create, send, and track customer invoices and payments.', completed: false },
+        { id: 'invoicing-create-invoice', title: 'Create Invoices', description: 'Generate professional invoices for your products or services using the "Create New Invoice" button.', completed: false },
+        { id: 'invoicing-track-payments', title: 'Track Payments', description: 'Monitor the payment status of your invoices and manage outstanding balances.', completed: false },
+      ];
+      break;
+    case 'purchase':
+      steps = [
+        { id: 'purchase-welcome', title: 'Purchase Module', description: 'Welcome to the Purchase module! Manage your procurement process, from purchase orders to supplier management.', completed: false },
+        { id: 'purchase-create-po', title: 'Create Purchase Orders', description: 'Use the "Create Purchase Order" button to request goods or services from your suppliers.', completed: false },
+        { id: 'purchase-manage-suppliers', title: 'Manage Suppliers', description: 'Keep a directory of your suppliers and track your purchasing history with them.', completed: false },
+      ];
+      break;
     default:
       steps = [
         { id: 'default', title: 'Welcome to OdooEcho', description: "Welcome to OdooEcho! I'm your voice assistant and I'll help you learn how to use this platform. Navigate to different sections to get specific guidance.", completed: false },
@@ -191,4 +194,3 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
   }
   return steps;
 };
-
