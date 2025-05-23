@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
@@ -8,10 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChatSession } from '@/types/livechat';
 import ChatSessionCard from '@/components/livechat/ChatSessionCard';
 import LiveChatWindow from '@/components/livechat/LiveChatWindow';
+import VoiceTrainer from '@/components/voice/VoiceTrainer';
 import { toast } from "@/components/ui/use-toast";
 
 const LiveChat = () => {
   const navigate = useNavigate();
+  const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
   const [activeSessions, setActiveSessions] = useState<ChatSession[]>([
     {
       id: '1',
@@ -91,7 +92,7 @@ const LiveChat = () => {
   
   const handleJoinChat = (session: ChatSession) => {
     if (session.status === 'waiting') {
-      const updatedSession = { 
+      const updatedSession: ChatSession = { 
         ...session, 
         status: 'active', 
         assignedTo: 'Current User' 
@@ -154,6 +155,16 @@ const LiveChat = () => {
               </div>
             </div>
             <div className="flex space-x-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowVoiceTrainer(!showVoiceTrainer)}
+                className="border-odoo-primary text-odoo-primary hover:bg-odoo-primary hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                </svg>
+                Voice Guide
+              </Button>
               <Button variant="outline">
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Analytics
@@ -227,6 +238,15 @@ const LiveChat = () => {
           session={currentChat}
           onClose={() => setCurrentChat(null)}
           onSendMessage={handleSendMessage}
+        />
+      )}
+      
+      {/* Voice Trainer */}
+      {showVoiceTrainer && (
+        <VoiceTrainer 
+          isOpen={showVoiceTrainer} 
+          onClose={() => setShowVoiceTrainer(false)} 
+          currentScreen="livechat"
         />
       )}
     </TopbarDashboardLayout>

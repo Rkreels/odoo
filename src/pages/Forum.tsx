@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
@@ -8,11 +7,13 @@ import { Input } from '@/components/ui/input';
 import { ForumTopic, ForumCategory } from '@/types/forum';
 import TopicCard from '@/components/forum/TopicCard';
 import CreateTopicForm from '@/components/forum/CreateTopicForm';
+import VoiceTrainer from '@/components/voice/VoiceTrainer';
 import { toast } from "@/components/ui/use-toast";
 
 const Forum = () => {
   const navigate = useNavigate();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
   const [topics, setTopics] = useState<ForumTopic[]>([
     {
       id: '1',
@@ -80,7 +81,6 @@ const Forum = () => {
   };
   
   const handleViewTopic = (topic: ForumTopic) => {
-    // In a full implementation, this would navigate to the topic detail page
     toast({
       title: "Viewing topic",
       description: `You are viewing: ${topic.title}`,
@@ -101,22 +101,36 @@ const Forum = () => {
                 </p>
               </div>
             </div>
-            <Button 
-              className="bg-odoo-primary text-white hover:bg-odoo-primary/90"
-              onClick={() => setShowCreateForm(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Topic
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowVoiceTrainer(!showVoiceTrainer)}
+                className="border-odoo-primary text-odoo-primary hover:bg-odoo-primary hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                </svg>
+                Voice Guide
+              </Button>
+              <Button 
+                className="bg-odoo-primary text-white hover:bg-odoo-primary/90"
+                onClick={() => setShowCreateForm(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Topic
+              </Button>
+            </div>
           </div>
           
           {/* Quick filters and search */}
           <div className="flex items-center mb-6 space-x-4">
-            <div className="flex-1">
+            <div className="flex-1 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-gray-400" />
+              </div>
               <Input
                 placeholder="Search topics..."
-                className="w-full"
-                icon={<Search className="h-4 w-4 text-gray-400" />}
+                className="w-full pl-10"
               />
             </div>
             <Button variant="outline" size="sm">
@@ -157,6 +171,15 @@ const Forum = () => {
         categories={categories}
         onTopicCreate={handleCreateTopic}
       />
+      
+      {/* Voice Trainer */}
+      {showVoiceTrainer && (
+        <VoiceTrainer 
+          isOpen={showVoiceTrainer} 
+          onClose={() => setShowVoiceTrainer(false)} 
+          currentScreen="forum"
+        />
+      )}
     </TopbarDashboardLayout>
   );
 };

@@ -1,19 +1,63 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
+import { Factory, Plus, Filter, Play, Pause, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ManufacturingOrder, WorkOrder } from '@/types/manufacturing';
+import VoiceTrainer from '@/components/voice/VoiceTrainer';
+import { toast } from "@/components/ui/use-toast";
 
 const Manufacturing = () => {
   const navigate = useNavigate();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
+  const [orders, setOrders] = useState<ManufacturingOrder[]>([
+    {
+      id: 'MO001',
+      product: 'Office Chair Premium',
+      quantity: 50,
+      plannedDate: '2025-05-25',
+      deadline: '2025-06-01',
+      status: 'in-progress',
+      location: 'Factory A',
+      responsible: 'John Smith',
+      workOrders: [
+        { id: 'WO001', name: 'Frame Assembly', workCenter: 'Assembly Line 1', status: 'done', duration: '2 hours' },
+        { id: 'WO002', name: 'Cushion Installation', workCenter: 'Assembly Line 2', status: 'in-progress', duration: '1 hour', assignedWorker: 'Alice Brown' },
+        { id: 'WO003', name: 'Quality Check', workCenter: 'QC Station', status: 'pending', duration: '30 min' }
+      ],
+      materials: [
+        { id: 'MAT001', product: 'Steel Frame', required: 50, available: 45, reserved: 45, unit: 'pcs' },
+        { id: 'MAT002', product: 'Foam Cushion', required: 50, available: 60, reserved: 50, unit: 'pcs' },
+        { id: 'MAT003', product: 'Fabric Cover', required: 50, available: 30, reserved: 30, unit: 'pcs' }
+      ]
+    },
+    {
+      id: 'MO002',
+      product: 'Conference Table',
+      quantity: 10,
+      plannedDate: '2025-05-28',
+      deadline: '2025-06-05',
+      status: 'planned',
+      location: 'Factory B',
+      responsible: 'Mike Wilson',
+      workOrders: [
+        { id: 'WO004', name: 'Wood Cutting', workCenter: 'CNC Machine', status: 'pending', duration: '3 hours' },
+        { id: 'WO005', name: 'Surface Treatment', workCenter: 'Finishing', status: 'pending', duration: '2 hours' },
+        { id: 'WO006', name: 'Assembly', workCenter: 'Assembly Line 3', status: 'pending', duration: '1.5 hours' }
+      ],
+      materials: [
+        { id: 'MAT004', product: 'Oak Wood Panel', required: 20, available: 25, reserved: 20, unit: 'pcs' },
+        { id: 'MAT005', product: 'Table Legs', required: 40, available: 50, reserved: 40, unit: 'pcs' },
+        { id: 'MAT006', product: 'Wood Finish', required: 2, available: 5, reserved: 2, unit: 'liters' }
+      ]
+    }
+  ]);
 
-  // Check authentication
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     if (!isAuthenticated) {
@@ -21,81 +65,37 @@ const Manufacturing = () => {
     }
   }, [navigate]);
 
-  const manufacturingOrders = [
-    {
-      id: 'MO001',
-      product: 'Office Desk',
-      quantity: 10,
-      deadline: '2025-05-15',
-      responsible: 'Jane Doe',
-      status: 'Confirmed',
-    },
-    {
-      id: 'MO002',
-      product: 'Ergonomic Chair',
-      quantity: 15,
-      deadline: '2025-05-20',
-      responsible: 'Mike Wilson',
-      status: 'In Progress',
-    },
-    {
-      id: 'MO003',
-      product: 'Acoustic Guitar',
-      quantity: 5,
-      deadline: '2025-06-01',
-      responsible: 'Jane Doe',
-      status: 'Planned',
-    },
-    {
-      id: 'MO004',
-      product: 'Smartphone Case',
-      quantity: 100,
-      deadline: '2025-05-10',
-      responsible: 'Mike Wilson',
-      status: 'Done',
-    },
-    {
-      id: 'MO005',
-      product: 'Wireless Keyboard',
-      quantity: 20,
-      deadline: '2025-05-25',
-      responsible: 'Jane Doe',
-      status: 'In Progress',
-    },
-  ];
-
-  const filteredOrders = filterStatus === 'all' 
-    ? manufacturingOrders 
-    : manufacturingOrders.filter(order => order.status.toLowerCase() === filterStatus.toLowerCase());
-
-  const toggleSelectAll = () => {
-    if (selectedItems.length === filteredOrders.length) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(filteredOrders.map(order => order.id));
-    }
+  const handleStartOrder = (orderId: string) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { ...order, status: 'in-progress' } : order
+      )
+    );
+    toast({
+      title: "Production started",
+      description: `Manufacturing order ${orderId} has been started.`,
+    });
   };
 
-  const toggleSelectItem = (id: string) => {
-    if (selectedItems.includes(id)) {
-      setSelectedItems(selectedItems.filter(itemId => itemId !== id));
-    } else {
-      setSelectedItems([...selectedItems, id]);
-    }
+  const handleCompleteOrder = (orderId: string) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { ...order, status: 'done' } : order
+      )
+    );
+    toast({
+      title: "Production completed",
+      description: `Manufacturing order ${orderId} has been completed.`,
+    });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'Planned':
-        return 'bg-blue-100 text-blue-800';
-      case 'Confirmed':
-        return 'bg-purple-100 text-purple-800';
-      case 'In Progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Done':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'planned': return 'outline';
+      case 'in-progress': return 'default';
+      case 'done': return 'secondary';
+      case 'cancelled': return 'destructive';
+      default: return 'outline';
     }
   };
 
@@ -103,144 +103,171 @@ const Manufacturing = () => {
     <TopbarDashboardLayout currentApp="Manufacturing">
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <h2 className="text-xl font-bold text-odoo-dark mb-4">Manufacturing Overview</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { name: 'Planned', count: 1, color: 'bg-blue-500' },
-              { name: 'Confirmed', count: 1, color: 'bg-purple-500' },
-              { name: 'In Progress', count: 2, color: 'bg-yellow-500' },
-              { name: 'Done', count: 1, color: 'bg-green-500' },
-            ].map((metric) => (
-              <div key={metric.name} className="p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full ${metric.color} mr-2`}></div>
-                  <h3 className="font-medium text-odoo-dark">{metric.name}</h3>
-                </div>
-                <p className="text-2xl font-bold mt-2 text-odoo-dark">{metric.count}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <Button variant="outline" className="mr-2">
-                <Plus className="h-4 w-4 mr-1" />
-                Create
-              </Button>
-              <Button variant="outline" className="mr-2" disabled={selectedItems.length === 0}>
-                Mass Action
-              </Button>
-              <div className="relative ml-2">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-400" />
-                </div>
-                <input
-                  type="search"
-                  placeholder="Search manufacturing orders..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-odoo-primary focus:border-odoo-primary w-full sm:w-auto"
-                />
+              <Factory className="h-8 w-8 text-odoo-primary mr-3" />
+              <div>
+                <h1 className="text-2xl font-bold text-odoo-dark">Manufacturing</h1>
+                <p className="text-odoo-gray">
+                  Manage production orders, work centers, and manufacturing processes.
+                </p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-2 self-end sm:self-auto">
-              <select 
-                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-odoo-primary focus:border-odoo-primary"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowVoiceTrainer(!showVoiceTrainer)}
+                className="border-odoo-primary text-odoo-primary hover:bg-odoo-primary hover:text-white"
               >
-                <option value="all">All Statuses</option>
-                <option value="planned">Planned</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="in progress">In Progress</option>
-                <option value="done">Done</option>
-              </select>
-              
-              <Button variant="outline" size="sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
                 </svg>
-                Filters
+                Voice Guide
               </Button>
+              <Button className="bg-odoo-primary hover:bg-odoo-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                New Manufacturing Order
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-500">Total Orders</p>
+              <p className="text-2xl font-semibold">{orders.length}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-500">In Progress</p>
+              <p className="text-2xl font-semibold">{orders.filter(o => o.status === 'in-progress').length}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-500">Planned</p>
+              <p className="text-2xl font-semibold">{orders.filter(o => o.status === 'planned').length}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-500">Completed</p>
+              <p className="text-2xl font-semibold">{orders.filter(o => o.status === 'done').length}</p>
+            </div>
+          </div>
+
+          <Tabs defaultValue="orders">
+            <TabsList>
+              <TabsTrigger value="orders">Manufacturing Orders</TabsTrigger>
+              <TabsTrigger value="workcenters">Work Centers</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="orders">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-64">
+                  <Input placeholder="Search orders..." />
+                </div>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                </Button>
+              </div>
               
-              <Button variant="outline" size="sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
-                </svg>
-                Group By
-              </Button>
-            </div>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0} 
-                      onCheckedChange={toggleSelectAll} 
-                      aria-label="Select all orders"
-                    />
-                  </TableHead>
-                  <TableHead>Order Number</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Deadline</TableHead>
-                  <TableHead>Responsible</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
-                    <TableRow key={order.id} className="cursor-pointer hover:bg-gray-50">
-                      <TableCell>
-                        <Checkbox 
-                          checked={selectedItems.includes(order.id)} 
-                          onCheckedChange={() => toggleSelectItem(order.id)} 
-                          aria-label={`Select ${order.id}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{order.product}</TableCell>
-                      <TableCell>{order.quantity}</TableCell>
-                      <TableCell>{order.deadline}</TableCell>
-                      <TableCell>{order.responsible}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(order.status)} variant="outline">
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      No orders found matching your filters. Try adjusting your search criteria.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <div className="p-4 border-t flex items-center justify-between">
-            <div className="text-sm text-odoo-gray">
-              Showing {filteredOrders.length} of {manufacturingOrders.length} orders
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" disabled>
-                Next
-              </Button>
-            </div>
-          </div>
+              <div className="space-y-4">
+                {orders.map(order => (
+                  <Card key={order.id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">{order.id} - {order.product}</CardTitle>
+                          <p className="text-gray-500">Quantity: {order.quantity} | Deadline: {order.deadline}</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={getStatusBadgeVariant(order.status)}>
+                            {order.status}
+                          </Badge>
+                          {order.status === 'planned' && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleStartOrder(order.id)}
+                              className="bg-odoo-primary hover:bg-odoo-primary/90"
+                            >
+                              <Play className="h-3 w-3 mr-1" />
+                              Start
+                            </Button>
+                          )}
+                          {order.status === 'in-progress' && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleCompleteOrder(order.id)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Complete
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium mb-2">Work Orders</h4>
+                          <div className="space-y-1">
+                            {order.workOrders.map(wo => (
+                              <div key={wo.id} className="flex justify-between text-sm">
+                                <span>{wo.name}</span>
+                                <Badge variant={getStatusBadgeVariant(wo.status)} className="text-xs">
+                                  {wo.status}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-2">Materials</h4>
+                          <div className="space-y-1">
+                            {order.materials.map(mat => (
+                              <div key={mat.id} className="flex justify-between text-sm">
+                                <span>{mat.product}</span>
+                                <span className={mat.available < mat.required ? 'text-red-500' : 'text-green-600'}>
+                                  {mat.available}/{mat.required} {mat.unit}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="workcenters">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {['Assembly Line 1', 'Assembly Line 2', 'CNC Machine', 'QC Station', 'Finishing'].map(center => (
+                  <Card key={center}>
+                    <CardHeader>
+                      <CardTitle className="text-base">{center}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm text-gray-500">
+                        <p>Status: <span className="text-green-600">Available</span></p>
+                        <p>Efficiency: 85%</p>
+                        <p>Current Job: Office Chair Premium</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
+      
+      {/* Voice Trainer */}
+      {showVoiceTrainer && (
+        <VoiceTrainer 
+          isOpen={showVoiceTrainer} 
+          onClose={() => setShowVoiceTrainer(false)} 
+          currentScreen="manufacturing"
+        />
+      )}
     </TopbarDashboardLayout>
   );
 };
