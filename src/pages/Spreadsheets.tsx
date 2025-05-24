@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
 import SpreadsheetCard from '@/components/spreadsheets/SpreadsheetCard';
-import { spreadsheet, Plus, FileText } from 'lucide-react';
+import { Table, Plus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spreadsheet } from '@/types/spreadsheets';
 
@@ -73,7 +73,7 @@ const Spreadsheets = () => {
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex items-center mb-4">
-            <spreadsheet className="h-8 w-8 text-odoo-primary mr-3" />
+            <Table className="h-8 w-8 text-odoo-primary mr-3" />
             <h1 className="text-2xl font-bold text-odoo-dark">Spreadsheets</h1>
           </div>
           <p className="text-odoo-gray">Create collaborative spreadsheets integrated with your business data for analysis and reporting.</p>
@@ -115,7 +115,7 @@ const Spreadsheets = () => {
           <h2 className="text-xl font-semibold text-odoo-dark mb-4">My Spreadsheets</h2>
           {spreadsheets.length === 0 ? (
             <div className="border rounded-lg p-8 text-center">
-              <spreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <Table className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-odoo-gray">No spreadsheets available. Create your first spreadsheet to get started.</p>
             </div>
           ) : (
