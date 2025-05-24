@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
@@ -6,7 +5,8 @@ import LeadsList from '@/components/crm/LeadsList';
 import ActivitiesList from '@/components/crm/ActivitiesList';
 import OpportunitiesList from '@/components/crm/OpportunitiesList';
 import ContactsList from '@/components/crm/ContactsList';
-import PipelineView from '@/components/crm/PipelineView';
+import DragDropPipelineView from '@/components/crm/DragDropPipelineView';
+import ReportsView from '@/components/crm/ReportsView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -193,7 +193,7 @@ const CRM = () => {
             </div>
             
             <TabsContent value="pipeline" className="mt-0">
-              <PipelineView />
+              <DragDropPipelineView />
             </TabsContent>
             
             <TabsContent value="leads" className="mt-0">
@@ -213,11 +213,7 @@ const CRM = () => {
             </TabsContent>
             
             <TabsContent value="reports" className="mt-0">
-              <div className="p-8 text-center">
-                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Reports & Analytics</h3>
-                <p className="text-gray-500">Advanced reporting features coming soon</p>
-              </div>
+              <ReportsView />
             </TabsContent>
           </Tabs>
         </Card>
