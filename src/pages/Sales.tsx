@@ -5,15 +5,30 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Plus } from 'lucide-react';
-import { SalesOrder, SalesOrderStatus } from '@/types/sales'; // Import new types
-import { getStoredSalesOrders, storeSalesOrders } from '@/lib/localStorageUtils'; // Import LS utils
+import { Search, Plus, Trash2 } from 'lucide-react';
+import { SalesOrder, SalesOrderStatus } from '@/types/sales';
+import { getStoredSalesOrders, storeSalesOrders } from '@/lib/localStorageUtils';
+import CreateSalesOrderForm from '@/components/sales/CreateSalesOrderForm';
+import { toast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Sales = () => {
   const navigate = useNavigate();
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(getStoredSalesOrders()); // Load from LS
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(getStoredSalesOrders());
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [filterStatus, setFilterStatus] = useState<string>('all'); // string 'all' or SalesOrderStatus
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showCreateOrderForm, setShowCreateOrderForm] = useState<boolean>(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState<boolean>(false);
 
   // Check authentication
   useEffect(() => {
@@ -23,16 +38,52 @@ const Sales = () => {
     }
   }, [navigate]);
 
-  // Example: if you add a way to update orders, you'd call this
-  // const handleUpdateOrder = (updatedOrder: SalesOrder) => {
-  //   const newOrders = salesOrders.map(order => order.id === updatedOrder.id ? updatedOrder : order);
-  //   setSalesOrders(newOrders);
-  //   storeSalesOrders(newOrders);
-  // };
+  const handleCreateOrder = (newOrder: SalesOrder) => {
+    const updatedOrders = [newOrder, ...salesOrders];
+    setSalesOrders(updatedOrders);
+    storeSalesOrders(updatedOrders);
+    setShowCreateOrderForm(false);
+  };
 
-  const filteredOrders = filterStatus === 'all' 
+  const handleDeleteSelectedOrders = () => {
+    if (selectedItems.length === 0) {
+      toast({
+        title: "No orders selected",
+        description: "Please select orders to delete.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDelete = () => {
+    const newOrders = salesOrders.filter(order => !selectedItems.includes(order.id));
+    setSalesOrders(newOrders);
+    storeSalesOrders(newOrders);
+    toast({
+      title: "Orders Deleted",
+      description: `${selectedItems.length} order(s) have been successfully deleted.`,
+    });
+    setSelectedItems([]);
+    setShowDeleteConfirmDialog(false);
+  };
+
+  const ordersAfterStatusFilter = filterStatus === 'all' 
     ? salesOrders 
     : salesOrders.filter(order => order.status.toLowerCase() === filterStatus.toLowerCase());
+
+  const filteredOrders = searchTerm
+    ? ordersAfterStatusFilter.filter(order => {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return (
+          order.id.toLowerCase().includes(lowerSearchTerm) ||
+          order.customer.toLowerCase().includes(lowerSearchTerm) ||
+          order.salesperson.toLowerCase().includes(lowerSearchTerm) ||
+          order.total.toString().includes(lowerSearchTerm)
+        );
+      })
+    : ordersAfterStatusFilter;
 
   const toggleSelectAll = () => {
     if (selectedItems.length === filteredOrders.length && filteredOrders.length > 0) {
@@ -68,7 +119,7 @@ const Sales = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -76,14 +127,12 @@ const Sales = () => {
     }).format(amount);
   };
 
-  // Calculate dynamic dashboard stats
   const quotationCount = salesOrders.filter(o => o.status === 'Quotation').length;
   const confirmedOrdersCount = salesOrders.filter(o => o.status === 'Order Confirmed').length;
-  const toInvoiceCount = salesOrders.filter(o => o.status === 'Delivery' || o.status === 'Order Confirmed').length; // Example logic
+  const toInvoiceCount = salesOrders.filter(o => o.status === 'Delivery' || o.status === 'Order Confirmed').length;
   const totalRevenue = salesOrders
     .filter(o => o.status === 'Invoiced' || o.status === 'Done')
     .reduce((sum, o) => sum + o.total, 0);
-
 
   const dashboardMetrics = [
     { name: 'Quotations', count: quotationCount.toString(), color: 'bg-blue-500' },
@@ -91,7 +140,6 @@ const Sales = () => {
     { name: 'To Invoice', count: toInvoiceCount.toString(), color: 'bg-green-500' },
     { name: 'Revenue', count: formatCurrency(totalRevenue), color: 'bg-purple-500' },
   ];
-
 
   return (
     <TopbarDashboardLayout currentApp="Sales">
@@ -113,15 +161,21 @@ const Sales = () => {
         
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center">
-              <Button variant="outline" className="mr-2">
+            <div className="flex items-center flex-wrap gap-2">
+              <Button variant="outline" className="mr-2" onClick={() => setShowCreateOrderForm(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 Create
               </Button>
-              <Button variant="outline" className="mr-2" disabled={selectedItems.length === 0}>
-                Mass Action
+              <Button 
+                variant="outline" 
+                className="mr-2" 
+                onClick={handleDeleteSelectedOrders}
+                disabled={selectedItems.length === 0}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete Selected
               </Button>
-              <div className="relative ml-2">
+              <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-gray-400" />
                 </div>
@@ -129,6 +183,8 @@ const Sales = () => {
                   type="search"
                   placeholder="Search orders..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-odoo-primary focus:border-odoo-primary w-full sm:w-auto"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
@@ -170,9 +226,10 @@ const Sales = () => {
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox 
-                      checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0} 
+                      checked={filteredOrders.length > 0 && selectedItems.length === filteredOrders.length} 
                       onCheckedChange={toggleSelectAll} 
                       aria-label="Select all orders"
+                      disabled={filteredOrders.length === 0}
                     />
                   </TableHead>
                   <TableHead>Order Number</TableHead>
@@ -198,7 +255,7 @@ const Sales = () => {
                       <TableCell>{order.customer}</TableCell>
                       <TableCell>{order.date}</TableCell>
                       <TableCell>{order.salesperson}</TableCell>
-                      <TableCell>{formatCurrency(order.total)}</TableCell> {/* Format currency */}
+                      <TableCell>{formatCurrency(order.total)}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(order.status)} variant="outline">
                           {order.status}
@@ -209,7 +266,7 @@ const Sales = () => {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      No orders found matching your filters. Try adjusting your search criteria.
+                      No orders found. {searchTerm ? "Try adjusting your search criteria." : "Create a new sales order to get started."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -232,6 +289,27 @@ const Sales = () => {
           </div>
         </div>
       </div>
+      <CreateSalesOrderForm 
+        isOpen={showCreateOrderForm}
+        onClose={() => setShowCreateOrderForm(false)}
+        onOrderCreate={handleCreateOrder}
+      />
+      <AlertDialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete {selectedItems.length} selected order(s).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TopbarDashboardLayout>
   );
 };
