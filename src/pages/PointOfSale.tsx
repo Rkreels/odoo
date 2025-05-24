@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
@@ -6,32 +5,11 @@ import SessionCard from '@/components/pos/SessionCard';
 import { Store, Plus, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { POSSession } from '@/types/pointofsale';
+import { getStoredPOSSessions, storePOSSessions } from '@/lib/localStorageUtils'; // Import LS utils
 
 const PointOfSale = () => {
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState<POSSession[]>([
-    {
-      id: '1',
-      name: 'Main Counter Session',
-      startTime: '2024-01-15T08:00:00Z',
-      status: 'open',
-      cashRegister: 'Register 001',
-      startingCash: 200,
-      totalSales: 1250.50,
-      transactions: 23
-    },
-    {
-      id: '2',
-      name: 'Express Lane Session',
-      startTime: '2024-01-15T09:30:00Z',
-      endTime: '2024-01-15T17:30:00Z',
-      status: 'closed',
-      cashRegister: 'Register 002',
-      startingCash: 150,
-      totalSales: 850.25,
-      transactions: 18
-    }
-  ]);
+  const [sessions, setSessions] = useState<POSSession[]>(getStoredPOSSessions()); // Load from LS
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
@@ -41,27 +19,37 @@ const PointOfSale = () => {
   }, [navigate]);
 
   const handleUpdateSession = (updatedSession: POSSession) => {
-    setSessions(prev => prev.map(session => 
+    const newSessions = sessions.map(session => 
       session.id === updatedSession.id ? updatedSession : session
-    ));
+    );
+    setSessions(newSessions);
+    storePOSSessions(newSessions); // Save to LS
   };
 
   const handleCreateSession = () => {
     const newSession: POSSession = {
       id: Date.now().toString(),
-      name: `Session ${Date.now()}`,
+      name: `Session ${Date.now().toString().slice(-4)}`, // Shorter name
       startTime: new Date().toISOString(),
       status: 'open',
-      cashRegister: `Register ${sessions.length + 1}`,
-      startingCash: 200,
+      cashRegister: `Register ${String(sessions.length + 1).padStart(3, '0')}`,
+      startingCash: 200, // Default, could be a form input later
       totalSales: 0,
       transactions: 0
     };
-    setSessions(prev => [newSession, ...prev]);
+    const newSessions = [newSession, ...sessions];
+    setSessions(newSessions);
+    storePOSSessions(newSessions); // Save to LS
   };
 
   const activeSessions = sessions.filter(s => s.status === 'open');
-  const totalSalestoday = sessions.reduce((sum, s) => sum + s.totalSales, 0);
+  const totalSalestoday = sessions
+    .filter(s => new Date(s.startTime).toDateString() === new Date().toDateString()) // Filter for today's sales
+    .reduce((sum, s) => sum + s.totalSales, 0);
+  
+  const totalTransactionsToday = sessions
+    .filter(s => new Date(s.startTime).toDateString() === new Date().toDateString()) // Filter for today's transactions
+    .reduce((sum, s) => sum + s.transactions, 0);
 
   return (
     <TopbarDashboardLayout currentApp="Point of Sale">
@@ -82,11 +70,11 @@ const PointOfSale = () => {
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="font-semibold text-green-800">Today's Sales</h3>
-              <p className="text-2xl font-bold text-green-900">${totalSalestoday.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-green-900">${totalSalestoday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-purple-800">Total Transactions</h3>
-              <p className="text-2xl font-bold text-purple-900">{sessions.reduce((sum, s) => sum + s.transactions, 0)}</p>
+              <h3 className="font-semibold text-purple-800">Today's Transactions</h3>
+              <p className="text-2xl font-bold text-purple-900">{totalTransactionsToday}</p>
             </div>
           </div>
 

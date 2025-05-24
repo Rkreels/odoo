@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
@@ -7,11 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Plus } from 'lucide-react';
+import { SalesOrder, SalesOrderStatus } from '@/types/sales'; // Import new types
+import { getStoredSalesOrders, storeSalesOrders } from '@/lib/localStorageUtils'; // Import LS utils
 
 const Sales = () => {
   const navigate = useNavigate();
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(getStoredSalesOrders()); // Load from LS
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all'); // string 'all' or SalesOrderStatus
 
   // Check authentication
   useEffect(() => {
@@ -21,55 +23,19 @@ const Sales = () => {
     }
   }, [navigate]);
 
-  const salesOrders = [
-    {
-      id: 'SO001',
-      customer: 'Acme Corporation',
-      date: '2025-05-01',
-      salesperson: 'Jane Doe',
-      total: '$5,000.00',
-      status: 'Quotation',
-    },
-    {
-      id: 'SO002',
-      customer: 'XYZ Industries',
-      date: '2025-05-02',
-      salesperson: 'Mike Wilson',
-      total: '$12,000.00',
-      status: 'Order Confirmed',
-    },
-    {
-      id: 'SO003',
-      customer: 'Globex Corporation',
-      date: '2025-04-28',
-      salesperson: 'Jane Doe',
-      total: '$8,750.00',
-      status: 'Delivery',
-    },
-    {
-      id: 'SO004',
-      customer: 'Tech Innovators',
-      date: '2025-04-25',
-      salesperson: 'Mike Wilson',
-      total: '$15,000.00',
-      status: 'Invoiced',
-    },
-    {
-      id: 'SO005',
-      customer: 'Summit Enterprises',
-      date: '2025-04-20',
-      salesperson: 'Jane Doe',
-      total: '$3,200.00',
-      status: 'Done',
-    },
-  ];
+  // Example: if you add a way to update orders, you'd call this
+  // const handleUpdateOrder = (updatedOrder: SalesOrder) => {
+  //   const newOrders = salesOrders.map(order => order.id === updatedOrder.id ? updatedOrder : order);
+  //   setSalesOrders(newOrders);
+  //   storeSalesOrders(newOrders);
+  // };
 
   const filteredOrders = filterStatus === 'all' 
     ? salesOrders 
     : salesOrders.filter(order => order.status.toLowerCase() === filterStatus.toLowerCase());
 
   const toggleSelectAll = () => {
-    if (selectedItems.length === filteredOrders.length) {
+    if (selectedItems.length === filteredOrders.length && filteredOrders.length > 0) {
       setSelectedItems([]);
     } else {
       setSelectedItems(filteredOrders.map(order => order.id));
@@ -84,7 +50,7 @@ const Sales = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: SalesOrderStatus) => {
     switch (status) {
       case 'Quotation':
         return 'bg-blue-100 text-blue-800';
@@ -95,11 +61,37 @@ const Sales = () => {
       case 'Invoiced':
         return 'bg-green-100 text-green-800';
       case 'Done':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-200 text-gray-800'; // Adjusted for better visibility
+      case 'Cancelled':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  // Calculate dynamic dashboard stats
+  const quotationCount = salesOrders.filter(o => o.status === 'Quotation').length;
+  const confirmedOrdersCount = salesOrders.filter(o => o.status === 'Order Confirmed').length;
+  const toInvoiceCount = salesOrders.filter(o => o.status === 'Delivery' || o.status === 'Order Confirmed').length; // Example logic
+  const totalRevenue = salesOrders
+    .filter(o => o.status === 'Invoiced' || o.status === 'Done')
+    .reduce((sum, o) => sum + o.total, 0);
+
+
+  const dashboardMetrics = [
+    { name: 'Quotations', count: quotationCount.toString(), color: 'bg-blue-500' },
+    { name: 'Orders', count: confirmedOrdersCount.toString(), color: 'bg-yellow-500' },
+    { name: 'To Invoice', count: toInvoiceCount.toString(), color: 'bg-green-500' },
+    { name: 'Revenue', count: formatCurrency(totalRevenue), color: 'bg-purple-500' },
+  ];
+
 
   return (
     <TopbarDashboardLayout currentApp="Sales">
@@ -107,12 +99,7 @@ const Sales = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <h2 className="text-xl font-bold text-odoo-dark mb-4">Sales Overview</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { name: 'Quotations', count: 12, color: 'bg-blue-500' },
-              { name: 'Orders', count: 8, color: 'bg-yellow-500' },
-              { name: 'To Invoice', count: 5, color: 'bg-green-500' },
-              { name: 'Revenue', count: '$45,950', color: 'bg-purple-500' },
-            ].map((metric) => (
+            {dashboardMetrics.map((metric) => (
               <div key={metric.name} className="p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full ${metric.color} mr-2`}></div>
@@ -153,11 +140,12 @@ const Sales = () => {
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
                 <option value="all">All Statuses</option>
-                <option value="quotation">Quotation</option>
-                <option value="order confirmed">Order Confirmed</option>
-                <option value="delivery">Delivery</option>
-                <option value="invoiced">Invoiced</option>
-                <option value="done">Done</option>
+                <option value="Quotation">Quotation</option>
+                <option value="Order Confirmed">Order Confirmed</option>
+                <option value="Delivery">Delivery</option>
+                <option value="Invoiced">Invoiced</option>
+                <option value="Done">Done</option>
+                <option value="Cancelled">Cancelled</option>
               </select>
               
               <Button variant="outline" size="sm">
@@ -210,7 +198,7 @@ const Sales = () => {
                       <TableCell>{order.customer}</TableCell>
                       <TableCell>{order.date}</TableCell>
                       <TableCell>{order.salesperson}</TableCell>
-                      <TableCell>{order.total}</TableCell>
+                      <TableCell>{formatCurrency(order.total)}</TableCell> {/* Format currency */}
                       <TableCell>
                         <Badge className={getStatusColor(order.status)} variant="outline">
                           {order.status}
