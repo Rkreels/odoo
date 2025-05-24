@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,62 +9,9 @@ import CreateOpportunityForm from './CreateOpportunityForm';
 import EditOpportunityForm from './EditOpportunityForm';
 import ViewOpportunityDialog from './ViewOpportunityDialog';
 import ConfigurePipelineDialog from './ConfigurePipelineDialog';
+import { getStoredOpportunities, storeOpportunities, generateId } from '@/lib/localStorageUtils';
 
-const initialOpportunities: Opportunity[] = [
-  {
-    id: '1',
-    name: 'Website Redesign Project',
-    customer: 'Acme Corporation',
-    expectedRevenue: 25000,
-    probability: 75,
-    stage: 'Proposition',
-    expectedClosing: '2024-02-15',
-    assignedTo: 'Jane Doe',
-    createdAt: '2024-01-10',
-    lastActivity: '2 days ago',
-    tags: ['Website', 'Design'],
-  },
-  {
-    id: '2',
-    name: 'Enterprise Software License',
-    customer: 'XYZ Industries',
-    expectedRevenue: 50000,
-    probability: 60,
-    stage: 'Qualified',
-    expectedClosing: '2024-03-01',
-    assignedTo: 'Mike Wilson',
-    createdAt: '2024-01-15',
-    lastActivity: '1 day ago',
-    tags: ['Software', 'Enterprise'],
-  },
-  {
-    id: '3',
-    name: 'Digital Marketing Campaign',
-    customer: 'Tech Innovators',
-    expectedRevenue: 15000,
-    probability: 90,
-    stage: 'Won',
-    expectedClosing: '2024-01-30',
-    assignedTo: 'Sarah Johnson',
-    createdAt: '2024-01-05',
-    lastActivity: '1 week ago',
-    tags: ['Marketing', 'Digital'],
-  },
-  {
-    id: '4',
-    name: 'Mobile App Development',
-    customer: 'StartupXYZ',
-    expectedRevenue: 35000,
-    probability: 40,
-    stage: 'New',
-    expectedClosing: '2024-04-01',
-    assignedTo: 'Jane Doe',
-    createdAt: '2024-01-22',
-    lastActivity: '3 hours ago',
-    tags: ['Mobile', 'Development'],
-  },
-];
-
+// pipelineStages can be made dynamic later from ConfigurePipelineDialog
 const pipelineStages = [
   { id: 'new', name: 'New', color: 'bg-blue-500' },
   { id: 'qualified', name: 'Qualified', color: 'bg-purple-500' },
@@ -74,13 +21,24 @@ const pipelineStages = [
 ];
 
 const DragDropPipelineView = () => {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isConfigureModalOpen, setIsConfigureModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+
+  useEffect(() => {
+    setOpportunities(getStoredOpportunities());
+  }, []);
+
+  useEffect(() => {
+    // Persist to local storage whenever opportunities change, but only if it's not the initial empty array
+    if (opportunities.length > 0 || localStorage.getItem('crmOpportunities')) {
+       storeOpportunities(opportunities);
+    }
+  }, [opportunities]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -91,7 +49,7 @@ const DragDropPipelineView = () => {
   };
 
   const getOpportunitiesByStage = (stage: string) => {
-    return opportunities.filter(opp => opp.stage.toLowerCase() === stage);
+    return opportunities.filter(opp => opp.stage.toLowerCase() === stage.toLowerCase());
   };
 
   const getStageTotal = (stage: string) => {
@@ -108,25 +66,34 @@ const DragDropPipelineView = () => {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent, newStage: string) => {
+  const handleDrop = (e: React.DragEvent, newStageName: string) => {
     e.preventDefault();
     if (!draggedItem) return;
 
+    const targetStage = pipelineStages.find(s => s.id === newStageName);
+    if (!targetStage) return;
+
     setOpportunities(prev => prev.map(opp => 
       opp.id === draggedItem 
-        ? { ...opp, stage: newStage.charAt(0).toUpperCase() + newStage.slice(1) as OpportunityStage }
+        ? { ...opp, stage: targetStage.name as OpportunityStage }
         : opp
     ));
     setDraggedItem(null);
   };
 
-  const handleOpportunityCreate = (newOpportunity: Opportunity) => {
+  const handleOpportunityCreate = (newOpportunityData: Omit<Opportunity, 'id' | 'createdAt' | 'lastActivity'>) => {
+    const newOpportunity: Opportunity = {
+      ...newOpportunityData,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+      lastActivity: new Date().toLocaleDateString(),
+    };
     setOpportunities(prev => [newOpportunity, ...prev]);
   };
 
   const handleOpportunityUpdate = (updatedOpportunity: Opportunity) => {
     setOpportunities(prev => prev.map(opp => 
-      opp.id === updatedOpportunity.id ? updatedOpportunity : opp
+      opp.id === updatedOpportunity.id ? { ...updatedOpportunity, lastActivity: new Date().toLocaleDateString() } : opp
     ));
   };
 
@@ -143,6 +110,8 @@ const DragDropPipelineView = () => {
     setSelectedOpportunity(opportunity);
     setIsEditModalOpen(true);
   };
+  
+  const totalRevenue = opportunities.reduce((sum, opp) => opp.stage.toLowerCase() !== 'lost' ? sum + opp.expectedRevenue : sum, 0);
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
@@ -151,7 +120,7 @@ const DragDropPipelineView = () => {
           <div className="flex items-center space-x-4">
             <h2 className="text-lg font-semibold text-odoo-dark">Pipeline</h2>
             <div className="text-sm text-gray-600">
-              Total Revenue: {formatCurrency(opportunities.reduce((sum, opp) => sum + opp.expectedRevenue, 0))}
+              Total Expected Revenue: {formatCurrency(totalRevenue)}
             </div>
           </div>
           
@@ -168,8 +137,8 @@ const DragDropPipelineView = () => {
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="p-4 overflow-x-auto">
+        <div className="flex space-x-4 min-w-max">
           {pipelineStages.map((stage) => {
             const stageOpportunities = getOpportunitiesByStage(stage.id);
             const stageTotal = getStageTotal(stage.id);
@@ -177,7 +146,7 @@ const DragDropPipelineView = () => {
             return (
               <div 
                 key={stage.id} 
-                className="min-h-[600px]"
+                className="bg-gray-50 p-3 rounded-lg w-72 flex-shrink-0" // Adjusted width and added flex-shrink-0
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, stage.id)}
               >
@@ -190,83 +159,81 @@ const DragDropPipelineView = () => {
                         {stageOpportunities.length}
                       </Badge>
                     </div>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="text-gray-500 hover:text-odoo-dark">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 font-semibold">
                     {formatCurrency(stageTotal)}
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
                   {stageOpportunities.map((opportunity) => (
                     <Card 
                       key={opportunity.id} 
-                      className="cursor-move hover:shadow-md transition-shadow"
+                      className="cursor-grab hover:shadow-lg transition-shadow bg-white"
                       draggable
                       onDragStart={(e) => handleDragStart(e, opportunity.id)}
+                      onClick={() => handleView(opportunity)} // Open view dialog on click
                     >
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-sm font-medium leading-tight">
+                      <CardHeader className="p-3 pb-2">
+                        <div className="flex items-start justify-between">
+                          <CardTitle className="text-sm font-semibold leading-tight text-odoo-link hover:underline">
                             {opportunity.name}
                           </CardTitle>
-                          <div className="flex items-center space-x-1">
-                            <Button variant="ghost" size="sm" onClick={() => handleView(opportunity)}>
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(opportunity)}>
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleOpportunityDelete(opportunity.id)}>
-                              <Trash className="h-3 w-3" />
-                            </Button>
-                          </div>
+                           {/* Actions moved to a dropdown or a context menu if too cluttered */}
                         </div>
                       </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="space-y-2">
-                          <div className="text-sm text-gray-600">
+                      <CardContent className="p-3 pt-0">
+                        <div className="space-y-1.5">
+                          <div className="text-xs text-gray-700 font-medium">
                             {opportunity.customer}
                           </div>
                           
                           <div className="flex justify-between items-center">
-                            <span className="font-medium text-odoo-primary">
+                            <span className="font-bold text-sm text-odoo-primary">
                               {formatCurrency(opportunity.expectedRevenue)}
                             </span>
-                            <span className="text-sm text-gray-500">
+                            <Badge variant="outline" className="text-xs py-0.5 px-1.5">
                               {opportunity.probability}%
-                            </span>
+                            </Badge>
                           </div>
                           
                           <div className="text-xs text-gray-500">
-                            {new Date(opportunity.expectedClosing).toLocaleDateString()}
+                            Closing: {new Date(opportunity.expectedClosing).toLocaleDateString()}
                           </div>
                           
                           {opportunity.tags && opportunity.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 mt-1">
                               {opportunity.tags.slice(0, 2).map(tag => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
+                                <Badge key={tag} variant="secondary" className="text-xs py-0.5 px-1.5">
                                   {tag}
                                 </Badge>
                               ))}
                               {opportunity.tags.length > 2 && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-xs py-0.5 px-1.5">
                                   +{opportunity.tags.length - 2}
                                 </Badge>
                               )}
                             </div>
                           )}
                           
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs text-gray-500">
-                              {opportunity.assignedTo}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {opportunity.lastActivity}
-                            </div>
+                          <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
+                            <span>{opportunity.assignedTo}</span>
+                            <span>{opportunity.lastActivity}</span>
                           </div>
+                           <div className="flex items-center space-x-1 justify-end mt-2">
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); handleView(opportunity); }}>
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); handleEdit(opportunity); }}>
+                                <Edit className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); handleOpportunityDelete(opportunity.id); }}>
+                                <Trash className="h-3.5 w-3.5 text-red-500" />
+                              </Button>
+                            </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -274,8 +241,11 @@ const DragDropPipelineView = () => {
                   
                   <Button 
                     variant="ghost" 
-                    className="w-full border-2 border-dashed border-gray-300 hover:border-odoo-primary hover:bg-odoo-primary/5"
-                    onClick={() => setIsCreateModalOpen(true)}
+                    className="w-full border-2 border-dashed border-gray-300 hover:border-odoo-primary hover:bg-odoo-primary/5 text-odoo-dark hover:text-odoo-primary mt-2"
+                    onClick={() => {
+                      setSelectedOpportunity(null); // Ensure no selected opp for create
+                      setIsCreateModalOpen(true);
+                    }}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Opportunity
@@ -297,14 +267,14 @@ const DragDropPipelineView = () => {
         <>
           <EditOpportunityForm 
             isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
+            onClose={() => { setIsEditModalOpen(false); setSelectedOpportunity(null);}}
             opportunity={selectedOpportunity}
             onOpportunityUpdate={handleOpportunityUpdate}
           />
 
           <ViewOpportunityDialog 
             isOpen={isViewModalOpen}
-            onClose={() => setIsViewModalOpen(false)}
+            onClose={() => { setIsViewModalOpen(false); setSelectedOpportunity(null);}}
             opportunity={selectedOpportunity}
           />
         </>

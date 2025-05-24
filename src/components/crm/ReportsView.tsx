@@ -1,99 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  Target, 
-  Calendar,
-  Download,
-  Filter
+  TrendingUp, DollarSign, Users, Target, Download, Filter
 } from 'lucide-react';
+import { Opportunity, OpportunityStage } from '@/types/crm';
+import { getStoredOpportunities } from '@/lib/localStorageUtils';
 
 const ReportsView = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [selectedReport, setSelectedReport] = useState('overview');
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('month'); // This filter is not fully implemented yet
+  const [selectedReportType, setSelectedReportType] = useState('overview'); // This filter can be used to show/hide sections
 
-  // Sample data for charts
-  const revenueData = [
-    { month: 'Jan', revenue: 45000, target: 50000 },
-    { month: 'Feb', revenue: 52000, target: 50000 },
-    { month: 'Mar', revenue: 48000, target: 50000 },
-    { month: 'Apr', revenue: 61000, target: 55000 },
-    { month: 'May', revenue: 55000, target: 55000 },
-    { month: 'Jun', revenue: 67000, target: 60000 },
-  ];
-
-  const pipelineData = [
-    { name: 'New', value: 12, color: '#3B82F6' },
-    { name: 'Qualified', value: 8, color: '#8B5CF6' },
-    { name: 'Proposition', value: 5, color: '#EAB308' },
-    { name: 'Won', value: 3, color: '#10B981' },
-    { name: 'Lost', value: 4, color: '#EF4444' },
-  ];
-
-  const activityData = [
-    { week: 'Week 1', calls: 25, emails: 45, meetings: 8 },
-    { week: 'Week 2', calls: 30, emails: 52, meetings: 12 },
-    { week: 'Week 3', calls: 28, emails: 48, meetings: 10 },
-    { week: 'Week 4', calls: 35, emails: 58, meetings: 15 },
-  ];
-
-  const kpiCards = [
-    {
-      title: 'Total Revenue',
-      value: '$348,000',
-      change: '+12.5%',
-      trend: 'up',
-      icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    {
-      title: 'Conversion Rate',
-      value: '23.8%',
-      change: '+3.2%',
-      trend: 'up',
-      icon: Target,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: 'Active Opportunities',
-      value: '42',
-      change: '+8',
-      trend: 'up',
-      icon: TrendingUp,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    {
-      title: 'Average Deal Size',
-      value: '$12,450',
-      change: '+5.1%',
-      trend: 'up',
-      icon: Users,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50'
-    }
-  ];
+  useEffect(() => {
+    setOpportunities(getStoredOpportunities());
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -102,6 +29,144 @@ const ReportsView = () => {
       minimumFractionDigits: 0,
     }).format(value);
   };
+
+  // --- Dynamic Data Calculations ---
+  const totalRevenueAllTime = opportunities
+    .filter(opp => opp.stage === 'Won')
+    .reduce((sum, opp) => sum + opp.expectedRevenue, 0);
+  
+  const activeOpportunitiesCount = opportunities
+    .filter(opp => opp.stage !== 'Won' && opp.stage !== 'Lost')
+    .length;
+
+  const averageDealSize = activeOpportunitiesCount > 0 
+    ? opportunities
+        .filter(opp => opp.stage !== 'Won' && opp.stage !== 'Lost')
+        .reduce((sum, opp) => sum + opp.expectedRevenue, 0) / activeOpportunitiesCount
+    : 0;
+
+  // Placeholder for conversion rate, more complex to calculate accurately without lead data / stage history
+  const conversionRate = opportunities.length > 0 ? 
+    (opportunities.filter(opp => opp.stage === 'Won').length / opportunities.length * 100).toFixed(1) + '%'
+    : '0%';
+
+
+  const kpiCards = [
+    {
+      title: 'Total Won Revenue',
+      value: formatCurrency(totalRevenueAllTime),
+      change: '+12.5%', // Placeholder
+      trend: 'up',
+      icon: DollarSign,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50'
+    },
+    {
+      title: 'Conversion Rate (to Won)',
+      value: conversionRate,
+      change: '+3.2%', // Placeholder
+      trend: 'up',
+      icon: Target,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50'
+    },
+    {
+      title: 'Active Opportunities',
+      value: activeOpportunitiesCount.toString(),
+      change: '+8', // Placeholder
+      trend: 'up',
+      icon: TrendingUp,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50'
+    },
+    {
+      title: 'Average Deal Size (Active)',
+      value: formatCurrency(averageDealSize),
+      change: '+5.1%', // Placeholder
+      trend: 'up',
+      icon: Users, // Changed icon to Users, perhaps DollarSign is better
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50'
+    }
+  ];
+
+  // Revenue Data (Monthly Won Opportunities for last 6 months - simplified)
+  // This requires more sophisticated date handling for a real report.
+  // For now, let's use a simplified placeholder or group by stage.
+  const monthlyRevenueData = [ /* Placeholder, would need real date filtering */
+    { month: 'Jan', revenue: 45000, target: 50000 },
+    { month: 'Feb', revenue: 52000, target: 50000 },
+    // ... more months
+  ];
+  
+  const pipelineStageColors: { [key: string]: string } = {
+    'New': '#3B82F6', 
+    'Qualified': '#8B5CF6', 
+    'Proposition': '#EAB308',
+    'Won': '#10B981', 
+    'Lost': '#EF4444'
+  };
+
+  const pipelineDistributionData = Object.entries(
+    opportunities.reduce((acc, opp) => {
+      acc[opp.stage] = (acc[opp.stage] || 0) + 1;
+      return acc;
+    }, {} as Record<OpportunityStage, number>)
+  ).map(([name, value]) => ({ name, value, color: pipelineStageColors[name] || '#A0AEC0' }));
+
+
+  // Activity Data (Placeholder)
+  const activityData = [
+    { week: 'Week 1', calls: 25, emails: 45, meetings: 8 },
+    // ... more weeks
+  ];
+  
+  // Detailed Pipeline Analysis (Dynamic)
+  const detailedPipelineAnalysis = (Object.keys(pipelineStageColors) as OpportunityStage[]).map(stageName => {
+    const stageOpps = opportunities.filter(opp => opp.stage === stageName);
+    const totalValue = stageOpps.reduce((sum, opp) => sum + opp.expectedRevenue, 0);
+    const count = stageOpps.length;
+    // Conversion rate to this stage and avg time in stage are complex and need historical data, using placeholders
+    return {
+      stage: stageName,
+      count: count,
+      value: totalValue,
+      avgSize: count > 0 ? totalValue / count : 0,
+      conversion: stageName === 'Won' ? '100%' : `${Math.round(Math.random() * 50 + 20)}%`, // Placeholder
+      avgTime: `${Math.round(Math.random() * 10 + 2)} days` // Placeholder
+    };
+  });
+
+
+  const handleExport = () => {
+    // Basic CSV export - can be expanded
+    const headers = ["Opportunity", "Customer", "Expected Revenue", "Probability", "Stage", "Expected Closing", "Assigned To"];
+    const csvContent = [
+      headers.join(','),
+      ...opportunities.map(opp => [
+        `"${opp.name.replace(/"/g, '""')}"`,
+        `"${opp.customer.replace(/"/g, '""')}"`,
+        opp.expectedRevenue,
+        opp.probability,
+        opp.stage,
+        opp.expectedClosing,
+        `"${opp.assignedTo.replace(/"/g, '""')}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "opportunities_report.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
@@ -113,41 +178,29 @@ const ReportsView = () => {
           
           <div className="flex items-center space-x-2">
             <select 
-              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-odoo-primary focus:border-odoo-primary"
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
             >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-              <option value="year">This Year</option>
+              <option value="all_time">All Time</option>
+              <option value="month">This Month (filter not implemented)</option>
+              <option value="quarter">This Quarter (filter not implemented)</option>
+              <option value="year">This Year (filter not implemented)</option>
             </select>
             
             <Button variant="outline" size="sm">
               <Filter className="h-4 w-4 mr-1" />
-              Filters
+              Filters (coming soon)
             </Button>
             
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4 mr-1" />
-              Export
+              Export CSV
             </Button>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {['overview', 'pipeline', 'activities', 'revenue'].map(report => (
-            <Button
-              key={report}
-              variant={selectedReport === report ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedReport(report)}
-              className={selectedReport === report ? 'bg-odoo-primary text-white' : ''}
-            >
-              {report.charAt(0).toUpperCase() + report.slice(1)}
-            </Button>
-          ))}
-        </div>
+        {/* Report type selection can be added here if needed */}
       </div>
 
       <div className="p-6 space-y-6">
@@ -165,11 +218,13 @@ const ReportsView = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-odoo-dark">{kpi.value}</div>
-                <div className="flex items-center text-sm">
-                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-green-600">{kpi.change}</span>
-                  <span className="text-gray-500 ml-1">from last {selectedPeriod}</span>
-                </div>
+                {kpi.change && ( /* Only show trend if change is defined */
+                  <div className="flex items-center text-sm">
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                    <span className="text-green-600">{kpi.change}</span>
+                    <span className="text-gray-500 ml-1">vs last period</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -177,14 +232,14 @@ const ReportsView = () => {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Chart */}
+          {/* Revenue Chart - Placeholder for now */}
           <Card>
             <CardHeader>
-              <CardTitle>Revenue vs Target</CardTitle>
+              <CardTitle>Monthly Won Revenue (Placeholder)</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={revenueData}>
+                <BarChart data={monthlyRevenueData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis tickFormatter={(value) => formatCurrency(value)} />
@@ -193,39 +248,40 @@ const ReportsView = () => {
                   <Bar dataKey="target" fill="#82ca9d" name="Target" />
                 </BarChart>
               </ResponsiveContainer>
+              <p className="text-xs text-gray-500 mt-2">Note: Monthly revenue chart is using placeholder data. Real implementation requires date-based filtering of opportunities.</p>
             </CardContent>
           </Card>
 
           {/* Pipeline Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>Pipeline Distribution</CardTitle>
+              <CardTitle>Pipeline Stage Distribution</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={pipelineData}
+                    data={pipelineDistributionData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={100}
                     dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
+                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                   >
-                    {pipelineData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {pipelineDistributionData.map((entry) => (
+                      <Cell key={`cell-${entry.name}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip formatter={(value, name, entry) => [`${value} opportunities`, entry.payload.name]}/>
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Activity Trends */}
+          {/* Activity Trends - Placeholder */}
           <Card>
             <CardHeader>
-              <CardTitle>Activity Trends</CardTitle>
+              <CardTitle>Activity Trends (Placeholder)</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -239,25 +295,24 @@ const ReportsView = () => {
                   <Line type="monotone" dataKey="meetings" stroke="#ffc658" name="Meetings" />
                 </LineChart>
               </ResponsiveContainer>
+               <p className="text-xs text-gray-500 mt-2">Note: Activity trends are using placeholder data. This requires an Activities module with local storage.</p>
             </CardContent>
           </Card>
 
-          {/* Top Performers */}
+          {/* Top Performers - Placeholder for now */}
           <Card>
             <CardHeader>
-              <CardTitle>Top Performers</CardTitle>
+              <CardTitle>Top Performers (Placeholder)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { name: 'Jane Doe', deals: 12, revenue: 145000 },
-                  { name: 'Mike Wilson', deals: 9, revenue: 128000 },
-                  { name: 'Sarah Johnson', deals: 8, revenue: 112000 },
-                  { name: 'Robert Davis', deals: 6, revenue: 89000 },
+                {[ /* Placeholder data */
+                  { name: 'Jane Doe', deals: 5, revenue: 75000 },
+                  { name: 'Mike Wilson', deals: 3, revenue: 120000 },
                 ].map((performer, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <Badge variant="outline" className="w-8 h-8 rounded-full flex items-center justify-center">
+                      <Badge variant="outline" className="w-8 h-8 rounded-full flex items-center justify-center bg-odoo-primary-light text-odoo-primary">
                         {index + 1}
                       </Badge>
                       <div>
@@ -273,6 +328,7 @@ const ReportsView = () => {
                   </div>
                 ))}
               </div>
+               <p className="text-xs text-gray-500 mt-2">Note: Top performers are using placeholder data. This requires tracking sales by user.</p>
             </CardContent>
           </Card>
         </div>
@@ -287,32 +343,27 @@ const ReportsView = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-2">Stage</th>
-                    <th className="text-left p-2">Opportunities</th>
-                    <th className="text-left p-2">Total Value</th>
-                    <th className="text-left p-2">Avg Deal Size</th>
-                    <th className="text-left p-2">Conversion Rate</th>
-                    <th className="text-left p-2">Avg Time in Stage</th>
+                    <th className="text-left p-2 font-semibold text-gray-700">Stage</th>
+                    <th className="text-left p-2 font-semibold text-gray-700">Opportunities</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">Total Value</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">Avg Deal Size</th>
+                    <th className="text-center p-2 font-semibold text-gray-700">Conversion Rate (Placeholder)</th>
+                    <th className="text-center p-2 font-semibold text-gray-700">Avg Time in Stage (Placeholder)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { stage: 'New', count: 12, value: 480000, avgSize: 40000, conversion: '45%', avgTime: '3 days' },
-                    { stage: 'Qualified', count: 8, value: 520000, avgSize: 65000, conversion: '62%', avgTime: '7 days' },
-                    { stage: 'Proposition', count: 5, value: 375000, avgSize: 75000, conversion: '80%', avgTime: '12 days' },
-                    { stage: 'Won', count: 3, value: 225000, avgSize: 75000, conversion: '100%', avgTime: '5 days' },
-                  ].map((row, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-2 font-medium">{row.stage}</td>
-                      <td className="p-2">{row.count}</td>
-                      <td className="p-2">{formatCurrency(row.value)}</td>
-                      <td className="p-2">{formatCurrency(row.avgSize)}</td>
-                      <td className="p-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                  {detailedPipelineAnalysis.map((row) => (
+                    <tr key={row.stage} className="border-b hover:bg-gray-50">
+                      <td className="p-2 font-medium text-odoo-dark">{row.stage}</td>
+                      <td className="p-2 text-center">{row.count}</td>
+                      <td className="p-2 text-right">{formatCurrency(row.value)}</td>
+                      <td className="p-2 text-right">{formatCurrency(row.avgSize)}</td>
+                      <td className="p-2 text-center">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
                           {row.conversion}
                         </Badge>
                       </td>
-                      <td className="p-2">{row.avgTime}</td>
+                      <td className="p-2 text-center">{row.avgTime}</td>
                     </tr>
                   ))}
                 </tbody>

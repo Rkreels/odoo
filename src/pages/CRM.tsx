@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
 import LeadsList from '@/components/crm/LeadsList';
@@ -20,30 +21,47 @@ import {
   Activity,
   Building
 } from 'lucide-react';
+import { Opportunity, OpportunityStage } from '@/types/crm'; // Added OpportunityStage
+import { getStoredOpportunities } from '@/lib/localStorageUtils';
 
 const CRM = () => {
   const navigate = useNavigate();
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [activeTab, setActiveTab] = useState("pipeline");
 
-  // Check authentication
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     if (!isAuthenticated) {
       navigate('/login');
     }
+    setOpportunities(getStoredOpportunities());
   }, [navigate]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+  
+  // Calculate dynamic "My Pipeline" value
+  const myPipelineValue = opportunities
+    .filter(opp => opp.stage.toLowerCase() !== 'won' && opp.stage.toLowerCase() !== 'lost')
+    .reduce((sum, opp) => sum + opp.expectedRevenue, 0);
 
   const dashboardStats = [
     {
       title: 'My Pipeline',
-      value: '$124,750',
-      change: '+12.5%',
+      value: formatCurrency(myPipelineValue),
+      change: '+12.5%', // Placeholder, make dynamic later
       trend: 'up',
       icon: Target,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
-      title: 'Monthly Recurring Revenue',
+      title: 'Monthly Recurring Revenue', // Static for now
       value: '$45,230',
       change: '+8.2%',
       trend: 'up',
@@ -52,7 +70,7 @@ const CRM = () => {
       bgColor: 'bg-green-50'
     },
     {
-      title: 'New Leads',
+      title: 'New Leads', // Static for now
       value: '23',
       change: '+15.3%',
       trend: 'up',
@@ -61,7 +79,7 @@ const CRM = () => {
       bgColor: 'bg-purple-50'
     },
     {
-      title: 'Activities Due',
+      title: 'Activities Due', // Static for now
       value: '8',
       change: '-5.1%',
       trend: 'down',
@@ -71,12 +89,24 @@ const CRM = () => {
     }
   ];
 
-  const pipelineOverview = [
-    { name: 'New', count: 12, amount: '$48,500', color: 'bg-blue-500' },
-    { name: 'Qualified', count: 8, amount: '$67,200', color: 'bg-purple-500' },
-    { name: 'Proposition', count: 5, amount: '$125,750', color: 'bg-yellow-500' },
-    { name: 'Won', count: 3, amount: '$89,300', color: 'bg-green-500' },
-  ];
+  // Calculate dynamic pipeline overview
+  const pipelineStageNames: OpportunityStage[] = ['New', 'Qualified', 'Proposition', 'Won']; // Removed 'Lost' for overview
+  const pipelineColors: { [key in OpportunityStage]?: string } = {
+      'New': 'bg-blue-500',
+      'Qualified': 'bg-purple-500',
+      'Proposition': 'bg-yellow-500',
+      'Won': 'bg-green-500'
+  };
+
+  const pipelineOverview = pipelineStageNames.map(stageName => {
+    const stageOpps = opportunities.filter(opp => opp.stage === stageName);
+    return {
+      name: stageName,
+      count: stageOpps.length,
+      amount: formatCurrency(stageOpps.reduce((sum, opp) => sum + opp.expectedRevenue, 0)),
+      color: pipelineColors[stageName] || 'bg-gray-500',
+    };
+  });
 
   return (
     <TopbarDashboardLayout currentApp="CRM">
@@ -118,7 +148,7 @@ const CRM = () => {
               <CardTitle className="text-xl font-bold text-odoo-dark">
                 Pipeline Overview
               </CardTitle>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setActiveTab("reports")}>
                 View Reports
               </Button>
             </div>
@@ -144,75 +174,50 @@ const CRM = () => {
 
         {/* Main CRM Tabs */}
         <Card>
-          <Tabs defaultValue="pipeline" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="border-b">
               <TabsList className="grid w-full grid-cols-6 bg-transparent h-auto p-0">
-                <TabsTrigger 
-                  value="pipeline" 
-                  className="data-[state=active]:bg-odoo-primary data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-odoo-primary"
-                >
-                  <Target className="h-4 w-4 mr-2" />
-                  Pipeline
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="leads"
-                  className="data-[state=active]:bg-odoo-primary data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-odoo-primary"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Leads
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="opportunities"
-                  className="data-[state=active]:bg-odoo-primary data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-odoo-primary"
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Opportunities
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="activities"
-                  className="data-[state=active]:bg-odoo-primary data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-odoo-primary"
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Activities
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="contacts"
-                  className="data-[state=active]:bg-odoo-primary data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-odoo-primary"
-                >
-                  <Building className="h-4 w-4 mr-2" />
-                  Contacts
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="reports"
-                  className="data-[state=active]:bg-odoo-primary data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-odoo-primary"
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Reports
-                </TabsTrigger>
+                {[
+                  { value: "pipeline", label: "Pipeline", icon: Target },
+                  { value: "leads", label: "Leads", icon: Users },
+                  { value: "opportunities", label: "Opportunities", icon: TrendingUp },
+                  { value: "activities", label: "Activities", icon: Activity },
+                  { value: "contacts", label: "Contacts", icon: Building },
+                  { value: "reports", label: "Reports", icon: TrendingUp }
+                ].map(tab => (
+                  <TabsTrigger 
+                    key={tab.value}
+                    value={tab.value} 
+                    className="data-[state=active]:bg-odoo-primary data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-odoo-primary py-3"
+                  >
+                    <tab.icon className="h-4 w-4 mr-2" />
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </div>
             
-            <TabsContent value="pipeline" className="mt-0">
+            <TabsContent value="pipeline" className="mt-0 p-0">
               <DragDropPipelineView />
             </TabsContent>
             
-            <TabsContent value="leads" className="mt-0">
+            <TabsContent value="leads" className="mt-0 p-4">
               <LeadsList />
             </TabsContent>
             
-            <TabsContent value="opportunities" className="mt-0">
+            <TabsContent value="opportunities" className="mt-0 p-0">
               <OpportunitiesList />
             </TabsContent>
             
-            <TabsContent value="activities" className="mt-0">
+            <TabsContent value="activities" className="mt-0 p-4">
               <ActivitiesList />
             </TabsContent>
             
-            <TabsContent value="contacts" className="mt-0">
+            <TabsContent value="contacts" className="mt-0 p-4">
               <ContactsList />
             </TabsContent>
             
-            <TabsContent value="reports" className="mt-0">
+            <TabsContent value="reports" className="mt-0 p-0">
               <ReportsView />
             </TabsContent>
           </Tabs>
