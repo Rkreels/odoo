@@ -1,6 +1,6 @@
 import { Opportunity, OpportunityStage } from '@/types/crm';
 import { POSSession, POSProduct, POSOrderItem, SessionStatus } from '@/types/pointofsale';
-import { SalesOrder, SalesOrderStatus } from '@/types/sales';
+import { SalesOrder, SalesOrderStatus, SalesOrderItem, SalesOrderDeliveryStatus, SalesOrderPaymentStatus, Currency, SalesOrderTemplate } from '@/types/sales';
 
 export const LOCAL_STORAGE_KEYS = {
   OPPORTUNITIES: 'crmOpportunities',
@@ -8,6 +8,7 @@ export const LOCAL_STORAGE_KEYS = {
   MESSAGES: 'discussMessages',
   POS_SESSIONS: 'posSessions',
   SALES_ORDERS: 'salesOrders',
+  SALES_ORDER_TEMPLATES: 'salesOrderTemplates', // New key for templates
   POS_PRODUCTS: 'posProducts',
 };
 
@@ -117,25 +118,41 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     customer: 'Acme Corporation',
     date: '2025-05-01',
     salesperson: 'Jane Doe',
-    salesTeam: 'Direct Sales Team Alpha', // Added
-    total: 4900.00, // Assuming a $100 discount was applied somewhere
-    status: 'Quotation',
+    salesTeam: 'Direct Sales Team Alpha',
     items: [
-      { id: 'item-1', productName: 'Product A', quantity: 2, unitPrice: 1500, discount: 50, subtotal: 2950 }, // discount applied
-      { id: 'item-2', productName: 'Service B', quantity: 1, unitPrice: 2000, discount: 50, subtotal: 1950 }, // discount applied
+      { id: 'item-1', productName: 'Product A', quantity: 2, unitPrice: 1500, discount: 50, subtotal: 2950 },
+      { id: 'item-2', productName: 'Service B', quantity: 1, unitPrice: 2000, discount: 50, subtotal: 1950 },
     ],
+    taxRate: 8,
+    status: 'Quotation',
+    version: 1,
+    deliveryStatus: 'Pending Delivery',
+    paymentStatus: 'Unpaid',
+    currency: 'USD',
+    linkedInvoiceIds: [],
+    subtotalBeforeTax: 0,
+    taxAmount: 0,
+    total: 0,
   },
   {
     id: 'SO002',
     customer: 'XYZ Industries',
     date: '2025-05-02',
     salesperson: 'Mike Wilson',
-    salesTeam: 'Key Accounts Team', // Added
-    total: 12000.00,
-    status: 'Order Confirmed',
+    salesTeam: 'Key Accounts Team',
     items: [
       { id: 'item-3', productName: 'Enterprise Suite', quantity: 1, unitPrice: 12000, attributes: "License: Premium, Users: 50", subtotal: 12000 },
     ],
+    taxRate: 0,
+    status: 'Order Confirmed',
+    version: 1,
+    deliveryStatus: 'Pending Delivery',
+    paymentStatus: 'Unpaid',
+    currency: 'USD',
+    linkedInvoiceIds: [],
+    subtotalBeforeTax: 0,
+    taxAmount: 0,
+    total: 0,
   },
   {
     id: 'SO003',
@@ -143,9 +160,17 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     date: '2025-04-28',
     salesperson: 'Jane Doe',
     salesTeam: 'Direct Sales Team Alpha',
-    total: 8750.00,
+    items: [],
+    taxRate: 5,
     status: 'Delivery',
-    items: [], 
+    version: 1,
+    deliveryStatus: 'Shipped',
+    paymentStatus: 'Partially Paid',
+    currency: 'EUR',
+    linkedInvoiceIds: ['INV-001'],
+    subtotalBeforeTax: 0,
+    taxAmount: 0,
+    total: 0,
   },
   {
     id: 'SO004',
@@ -153,22 +178,45 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     date: '2025-04-25',
     salesperson: 'Mike Wilson',
     salesTeam: 'Key Accounts Team',
-    total: 15000.00,
-    status: 'Invoiced',
     items: [
       { id: 'item-4', productName: 'Consulting Hours', quantity: 100, unitPrice: 150, subtotal: 15000 },
-    ]
+    ],
+    taxRate: 0,
+    status: 'Invoiced',
+    version: 2,
+    deliveryStatus: 'Delivered',
+    paymentStatus: 'Paid',
+    currency: 'USD',
+    linkedInvoiceIds: ['INV-002', 'INV-003'],
+    subtotalBeforeTax: 0,
+    taxAmount: 0,
+    total: 0,
   },
   {
     id: 'SO005',
     customer: 'Summit Enterprises',
     date: '2025-04-20',
     salesperson: 'Jane Doe',
-    total: 3200.00,
+    items: [{ id: 'item-5', productName: 'Support Package', quantity:1, unitPrice: 3200, subtotal: 3200}],
+    taxRate: 10,
     status: 'Done',
-    items: [],
+    version: 1,
+    deliveryStatus: 'Delivered',
+    paymentStatus: 'Paid',
+    currency: 'GBP',
+    linkedInvoiceIds: ['INV-004'],
+    subtotalBeforeTax: 0,
+    taxAmount: 0,
+    total: 0,
   },
 ];
+
+const calculateOrderTotals = (items: SalesOrderItem[] = [], taxRate: number = 0): { subtotalBeforeTax: number, taxAmount: number, total: number } => {
+  const subtotalBeforeTax = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice) - (item.discount || 0), 0);
+  const taxAmount = subtotalBeforeTax * (taxRate / 100);
+  const total = subtotalBeforeTax + taxAmount;
+  return { subtotalBeforeTax, taxAmount, total };
+};
 
 export const getStoredOpportunities = (): Opportunity[] => {
   const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.OPPORTUNITIES);
@@ -227,38 +275,53 @@ export const getStoredSalesTeams = (): string[] => {
 
 export const getStoredSalesOrders = (): SalesOrder[] => {
   const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.SALES_ORDERS);
+  let ordersToProcess: SalesOrder[] = INITIAL_SALES_ORDERS;
   if (storedData) {
-    const orders: SalesOrder[] = JSON.parse(storedData);
-    return orders.map(order => ({ 
-      ...order, 
-      items: order.items?.map(item => ({
-        ...item,
-        discount: item.discount || 0, // ensure discount exists
-        subtotal: (item.quantity * item.unitPrice) - (item.discount || 0) // recalculate for safety
-      })) || [],
-      total: order.items?.reduce((sum, item) => sum + (item.quantity * item.unitPrice) - (item.discount || 0), 0) || 0 // recalculate total
-    }));
+    ordersToProcess = JSON.parse(storedData);
   }
-  // For initial data, ensure items array is present and calculations are correct
-  const initialOrdersWithItems = INITIAL_SALES_ORDERS.map(order => {
+
+  const processedOrders = ordersToProcess.map(order => {
     const itemsWithSubtotals = order.items?.map(item => ({
       ...item,
       discount: item.discount || 0,
       subtotal: (item.quantity * item.unitPrice) - (item.discount || 0)
     })) || [];
-    const calculatedTotal = itemsWithSubtotals.reduce((sum, item) => sum + item.subtotal, 0);
+    
+    const { subtotalBeforeTax, taxAmount, total } = calculateOrderTotals(itemsWithSubtotals, order.taxRate || 0);
+
     return {
       ...order,
       items: itemsWithSubtotals,
-      total: calculatedTotal
+      taxRate: order.taxRate || 0,
+      subtotalBeforeTax,
+      taxAmount,
+      total,
+      version: order.version || 1,
+      deliveryStatus: order.deliveryStatus || 'Pending Delivery',
+      paymentStatus: order.paymentStatus || 'Unpaid',
+      currency: order.currency || 'USD',
+      linkedInvoiceIds: order.linkedInvoiceIds || [],
+      salesTeam: order.salesTeam || getStoredSalesTeams()[0] || 'Not Assigned', // Ensure salesTeam has a default
     };
   });
-  localStorage.setItem(LOCAL_STORAGE_KEYS.SALES_ORDERS, JSON.stringify(initialOrdersWithItems));
-  return initialOrdersWithItems;
+
+  if (!storedData) { // Only set initial data if nothing was in local storage
+    localStorage.setItem(LOCAL_STORAGE_KEYS.SALES_ORDERS, JSON.stringify(processedOrders));
+  }
+  return processedOrders;
 };
 
 export const storeSalesOrders = (orders: SalesOrder[]): void => {
   localStorage.setItem(LOCAL_STORAGE_KEYS.SALES_ORDERS, JSON.stringify(orders));
+};
+
+export const getStoredSalesOrderTemplates = (): SalesOrderTemplate[] => {
+  const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.SALES_ORDER_TEMPLATES);
+  return storedData ? JSON.parse(storedData) : [];
+};
+
+export const storeSalesOrderTemplates = (templates: SalesOrderTemplate[]): void => {
+  localStorage.setItem(LOCAL_STORAGE_KEYS.SALES_ORDER_TEMPLATES, JSON.stringify(templates));
 };
 
 export const generateId = (): string => Date.now().toString();

@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Plus, Trash2 } from 'lucide-react';
-import { SalesOrder, SalesOrderStatus } from '@/types/sales';
+import { Search, Plus, Trash2, FileText, ExternalLink } from 'lucide-react';
+import { SalesOrder, SalesOrderStatus, SalesOrderDeliveryStatus, SalesOrderPaymentStatus } from '@/types/sales';
 import { getStoredSalesOrders, storeSalesOrders } from '@/lib/localStorageUtils';
 import CreateSalesOrderForm from '@/components/sales/CreateSalesOrderForm';
 import { toast } from "@/components/ui/use-toast";
@@ -37,6 +37,11 @@ const Sales = () => {
       navigate('/login');
     }
   }, [navigate]);
+
+  // Refresh sales orders from local storage if needed elsewhere, or on initial load
+  useEffect(() => {
+    setSalesOrders(getStoredSalesOrders());
+  }, [showCreateOrderForm]); // Re-fetch when form closes, for example
 
   const handleCreateOrder = (newOrder: SalesOrder) => {
     const updatedOrders = [newOrder, ...salesOrders];
@@ -80,8 +85,9 @@ const Sales = () => {
           order.id.toLowerCase().includes(lowerSearchTerm) ||
           order.customer.toLowerCase().includes(lowerSearchTerm) ||
           order.salesperson.toLowerCase().includes(lowerSearchTerm) ||
-          (order.salesTeam && order.salesTeam.toLowerCase().includes(lowerSearchTerm)) || // Search by sales team
-          order.total.toString().includes(lowerSearchTerm)
+          (order.salesTeam && order.salesTeam.toLowerCase().includes(lowerSearchTerm)) ||
+          order.total.toString().includes(lowerSearchTerm) ||
+          (order.currency && order.currency.toLowerCase().includes(lowerSearchTerm))
         );
       })
     : ordersAfterStatusFilter;
@@ -95,51 +101,54 @@ const Sales = () => {
   };
 
   const toggleSelectItem = (id: string) => {
-    if (selectedItems.includes(id)) {
-      setSelectedItems(selectedItems.filter(itemId => itemId !== id));
-    } else {
-      setSelectedItems([...selectedItems, id]);
-    }
+    setSelectedItems(prev => prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]);
   };
 
-  const getStatusColor = (status: SalesOrderStatus) => {
+  const getStatusBadgeColor = (status: SalesOrderStatus | SalesOrderDeliveryStatus | SalesOrderPaymentStatus) => {
     switch (status) {
-      case 'Quotation':
-        return 'bg-blue-100 text-blue-800';
-      case 'Order Confirmed':
-        return 'bg-purple-100 text-purple-800';
-      case 'Delivery':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Invoiced':
-        return 'bg-green-100 text-green-800';
-      case 'Done':
-        return 'bg-gray-200 text-gray-800'; 
-      case 'Cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      // SalesOrderStatus
+      case 'Quotation': return 'bg-blue-100 text-blue-800';
+      case 'Order Confirmed': return 'bg-purple-100 text-purple-800';
+      case 'Delivery': return 'bg-yellow-100 text-yellow-800'; // Note: 'Delivery' is also a SalesOrderStatus
+      case 'Invoiced': return 'bg-green-100 text-green-800';
+      case 'Done': return 'bg-gray-200 text-gray-800'; 
+      case 'Cancelled': return 'bg-red-100 text-red-800';
+      // SalesOrderDeliveryStatus
+      case 'Pending Delivery': return 'bg-orange-100 text-orange-800';
+      case 'Partially Shipped': return 'bg-yellow-100 text-yellow-800'; // Might clash if not careful
+      case 'Shipped': return 'bg-teal-100 text-teal-800';
+      // 'Delivered' is SalesOrderDeliveryStatus and also covered by SalesOrderStatus 'Done'
+      // SalesOrderPaymentStatus
+      case 'Unpaid': return 'bg-red-100 text-red-800';
+      case 'Partially Paid': return 'bg-yellow-100 text-yellow-800';
+      case 'Paid': return 'bg-green-100 text-green-800';
+      case 'Refunded': return 'bg-pink-100 text-pink-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+  const formatCurrencyDisplay = (amount: number, currencyCode: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
   };
 
   const quotationCount = salesOrders.filter(o => o.status === 'Quotation').length;
   const confirmedOrdersCount = salesOrders.filter(o => o.status === 'Order Confirmed').length;
-  const toInvoiceCount = salesOrders.filter(o => o.status === 'Delivery' || o.status === 'Order Confirmed').length;
-  const totalRevenue = salesOrders
-    .filter(o => o.status === 'Invoiced' || o.status === 'Done')
+  // For "To Invoice", consider orders that are confirmed or in delivery but not yet invoiced/done.
+  // This requires knowing if an invoice has been generated. We have `linkedInvoiceIds`.
+  const toInvoiceCount = salesOrders.filter(o => 
+    (o.status === 'Order Confirmed' || o.status === 'Delivery') && 
+    (!o.linkedInvoiceIds || o.linkedInvoiceIds.length === 0)
+  ).length;
+  
+  const totalRevenue = salesOrders // Revenue from fully paid orders
+    .filter(o => o.paymentStatus === 'Paid' && (o.status === 'Invoiced' || o.status === 'Done'))
     .reduce((sum, o) => sum + o.total, 0);
 
   const dashboardMetrics = [
     { name: 'Quotations', count: quotationCount.toString(), color: 'bg-blue-500' },
-    { name: 'Orders', count: confirmedOrdersCount.toString(), color: 'bg-yellow-500' },
-    { name: 'To Invoice', count: toInvoiceCount.toString(), color: 'bg-green-500' },
-    { name: 'Revenue', count: formatCurrency(totalRevenue), color: 'bg-purple-500' },
+    { name: 'Confirmed Orders', count: confirmedOrdersCount.toString(), color: 'bg-purple-500' },
+    { name: 'Ready to Invoice', count: toInvoiceCount.toString(), color: 'bg-yellow-500' }, // Updated metric name
+    { name: 'Total Paid Revenue', count: formatCurrencyDisplay(totalRevenue, 'USD'), color: 'bg-green-500' }, // Specify currency for primary display
   ];
 
   return (
@@ -174,7 +183,7 @@ const Sales = () => {
                 disabled={selectedItems.length === 0}
               >
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete Selected
+                Delete Sel.
               </Button>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -196,7 +205,7 @@ const Sales = () => {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
-                <option value="all">All Statuses</option>
+                <option value="all">All Order Statuses</option>
                 <option value="Quotation">Quotation</option>
                 <option value="Order Confirmed">Order Confirmed</option>
                 <option value="Delivery">Delivery</option>
@@ -205,14 +214,11 @@ const Sales = () => {
                 <option value="Cancelled">Cancelled</option>
               </select>
               
-              <Button variant="outline" size="sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-                </svg>
-                Filters
+              <Button variant="outline" size="sm" disabled>
+                <FileText className="h-4 w-4 mr-1" />Filters
               </Button>
               
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
                 </svg>
@@ -233,13 +239,17 @@ const Sales = () => {
                       disabled={filteredOrders.length === 0}
                     />
                   </TableHead>
-                  <TableHead>Order Number</TableHead>
+                  <TableHead>Order ID</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Salesperson</TableHead>
-                  <TableHead>Sales Team</TableHead>
                   <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Tax ({filteredOrders[0]?.taxRate || 0}%)</TableHead>
+                  <TableHead>Currency</TableHead>
+                  <TableHead>Order Status</TableHead>
+                  <TableHead>Delivery</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -253,22 +263,52 @@ const Sales = () => {
                           aria-label={`Select ${order.id}`}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell className="font-medium">{order.id} {order.version && order.version > 1 ? `(v${order.version})`:''}</TableCell>
                       <TableCell>{order.customer}</TableCell>
                       <TableCell>{order.date}</TableCell>
                       <TableCell>{order.salesperson}</TableCell>
-                      <TableCell>{order.salesTeam || 'N/A'}</TableCell>
-                      <TableCell>{formatCurrency(order.total)}</TableCell>
+                      <TableCell>{formatCurrencyDisplay(order.total, order.currency)}</TableCell>
+                      <TableCell>{formatCurrencyDisplay(order.taxAmount, order.currency)} ({order.taxRate}%)</TableCell>
+                      <TableCell>{order.currency}</TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(order.status)} variant="outline">
+                        <Badge className={getStatusBadgeColor(order.status)} variant="outline">
                           {order.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusBadgeColor(order.deliveryStatus!)} variant="outline">
+                          {order.deliveryStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusBadgeColor(order.paymentStatus!)} variant="outline">
+                          {order.paymentStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {/* Placeholder for "Create Invoice" button - needs navigation and logic */}
+                        {(order.status === 'Order Confirmed' || order.status === 'Delivery') && (!order.linkedInvoiceIds || order.linkedInvoiceIds.length === 0) &&
+                            <Button variant="outline" size="xs" onClick={() => {
+                                toast({title: "Navigate to Invoicing", description: `Would create invoice for ${order.id}`});
+                                // navigate(`/apps/invoicing/create?salesOrderId=${order.id}`); // Example navigation
+                            }}>
+                                <FileText className="h-3 w-3 mr-1" /> Invoice
+                            </Button>
+                        }
+                        {order.linkedInvoiceIds && order.linkedInvoiceIds.length > 0 &&
+                            <Button variant="ghost" size="xs" onClick={() => {
+                                toast({title: "View Invoices", description: `Linked to: ${order.linkedInvoiceIds?.join(', ')}`});
+                                // navigate(`/apps/invoicing?search=${order.linkedInvoiceIds[0]}`); // Example
+                            }}>
+                                <ExternalLink className="h-3 w-3 mr-1" /> View Inv.
+                            </Button>
+                        }
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={12} className="text-center py-8 text-gray-500">
                       No orders found. {searchTerm ? "Try adjusting your search criteria." : "Create a new sales order to get started."}
                     </TableCell>
                   </TableRow>
