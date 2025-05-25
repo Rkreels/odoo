@@ -5,26 +5,23 @@ export type SalesOrderStatus =
   | 'Delivery' 
   | 'Invoiced' 
   | 'Done' 
-  | 'Cancelled'; // Added Cancelled for completeness
+  | 'Cancelled';
+
+export interface SalesOrderItem {
+  id: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
 
 export interface SalesOrder {
   id: string;
   customer: string;
-  date: string; // Consider using Date type or ISO string
+  date: string;
   salesperson: string;
-  total: number; // Changed from string to number
+  total: number;
   status: SalesOrderStatus;
-  // Optional: Add more fields like order lines, shipping address etc. later
-  // items?: SalesOrderItem[]; 
+  items?: SalesOrderItem[]; // Added order items
 }
-
-// Interface for SalesOrderItems if you add detailed order lines later
-// export interface SalesOrderItem {
-//   id: string;
-//   productId: string;
-//   productName: string;
-//   quantity: number;
-//   unitPrice: number;
-//   subtotal: number;
-// }
 

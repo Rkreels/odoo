@@ -101,6 +101,10 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     salesperson: 'Jane Doe',
     total: 5000.00,
     status: 'Quotation',
+    items: [
+      { id: 'item-1', productName: 'Product A', quantity: 2, unitPrice: 1500, subtotal: 3000 },
+      { id: 'item-2', productName: 'Service B', quantity: 1, unitPrice: 2000, subtotal: 2000 },
+    ],
   },
   {
     id: 'SO002',
@@ -109,6 +113,9 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     salesperson: 'Mike Wilson',
     total: 12000.00,
     status: 'Order Confirmed',
+    items: [
+      { id: 'item-3', productName: 'Enterprise Suite', quantity: 1, unitPrice: 12000, subtotal: 12000 },
+    ],
   },
   {
     id: 'SO003',
@@ -117,6 +124,7 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     salesperson: 'Jane Doe',
     total: 8750.00,
     status: 'Delivery',
+    items: [], // Example of an order that might not have item details yet
   },
   {
     id: 'SO004',
@@ -125,6 +133,9 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     salesperson: 'Mike Wilson',
     total: 15000.00,
     status: 'Invoiced',
+    items: [
+      { id: 'item-4', productName: 'Consulting Hours', quantity: 100, unitPrice: 150, subtotal: 15000 },
+    ]
   },
   {
     id: 'SO005',
@@ -133,6 +144,7 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     salesperson: 'Jane Doe',
     total: 3200.00,
     status: 'Done',
+    items: [],
   },
 ];
 
@@ -165,10 +177,17 @@ export const storePOSSessions = (sessions: POSSession[]): void => {
 export const getStoredSalesOrders = (): SalesOrder[] => {
   const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.SALES_ORDERS);
   if (storedData) {
-    return JSON.parse(storedData);
+    // Ensure existing orders have at least an empty items array if not present
+    const orders: SalesOrder[] = JSON.parse(storedData);
+    return orders.map(order => ({ ...order, items: order.items || [] }));
   }
-  localStorage.setItem(LOCAL_STORAGE_KEYS.SALES_ORDERS, JSON.stringify(INITIAL_SALES_ORDERS));
-  return INITIAL_SALES_ORDERS;
+  // For initial data, ensure items array is present
+  const initialOrdersWithItems = INITIAL_SALES_ORDERS.map(order => ({
+    ...order,
+    items: order.items || []
+  }));
+  localStorage.setItem(LOCAL_STORAGE_KEYS.SALES_ORDERS, JSON.stringify(initialOrdersWithItems));
+  return initialOrdersWithItems;
 };
 
 export const storeSalesOrders = (orders: SalesOrder[]): void => {
