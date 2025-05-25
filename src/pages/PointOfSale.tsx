@@ -2,14 +2,22 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
 import SessionCard from '@/components/pos/SessionCard';
+import ActivePOSSessionModal from '@/components/pos/ActivePOSSessionModal'; // Import the modal
 import { Store, Plus, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { POSSession } from '@/types/pointofsale';
-import { getStoredPOSSessions, storePOSSessions } from '@/lib/localStorageUtils'; // Import LS utils
+import { getStoredPOSSessions, storePOSSessions, getStoredPOSProducts } from '@/lib/localStorageUtils';
 
 const PointOfSale = () => {
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState<POSSession[]>(getStoredPOSSessions()); // Load from LS
+  const [sessions, setSessions] = useState<POSSession[]>(getStoredPOSSessions());
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedSession, setSelectedSession] = useState<POSSession | null>(null);
+
+  // Preload products once if needed by the modal or other components
+  useEffect(() => {
+    getStoredPOSProducts(); // Ensures products are in local storage if not already
+  }, []);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
@@ -19,36 +27,56 @@ const PointOfSale = () => {
   }, [navigate]);
 
   const handleUpdateSession = (updatedSession: POSSession) => {
-    const newSessions = sessions.map(session => 
+    const newSessions = sessions.map(session =>
       session.id === updatedSession.id ? updatedSession : session
     );
     setSessions(newSessions);
-    storePOSSessions(newSessions); // Save to LS
+    storePOSSessions(newSessions);
+    // If the updated session is the one in the modal, update selectedSession
+    if (selectedSession && selectedSession.id === updatedSession.id) {
+      setSelectedSession(updatedSession);
+    }
   };
 
   const handleCreateSession = () => {
     const newSession: POSSession = {
       id: Date.now().toString(),
-      name: `Session ${Date.now().toString().slice(-4)}`, // Shorter name
+      name: `Session ${Date.now().toString().slice(-4)}`,
       startTime: new Date().toISOString(),
       status: 'open',
       cashRegister: `Register ${String(sessions.length + 1).padStart(3, '0')}`,
-      startingCash: 200, // Default, could be a form input later
+      startingCash: 200,
       totalSales: 0,
-      transactions: 0
+      transactions: 0,
+      currentOrderItems: [], // Initialize with empty order items
     };
     const newSessions = [newSession, ...sessions];
     setSessions(newSessions);
-    storePOSSessions(newSessions); // Save to LS
+    storePOSSessions(newSessions);
+    // Optionally open the new session in the modal directly
+    // handleResumeSession(newSession); 
+  };
+
+  const handleResumeSession = (session: POSSession) => {
+    setSelectedSession(session);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedSession(null);
+    // Refresh sessions from storage to reflect any changes made in modal if not passed up directly
+    // For better reactivity, ensure onSessionUpdate in modal updates parent state.
+    setSessions(getStoredPOSSessions()); 
   };
 
   const activeSessions = sessions.filter(s => s.status === 'open');
   const totalSalestoday = sessions
-    .filter(s => new Date(s.startTime).toDateString() === new Date().toDateString()) // Filter for today's sales
+    .filter(s => new Date(s.startTime).toDateString() === new Date().toDateString())
     .reduce((sum, s) => sum + s.totalSales, 0);
   
   const totalTransactionsToday = sessions
-    .filter(s => new Date(s.startTime).toDateString() === new Date().toDateString()) // Filter for today's transactions
+    .filter(s => new Date(s.startTime).toDateString() === new Date().toDateString())
     .reduce((sum, s) => sum + s.transactions, 0);
 
   return (
@@ -110,12 +138,21 @@ const PointOfSale = () => {
                   key={session.id}
                   session={session}
                   onUpdate={handleUpdateSession}
+                  onResume={handleResumeSession} // Pass the resume handler
                 />
               ))}
             </div>
           )}
         </div>
       </div>
+      {selectedSession && (
+        <ActivePOSSessionModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          session={selectedSession}
+          onSessionUpdate={handleUpdateSession}
+        />
+      )}
     </TopbarDashboardLayout>
   );
 };

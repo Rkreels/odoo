@@ -1,5 +1,5 @@
 import { Opportunity, OpportunityStage } from '@/types/crm';
-import { POSSession } from '@/types/pointofsale';
+import { POSSession, POSProduct, POSOrderItem, SessionStatus } from '@/types/pointofsale';
 import { SalesOrder, SalesOrderStatus } from '@/types/sales';
 
 export const LOCAL_STORAGE_KEYS = {
@@ -8,6 +8,7 @@ export const LOCAL_STORAGE_KEYS = {
   MESSAGES: 'discussMessages',
   POS_SESSIONS: 'posSessions',
   SALES_ORDERS: 'salesOrders',
+  POS_PRODUCTS: 'posProducts',
 };
 
 const INITIAL_OPPORTUNITIES: Opportunity[] = [
@@ -69,6 +70,14 @@ const INITIAL_OPPORTUNITIES: Opportunity[] = [
   },
 ];
 
+const INITIAL_POS_PRODUCTS: POSProduct[] = [
+  { id: 'prod-1', name: 'Coffee Mug', price: 12.99, category: 'Drinkware', imageUrl: '/placeholder.svg' },
+  { id: 'prod-2', name: 'T-Shirt (L)', price: 25.00, category: 'Apparel', imageUrl: '/placeholder.svg' },
+  { id: 'prod-3', name: 'Notebook', price: 8.50, category: 'Stationery', imageUrl: '/placeholder.svg' },
+  { id: 'prod-4', name: 'Water Bottle', price: 15.75, category: 'Drinkware', imageUrl: '/placeholder.svg' },
+  { id: 'prod-5', name: 'Keychain', price: 5.00, category: 'Accessories', imageUrl: '/placeholder.svg' },
+];
+
 const INITIAL_POS_SESSIONS: POSSession[] = [
   {
     id: '1',
@@ -78,7 +87,8 @@ const INITIAL_POS_SESSIONS: POSSession[] = [
     cashRegister: 'Register 001',
     startingCash: 200,
     totalSales: 1250.50,
-    transactions: 23
+    transactions: 23,
+    currentOrderItems: [], // Added
   },
   {
     id: '2',
@@ -89,7 +99,8 @@ const INITIAL_POS_SESSIONS: POSSession[] = [
     cashRegister: 'Register 002',
     startingCash: 150,
     totalSales: 850.25,
-    transactions: 18
+    transactions: 18,
+    currentOrderItems: [], // Added
   }
 ];
 
@@ -161,13 +172,36 @@ export const storeOpportunities = (opportunities: Opportunity[]): void => {
   localStorage.setItem(LOCAL_STORAGE_KEYS.OPPORTUNITIES, JSON.stringify(opportunities));
 };
 
-export const getStoredPOSSessions = (): POSSession[] => {
-  const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.POS_SESSIONS);
+export const getStoredPOSProducts = (): POSProduct[] => {
+  const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.POS_PRODUCTS);
   if (storedData) {
     return JSON.parse(storedData);
   }
-  localStorage.setItem(LOCAL_STORAGE_KEYS.POS_SESSIONS, JSON.stringify(INITIAL_POS_SESSIONS));
-  return INITIAL_POS_SESSIONS;
+  localStorage.setItem(LOCAL_STORAGE_KEYS.POS_PRODUCTS, JSON.stringify(INITIAL_POS_PRODUCTS));
+  return INITIAL_POS_PRODUCTS;
+};
+
+export const storePOSProducts = (products: POSProduct[]): void => {
+  localStorage.setItem(LOCAL_STORAGE_KEYS.POS_PRODUCTS, JSON.stringify(products));
+};
+
+export const getStoredPOSSessions = (): POSSession[] => {
+  const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.POS_SESSIONS);
+  if (storedData) {
+    const sessions: POSSession[] = JSON.parse(storedData);
+    // Ensure all sessions have currentOrderItems initialized
+    return sessions.map(session => ({
+      ...session,
+      currentOrderItems: session.currentOrderItems || []
+    }));
+  }
+  // Ensure initial data also has currentOrderItems
+  const initialSessionsWithItems = INITIAL_POS_SESSIONS.map(session => ({
+    ...session,
+    currentOrderItems: session.currentOrderItems || []
+  }));
+  localStorage.setItem(LOCAL_STORAGE_KEYS.POS_SESSIONS, JSON.stringify(initialSessionsWithItems));
+  return initialSessionsWithItems;
 };
 
 export const storePOSSessions = (sessions: POSSession[]): void => {
