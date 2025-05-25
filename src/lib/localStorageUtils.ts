@@ -104,17 +104,25 @@ const INITIAL_POS_SESSIONS: POSSession[] = [
   }
 ];
 
+const INITIAL_SALES_TEAMS: string[] = [
+  'Not Assigned',
+  'Direct Sales Team Alpha',
+  'Channel Partners Team',
+  'Key Accounts Team',
+];
+
 const INITIAL_SALES_ORDERS: SalesOrder[] = [
   {
     id: 'SO001',
     customer: 'Acme Corporation',
     date: '2025-05-01',
     salesperson: 'Jane Doe',
-    total: 5000.00,
+    salesTeam: 'Direct Sales Team Alpha', // Added
+    total: 4900.00, // Assuming a $100 discount was applied somewhere
     status: 'Quotation',
     items: [
-      { id: 'item-1', productName: 'Product A', quantity: 2, unitPrice: 1500, subtotal: 3000 },
-      { id: 'item-2', productName: 'Service B', quantity: 1, unitPrice: 2000, subtotal: 2000 },
+      { id: 'item-1', productName: 'Product A', quantity: 2, unitPrice: 1500, discount: 50, subtotal: 2950 }, // discount applied
+      { id: 'item-2', productName: 'Service B', quantity: 1, unitPrice: 2000, discount: 50, subtotal: 1950 }, // discount applied
     ],
   },
   {
@@ -122,10 +130,11 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     customer: 'XYZ Industries',
     date: '2025-05-02',
     salesperson: 'Mike Wilson',
+    salesTeam: 'Key Accounts Team', // Added
     total: 12000.00,
     status: 'Order Confirmed',
     items: [
-      { id: 'item-3', productName: 'Enterprise Suite', quantity: 1, unitPrice: 12000, subtotal: 12000 },
+      { id: 'item-3', productName: 'Enterprise Suite', quantity: 1, unitPrice: 12000, attributes: "License: Premium, Users: 50", subtotal: 12000 },
     ],
   },
   {
@@ -133,15 +142,17 @@ const INITIAL_SALES_ORDERS: SalesOrder[] = [
     customer: 'Globex Corporation',
     date: '2025-04-28',
     salesperson: 'Jane Doe',
+    salesTeam: 'Direct Sales Team Alpha',
     total: 8750.00,
     status: 'Delivery',
-    items: [], // Example of an order that might not have item details yet
+    items: [], 
   },
   {
     id: 'SO004',
     customer: 'Tech Innovators',
     date: '2025-04-25',
     salesperson: 'Mike Wilson',
+    salesTeam: 'Key Accounts Team',
     total: 15000.00,
     status: 'Invoiced',
     items: [
@@ -208,18 +219,40 @@ export const storePOSSessions = (sessions: POSSession[]): void => {
   localStorage.setItem(LOCAL_STORAGE_KEYS.POS_SESSIONS, JSON.stringify(sessions));
 };
 
+export const getStoredSalesTeams = (): string[] => {
+  // For now, we'll return the initial list. 
+  // Could be extended to store/retrieve from localStorage if teams need to be managed.
+  return INITIAL_SALES_TEAMS;
+};
+
 export const getStoredSalesOrders = (): SalesOrder[] => {
   const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.SALES_ORDERS);
   if (storedData) {
-    // Ensure existing orders have at least an empty items array if not present
     const orders: SalesOrder[] = JSON.parse(storedData);
-    return orders.map(order => ({ ...order, items: order.items || [] }));
+    return orders.map(order => ({ 
+      ...order, 
+      items: order.items?.map(item => ({
+        ...item,
+        discount: item.discount || 0, // ensure discount exists
+        subtotal: (item.quantity * item.unitPrice) - (item.discount || 0) // recalculate for safety
+      })) || [],
+      total: order.items?.reduce((sum, item) => sum + (item.quantity * item.unitPrice) - (item.discount || 0), 0) || 0 // recalculate total
+    }));
   }
-  // For initial data, ensure items array is present
-  const initialOrdersWithItems = INITIAL_SALES_ORDERS.map(order => ({
-    ...order,
-    items: order.items || []
-  }));
+  // For initial data, ensure items array is present and calculations are correct
+  const initialOrdersWithItems = INITIAL_SALES_ORDERS.map(order => {
+    const itemsWithSubtotals = order.items?.map(item => ({
+      ...item,
+      discount: item.discount || 0,
+      subtotal: (item.quantity * item.unitPrice) - (item.discount || 0)
+    })) || [];
+    const calculatedTotal = itemsWithSubtotals.reduce((sum, item) => sum + item.subtotal, 0);
+    return {
+      ...order,
+      items: itemsWithSubtotals,
+      total: calculatedTotal
+    };
+  });
   localStorage.setItem(LOCAL_STORAGE_KEYS.SALES_ORDERS, JSON.stringify(initialOrdersWithItems));
   return initialOrdersWithItems;
 };

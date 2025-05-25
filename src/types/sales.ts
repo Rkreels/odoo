@@ -12,7 +12,9 @@ export interface SalesOrderItem {
   productName: string;
   quantity: number;
   unitPrice: number;
-  subtotal: number;
+  attributes?: string; // New: For simple product attributes like "Color: Red, Size: L"
+  discount?: number; // New: Fixed discount amount for this item
+  subtotal: number; // This will be (quantity * unitPrice) - discount
 }
 
 export interface SalesOrder {
@@ -20,8 +22,8 @@ export interface SalesOrder {
   customer: string;
   date: string;
   salesperson: string;
-  total: number;
+  salesTeam?: string; // New: To assign order to a sales team
+  total: number; // This will be the sum of all item subtotals
   status: SalesOrderStatus;
-  items?: SalesOrderItem[]; // Added order items
+  items?: SalesOrderItem[];
 }
-

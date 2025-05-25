@@ -41,7 +41,7 @@ const Sales = () => {
   const handleCreateOrder = (newOrder: SalesOrder) => {
     const updatedOrders = [newOrder, ...salesOrders];
     setSalesOrders(updatedOrders);
-    storeSalesOrders(updatedOrders);
+    storeSalesOrders(updatedOrders); // This will store the order with new fields
     setShowCreateOrderForm(false);
   };
 
@@ -80,6 +80,7 @@ const Sales = () => {
           order.id.toLowerCase().includes(lowerSearchTerm) ||
           order.customer.toLowerCase().includes(lowerSearchTerm) ||
           order.salesperson.toLowerCase().includes(lowerSearchTerm) ||
+          (order.salesTeam && order.salesTeam.toLowerCase().includes(lowerSearchTerm)) || // Search by sales team
           order.total.toString().includes(lowerSearchTerm)
         );
       })
@@ -112,7 +113,7 @@ const Sales = () => {
       case 'Invoiced':
         return 'bg-green-100 text-green-800';
       case 'Done':
-        return 'bg-gray-200 text-gray-800'; // Adjusted for better visibility
+        return 'bg-gray-200 text-gray-800'; 
       case 'Cancelled':
         return 'bg-red-100 text-red-800';
       default:
@@ -236,6 +237,7 @@ const Sales = () => {
                   <TableHead>Customer</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Salesperson</TableHead>
+                  <TableHead>Sales Team</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -255,6 +257,7 @@ const Sales = () => {
                       <TableCell>{order.customer}</TableCell>
                       <TableCell>{order.date}</TableCell>
                       <TableCell>{order.salesperson}</TableCell>
+                      <TableCell>{order.salesTeam || 'N/A'}</TableCell>
                       <TableCell>{formatCurrency(order.total)}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(order.status)} variant="outline">
@@ -265,7 +268,7 @@ const Sales = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                       No orders found. {searchTerm ? "Try adjusting your search criteria." : "Create a new sales order to get started."}
                     </TableCell>
                   </TableRow>
