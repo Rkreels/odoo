@@ -1,9 +1,16 @@
+
 import * as React from "react"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
-const TooltipProvider = TooltipPrimitive.Provider
+// const TooltipProvider = TooltipPrimitive.Provider; // Original line commented out
+
+// New wrapper component
+const CustomTooltipProvider = (props: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Provider>) => {
+  return <TooltipPrimitive.Provider {...props} />;
+};
+CustomTooltipProvider.displayName = 'TooltipProvider'; // Keep the display name for DevTools
 
 const Tooltip = TooltipPrimitive.Root
 
@@ -25,4 +32,5 @@ const TooltipContent = React.forwardRef<
 ))
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export { Tooltip, TooltipTrigger, TooltipContent, CustomTooltipProvider as TooltipProvider } // Exporting the wrapper
+
