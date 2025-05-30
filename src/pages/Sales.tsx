@@ -288,7 +288,7 @@ const Sales = () => {
                       <TableCell>
                         {/* Placeholder for "Create Invoice" button - needs navigation and logic */}
                         {(order.status === 'Order Confirmed' || order.status === 'Delivery') && (!order.linkedInvoiceIds || order.linkedInvoiceIds.length === 0) &&
-                            <Button variant="outline" size="xs" onClick={() => {
+                            <Button variant="outline" size="sm" onClick={() => {
                                 toast({title: "Navigate to Invoicing", description: `Would create invoice for ${order.id}`});
                                 // navigate(`/apps/invoicing/create?salesOrderId=${order.id}`); // Example navigation
                             }}>
@@ -296,7 +296,7 @@ const Sales = () => {
                             </Button>
                         }
                         {order.linkedInvoiceIds && order.linkedInvoiceIds.length > 0 &&
-                            <Button variant="ghost" size="xs" onClick={() => {
+                            <Button variant="ghost" size="sm" onClick={() => {
                                 toast({title: "View Invoices", description: `Linked to: ${order.linkedInvoiceIds?.join(', ')}`});
                                 // navigate(`/apps/invoicing?search=${order.linkedInvoiceIds[0]}`); // Example
                             }}>
