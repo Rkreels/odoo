@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +24,7 @@ import Elearning from "./pages/Elearning";
 import PointOfSale from "./pages/PointOfSale";
 import Invoicing from "./pages/Invoicing";
 import Purchase from "./pages/Purchase";
+import Contacts from "./pages/Contacts";
 import LiveChat from "./pages/LiveChat";
 import Subscriptions from "./pages/Subscriptions";
 import Rental from "./pages/Rental";
@@ -67,6 +67,7 @@ const App = () => (
           <Route path="/apps/point-of-sale" element={<PointOfSale />} />
           <Route path="/apps/invoicing" element={<Invoicing />} />
           <Route path="/apps/purchase" element={<Purchase />} />
+          <Route path="/apps/contacts" element={<Contacts />} />
           
           {/* New App Routes */}
           <Route path="/apps/live-chat" element={<LiveChat />} />

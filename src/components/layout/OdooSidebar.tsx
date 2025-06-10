@@ -58,6 +58,12 @@ const appModules: AppModule[] = [
     path: '/apps/invoicing'
   },
   {
+    id: 'point-of-sale',
+    name: 'Point of Sale',
+    icon: '🛒',
+    path: '/apps/point-of-sale'
+  },
+  {
     id: 'inventory',
     name: 'Inventory',
     icon: '📦',
