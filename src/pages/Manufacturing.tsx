@@ -1,60 +1,177 @@
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
-import { Factory, Plus, Filter, Play, Pause, CheckCircle } from 'lucide-react';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
+import OdooControlPanel from '@/components/layout/OdooControlPanel';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ManufacturingOrder, WorkOrder } from '@/types/manufacturing';
-import VoiceTrainer from '@/components/voice/VoiceTrainer';
-import { toast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Factory, 
+  Package, 
+  Clock, 
+  AlertTriangle,
+  TrendingUp,
+  BarChart3,
+  Play,
+  Pause,
+  CheckCircle,
+  XCircle,
+  Settings,
+  Eye,
+  Edit,
+  Calendar,
+  User
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface ManufacturingOrder {
+  id: string;
+  reference: string;
+  product: string;
+  quantity: number;
+  quantityProduced: number;
+  state: 'draft' | 'confirmed' | 'progress' | 'done' | 'cancel';
+  priority: '0' | '1' | '2' | '3';
+  scheduledDate: string;
+  deadline: string;
+  responsible: string;
+  workcenters: string[];
+  billOfMaterials: string;
+  source: string;
+  routing: string;
+  company: string;
+}
+
+interface WorkCenter {
+  id: string;
+  name: string;
+  code: string;
+  capacity: number;
+  efficiency: number;
+  timeEfficiency: number;
+  oeeTarget: number;
+  currentLoad: number;
+  status: 'available' | 'busy' | 'blocked' | 'maintenance';
+  activeOrders: number;
+  location: string;
+}
+
+interface BillOfMaterials {
+  id: string;
+  reference: string;
+  product: string;
+  quantity: number;
+  type: 'normal' | 'phantom' | 'kit';
+  components: Component[];
+  routing: string;
+  version: string;
+  active: boolean;
+}
+
+interface Component {
+  id: string;
+  product: string;
+  quantity: number;
+  unit: string;
+  operation: string;
+}
 
 const Manufacturing = () => {
   const navigate = useNavigate();
-  const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
-  const [orders, setOrders] = useState<ManufacturingOrder[]>([
+  const [activeTab, setActiveTab] = useState('orders');
+  const [viewType, setViewType] = useState<'list' | 'kanban'>('list');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [manufacturingOrders] = useState<ManufacturingOrder[]>([
     {
-      id: 'MO001',
-      product: 'Office Chair Premium',
-      quantity: 50,
-      plannedDate: '2025-05-25',
-      deadline: '2025-06-01',
-      status: 'in-progress',
-      location: 'Factory A',
+      id: '1',
+      reference: 'MO/001',
+      product: 'Office Chair - Premium',
+      quantity: 100,
+      quantityProduced: 75,
+      state: 'progress',
+      priority: '2',
+      scheduledDate: '2024-01-15',
+      deadline: '2024-01-25',
       responsible: 'John Smith',
-      workOrders: [
-        { id: 'WO001', name: 'Frame Assembly', workCenter: 'Assembly Line 1', status: 'done', duration: '2 hours' },
-        { id: 'WO002', name: 'Cushion Installation', workCenter: 'Assembly Line 2', status: 'in-progress', duration: '1 hour', assignedWorker: 'Alice Brown' },
-        { id: 'WO003', name: 'Quality Check', workCenter: 'QC Station', status: 'pending', duration: '30 min' }
-      ],
-      materials: [
-        { id: 'MAT001', product: 'Steel Frame', required: 50, available: 45, reserved: 45, unit: 'pcs' },
-        { id: 'MAT002', product: 'Foam Cushion', required: 50, available: 60, reserved: 50, unit: 'pcs' },
-        { id: 'MAT003', product: 'Fabric Cover', required: 50, available: 30, reserved: 30, unit: 'pcs' }
-      ]
+      workcenters: ['Assembly Line 1', 'Quality Control'],
+      billOfMaterials: 'BOM/Chair/001',
+      source: 'Sales Order SO123',
+      routing: 'Chair Assembly Route',
+      company: 'Main Company'
     },
     {
-      id: 'MO002',
-      product: 'Conference Table',
-      quantity: 10,
-      plannedDate: '2025-05-28',
-      deadline: '2025-06-05',
-      status: 'planned',
-      location: 'Factory B',
-      responsible: 'Mike Wilson',
-      workOrders: [
-        { id: 'WO004', name: 'Wood Cutting', workCenter: 'CNC Machine', status: 'pending', duration: '3 hours' },
-        { id: 'WO005', name: 'Surface Treatment', workCenter: 'Finishing', status: 'pending', duration: '2 hours' },
-        { id: 'WO006', name: 'Assembly', workCenter: 'Assembly Line 3', status: 'pending', duration: '1.5 hours' }
+      id: '2',
+      reference: 'MO/002',
+      product: 'Desk Lamp - LED',
+      quantity: 200,
+      quantityProduced: 0,
+      state: 'confirmed',
+      priority: '1',
+      scheduledDate: '2024-01-20',
+      deadline: '2024-01-30',
+      responsible: 'Sarah Johnson',
+      workcenters: ['Electronics Line', 'Testing'],
+      billOfMaterials: 'BOM/Lamp/001',
+      source: 'Manual',
+      routing: 'Electronics Assembly',
+      company: 'Main Company'
+    }
+  ]);
+
+  const [workCenters] = useState<WorkCenter[]>([
+    {
+      id: '1',
+      name: 'Assembly Line 1',
+      code: 'ASM001',
+      capacity: 8,
+      efficiency: 85,
+      timeEfficiency: 92,
+      oeeTarget: 80,
+      currentLoad: 75,
+      status: 'busy',
+      activeOrders: 3,
+      location: 'Building A - Floor 1'
+    },
+    {
+      id: '2',
+      name: 'Quality Control',
+      code: 'QC001',
+      capacity: 4,
+      efficiency: 95,
+      timeEfficiency: 88,
+      oeeTarget: 85,
+      currentLoad: 60,
+      status: 'available',
+      activeOrders: 2,
+      location: 'Building A - Floor 2'
+    }
+  ]);
+
+  const [billsOfMaterials] = useState<BillOfMaterials[]>([
+    {
+      id: '1',
+      reference: 'BOM/Chair/001',
+      product: 'Office Chair - Premium',
+      quantity: 1,
+      type: 'normal',
+      components: [
+        { id: '1', product: 'Chair Base', quantity: 1, unit: 'Unit', operation: 'Assembly' },
+        { id: '2', product: 'Chair Seat', quantity: 1, unit: 'Unit', operation: 'Assembly' },
+        { id: '3', product: 'Chair Back', quantity: 1, unit: 'Unit', operation: 'Assembly' },
+        { id: '4', product: 'Screws Pack', quantity: 1, unit: 'Pack', operation: 'Assembly' }
       ],
-      materials: [
-        { id: 'MAT004', product: 'Oak Wood Panel', required: 20, available: 25, reserved: 20, unit: 'pcs' },
-        { id: 'MAT005', product: 'Table Legs', required: 40, available: 50, reserved: 40, unit: 'pcs' },
-        { id: 'MAT006', product: 'Wood Finish', required: 2, available: 5, reserved: 2, unit: 'liters' }
-      ]
+      routing: 'Chair Assembly Route',
+      version: '1.0',
+      active: true
     }
   ]);
 
@@ -65,210 +182,280 @@ const Manufacturing = () => {
     }
   }, [navigate]);
 
-  const handleStartOrder = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: 'in-progress' } : order
-      )
-    );
-    toast({
-      title: "Production started",
-      description: `Manufacturing order ${orderId} has been started.`,
-    });
+  const orderFilters = [
+    { label: 'To Launch', value: 'confirmed', count: 5 },
+    { label: 'In Progress', value: 'progress', count: 8 },
+    { label: 'Done', value: 'done', count: 23 },
+    { label: 'Late', value: 'late', count: 2 }
+  ];
+
+  const getStateColor = (state: string) => {
+    const colors = {
+      draft: 'bg-gray-500',
+      confirmed: 'bg-blue-500',
+      progress: 'bg-yellow-500',
+      done: 'bg-green-500',
+      cancel: 'bg-red-500'
+    };
+    return colors[state as keyof typeof colors] || 'bg-gray-500';
   };
 
-  const handleCompleteOrder = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: 'done' } : order
-      )
-    );
-    toast({
-      title: "Production completed",
-      description: `Manufacturing order ${orderId} has been completed.`,
-    });
+  const getStatusColor = (status: string) => {
+    const colors = {
+      available: 'bg-green-500',
+      busy: 'bg-yellow-500',
+      blocked: 'bg-red-500',
+      maintenance: 'bg-orange-500'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-500';
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'planned': return 'outline';
-      case 'in-progress': return 'default';
-      case 'done': return 'secondary';
-      case 'cancelled': return 'destructive';
-      default: return 'outline';
-    }
-  };
+  const filteredOrders = manufacturingOrders.filter(order => {
+    const matchesSearch = order.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.product.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || order.state === selectedFilter;
+    return matchesSearch && matchesFilter;
+  });
 
-  return (
-    <TopbarDashboardLayout currentApp="Manufacturing">
-      <div className="p-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <Factory className="h-8 w-8 text-odoo-primary mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-odoo-dark">Manufacturing</h1>
-                <p className="text-odoo-gray">
-                  Manage production orders, work centers, and manufacturing processes.
-                </p>
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline"
-                onClick={() => setShowVoiceTrainer(!showVoiceTrainer)}
-                className="border-odoo-primary text-odoo-primary hover:bg-odoo-primary hover:text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                </svg>
-                Voice Guide
-              </Button>
-              <Button className="bg-odoo-primary hover:bg-odoo-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                New Manufacturing Order
-              </Button>
-            </div>
-          </div>
+  const totalOrders = manufacturingOrders.length;
+  const inProgressOrders = manufacturingOrders.filter(o => o.state === 'progress').length;
+  const avgEfficiency = workCenters.reduce((sum, wc) => sum + wc.efficiency, 0) / workCenters.length;
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Total Orders</p>
-              <p className="text-2xl font-semibold">{orders.length}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">In Progress</p>
-              <p className="text-2xl font-semibold">{orders.filter(o => o.status === 'in-progress').length}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Planned</p>
-              <p className="text-2xl font-semibold">{orders.filter(o => o.status === 'planned').length}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Completed</p>
-              <p className="text-2xl font-semibold">{orders.filter(o => o.status === 'done').length}</p>
-            </div>
-          </div>
-
-          <Tabs defaultValue="orders">
-            <TabsList>
-              <TabsTrigger value="orders">Manufacturing Orders</TabsTrigger>
-              <TabsTrigger value="workcenters">Work Centers</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="orders">
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-64">
-                  <Input placeholder="Search orders..." />
-                </div>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {orders.map(order => (
-                  <Card key={order.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{order.id} - {order.product}</CardTitle>
-                          <p className="text-gray-500">Quantity: {order.quantity} | Deadline: {order.deadline}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={getStatusBadgeVariant(order.status)}>
-                            {order.status}
-                          </Badge>
-                          {order.status === 'planned' && (
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleStartOrder(order.id)}
-                              className="bg-odoo-primary hover:bg-odoo-primary/90"
-                            >
-                              <Play className="h-3 w-3 mr-1" />
-                              Start
-                            </Button>
-                          )}
-                          {order.status === 'in-progress' && (
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleCompleteOrder(order.id)}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Complete
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-medium mb-2">Work Orders</h4>
-                          <div className="space-y-1">
-                            {order.workOrders.map(wo => (
-                              <div key={wo.id} className="flex justify-between text-sm">
-                                <span>{wo.name}</span>
-                                <Badge variant={getStatusBadgeVariant(wo.status)} className="text-xs">
-                                  {wo.status}
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-2">Materials</h4>
-                          <div className="space-y-1">
-                            {order.materials.map(mat => (
-                              <div key={mat.id} className="flex justify-between text-sm">
-                                <span>{mat.product}</span>
-                                <span className={mat.available < mat.required ? 'text-red-500' : 'text-green-600'}>
-                                  {mat.available}/{mat.required} {mat.unit}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="workcenters">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {['Assembly Line 1', 'Assembly Line 2', 'CNC Machine', 'QC Station', 'Finishing'].map(center => (
-                  <Card key={center}>
-                    <CardHeader>
-                      <CardTitle className="text-base">{center}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm text-gray-500">
-                        <p>Status: <span className="text-green-600">Available</span></p>
-                        <p>Efficiency: 85%</p>
-                        <p>Current Job: Office Chair Premium</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+  const renderOrdersList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Reference</div>
+        <div className="col-span-2">Product</div>
+        <div className="col-span-1">Quantity</div>
+        <div className="col-span-1">State</div>
+        <div className="col-span-1">Priority</div>
+        <div className="col-span-2">Scheduled Date</div>
+        <div className="col-span-2">Responsible</div>
+        <div className="col-span-1">Actions</div>
       </div>
       
-      {/* Voice Trainer */}
-      {showVoiceTrainer && (
-        <VoiceTrainer 
-          isOpen={showVoiceTrainer} 
-          onClose={() => setShowVoiceTrainer(false)} 
-          currentScreen="manufacturing"
+      {filteredOrders.map(order => (
+        <div key={order.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-2">
+            <p className="font-medium text-sm">{order.reference}</p>
+            <p className="text-xs text-gray-600">{order.source}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm font-medium">{order.product}</p>
+            <p className="text-xs text-gray-600">{order.billOfMaterials}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{order.quantityProduced}/{order.quantity}</p>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+              <div 
+                className="bg-blue-600 h-2 rounded-full" 
+                style={{ width: `${(order.quantityProduced / order.quantity) * 100}%` }}
+              />
+            </div>
+          </div>
+          <div className="col-span-1">
+            <Badge className={`text-white ${getStateColor(order.state)}`}>
+              {order.state}
+            </Badge>
+          </div>
+          <div className="col-span-1">
+            <Badge variant={order.priority === '3' ? 'destructive' : order.priority === '2' ? 'default' : 'secondary'}>
+              P{order.priority}
+            </Badge>
+          </div>
+          <div className="col-span-2">
+            <div className="flex items-center space-x-1">
+              <Calendar className="h-3 w-3" />
+              <span className="text-sm">{order.scheduledDate}</span>
+            </div>
+            <p className="text-xs text-gray-600">Due: {order.deadline}</p>
+          </div>
+          <div className="col-span-2">
+            <div className="flex items-center space-x-1">
+              <User className="h-3 w-3" />
+              <span className="text-sm">{order.responsible}</span>
+            </div>
+          </div>
+          <div className="col-span-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Play className="h-4 w-4 mr-2" />
+                  Start
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Pause className="h-4 w-4 mr-2" />
+                  Pause
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Mark Done
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderWorkCentersList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Work Center</div>
+        <div className="col-span-1">Capacity</div>
+        <div className="col-span-1">Load</div>
+        <div className="col-span-1">Efficiency</div>
+        <div className="col-span-1">OEE Target</div>
+        <div className="col-span-2">Status</div>
+        <div className="col-span-2">Active Orders</div>
+        <div className="col-span-2">Location</div>
+      </div>
+      
+      {workCenters.map(workCenter => (
+        <div key={workCenter.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-2">
+            <p className="font-medium text-sm">{workCenter.name}</p>
+            <p className="text-xs text-gray-600">{workCenter.code}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{workCenter.capacity}h</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{workCenter.currentLoad}%</p>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+              <div 
+                className={`h-2 rounded-full ${workCenter.currentLoad > 80 ? 'bg-red-500' : 'bg-green-500'}`}
+                style={{ width: `${workCenter.currentLoad}%` }}
+              />
+            </div>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{workCenter.efficiency}%</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{workCenter.oeeTarget}%</p>
+          </div>
+          <div className="col-span-2">
+            <Badge className={`text-white ${getStatusColor(workCenter.status)}`}>
+              {workCenter.status}
+            </Badge>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{workCenter.activeOrders} orders</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{workCenter.location}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <OdooMainLayout currentApp="Manufacturing">
+      <div className="flex flex-col h-full">
+        <OdooControlPanel
+          title={activeTab === 'orders' ? 'Manufacturing Orders' : activeTab === 'workcenters' ? 'Work Centers' : 'Bills of Materials'}
+          subtitle={activeTab === 'orders' ? 'Production planning and execution' : activeTab === 'workcenters' ? 'Work center efficiency and capacity' : 'Product structure and components'}
+          searchPlaceholder={`Search ${activeTab}...`}
+          onSearch={setSearchTerm}
+          onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
+          viewType={viewType}
+          onViewChange={(view) => setViewType(view as any)}
+          filters={activeTab === 'orders' ? orderFilters : []}
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
+          recordCount={activeTab === 'orders' ? filteredOrders.length : activeTab === 'workcenters' ? workCenters.length : billsOfMaterials.length}
         />
-      )}
-    </TopbarDashboardLayout>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="border-b bg-white px-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="orders">Orders</TabsTrigger>
+              <TabsTrigger value="workcenters">Work Centers</TabsTrigger>
+              <TabsTrigger value="bom">Bills of Materials</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="orders" className="flex-1 flex flex-col">
+            {/* Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Factory className="h-5 w-5 text-blue-600" />
+                    <span className="text-2xl font-bold">{totalOrders}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">In Progress</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5 text-yellow-600" />
+                    <span className="text-2xl font-bold">{inProgressOrders}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Avg Efficiency</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl font-bold">{avgEfficiency.toFixed(1)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Alerts</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <span className="text-2xl font-bold">3</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex-1 p-6">
+              {renderOrdersList()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="workcenters" className="flex-1 p-6">
+            {renderWorkCentersList()}
+          </TabsContent>
+
+          <TabsContent value="bom" className="flex-1 p-6">
+            <div className="text-center text-gray-500">
+              Bills of Materials management coming soon...
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </OdooMainLayout>
   );
 };
 
