@@ -16,11 +16,72 @@ const Spreadsheets = () => {
       description: 'Quarterly sales performance analysis',
       status: 'shared',
       owner: 'John Doe',
-      collaborators: ['jane.doe@company.com', 'mike.smith@company.com'],
+      collaborators: [
+        {
+          userId: '1',
+          name: 'Jane Doe',
+          email: 'jane.doe@company.com',
+          role: 'editor',
+          joinedAt: '2024-01-15',
+          isOnline: true
+        },
+        {
+          userId: '2',
+          name: 'Mike Smith',
+          email: 'mike.smith@company.com',
+          role: 'viewer',
+          joinedAt: '2024-01-16',
+          isOnline: false
+        }
+      ],
       lastModified: '2024-01-20T10:30:00Z',
       rowCount: 150,
       columnCount: 12,
-      template: 'Sales Report'
+      template: 'Sales Report',
+      version: 1,
+      isLocked: false,
+      sheets: [
+        {
+          id: 'sheet1',
+          name: 'Sheet1',
+          index: 0,
+          isHidden: false,
+          isProtected: false,
+          rowCount: 150,
+          columnCount: 12,
+          cells: {},
+          filters: [],
+          sorting: [],
+          formatting: {
+            conditionalFormats: [],
+            frozenRows: 0,
+            frozenColumns: 0,
+            gridlines: true,
+            headers: true
+          }
+        }
+      ],
+      charts: [],
+      namedRanges: [],
+      formulas: [],
+      settings: {
+        autoSave: true,
+        showFormulas: false,
+        calculationMode: 'automatic',
+        iterativeCalculation: false,
+        maxIterations: 100,
+        defaultNumberFormat: 'General',
+        timezone: 'UTC'
+      },
+      permissions: {
+        canEdit: true,
+        canComment: true,
+        canShare: true,
+        canDownload: true,
+        canPrint: true,
+        canCopy: true
+      },
+      history: []
     },
     {
       id: '2',
@@ -32,7 +93,51 @@ const Spreadsheets = () => {
       lastModified: '2024-01-22T14:15:00Z',
       rowCount: 200,
       columnCount: 15,
-      template: 'Budget Template'
+      template: 'Budget Template',
+      version: 1,
+      isLocked: false,
+      sheets: [
+        {
+          id: 'sheet1',
+          name: 'Budget',
+          index: 0,
+          isHidden: false,
+          isProtected: false,
+          rowCount: 200,
+          columnCount: 15,
+          cells: {},
+          filters: [],
+          sorting: [],
+          formatting: {
+            conditionalFormats: [],
+            frozenRows: 1,
+            frozenColumns: 1,
+            gridlines: true,
+            headers: true
+          }
+        }
+      ],
+      charts: [],
+      namedRanges: [],
+      formulas: [],
+      settings: {
+        autoSave: true,
+        showFormulas: false,
+        calculationMode: 'automatic',
+        iterativeCalculation: false,
+        maxIterations: 100,
+        defaultNumberFormat: 'Currency',
+        timezone: 'UTC'
+      },
+      permissions: {
+        canEdit: true,
+        canComment: true,
+        canShare: false,
+        canDownload: true,
+        canPrint: true,
+        canCopy: true
+      },
+      history: []
     }
   ]);
 
@@ -59,7 +164,51 @@ const Spreadsheets = () => {
       collaborators: [],
       lastModified: new Date().toISOString(),
       rowCount: 50,
-      columnCount: 10
+      columnCount: 10,
+      version: 1,
+      isLocked: false,
+      sheets: [
+        {
+          id: 'sheet1',
+          name: 'Sheet1',
+          index: 0,
+          isHidden: false,
+          isProtected: false,
+          rowCount: 50,
+          columnCount: 10,
+          cells: {},
+          filters: [],
+          sorting: [],
+          formatting: {
+            conditionalFormats: [],
+            frozenRows: 0,
+            frozenColumns: 0,
+            gridlines: true,
+            headers: true
+          }
+        }
+      ],
+      charts: [],
+      namedRanges: [],
+      formulas: [],
+      settings: {
+        autoSave: true,
+        showFormulas: false,
+        calculationMode: 'automatic',
+        iterativeCalculation: false,
+        maxIterations: 100,
+        defaultNumberFormat: 'General',
+        timezone: 'UTC'
+      },
+      permissions: {
+        canEdit: true,
+        canComment: true,
+        canShare: true,
+        canDownload: true,
+        canPrint: true,
+        canCopy: true
+      },
+      history: []
     };
     setSpreadsheets(prev => [newSpreadsheet, ...prev]);
   };

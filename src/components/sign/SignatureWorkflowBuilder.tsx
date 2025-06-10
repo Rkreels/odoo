@@ -8,9 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { SignatureWorkflow, WorkflowStep, SignatureRecipient } from '@/types/sign';
 import { 
   Workflow, Plus, Trash2, ArrowRight, Settings, 
-  Users, Clock, CheckCircle, AlertCircle, Play
+  Users, Clock, CheckCircle, AlertCircle, Play, MoveUp, MoveDown
 } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 interface SignatureWorkflowBuilderProps {
   workflow: SignatureWorkflow;
@@ -53,15 +52,18 @@ const SignatureWorkflowBuilder = ({ workflow, recipients, onUpdate }: SignatureW
     });
   };
 
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return;
+  const moveStep = (stepId: string, direction: 'up' | 'down') => {
+    const stepIndex = workflow.steps.findIndex(step => step.id === stepId);
+    if (stepIndex === -1) return;
 
-    const items = Array.from(workflow.steps);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const newIndex = direction === 'up' ? stepIndex - 1 : stepIndex + 1;
+    if (newIndex < 0 || newIndex >= workflow.steps.length) return;
+
+    const newSteps = [...workflow.steps];
+    [newSteps[stepIndex], newSteps[newIndex]] = [newSteps[newIndex], newSteps[stepIndex]];
 
     // Update order property
-    const updatedSteps = items.map((step, index) => ({
+    const updatedSteps = newSteps.map((step, index) => ({
       ...step,
       order: index + 1
     }));
@@ -134,129 +136,132 @@ const SignatureWorkflowBuilder = ({ workflow, recipients, onUpdate }: SignatureW
             </Button>
           </div>
 
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="workflow-steps">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
-                  {workflow.steps.map((step, index) => (
-                    <Draggable key={step.id} draggableId={step.id} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`border rounded-lg p-4 ${
-                            activeStep === step.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-2">
-                                {getStepIcon(step)}
-                                <span className="font-medium">Step {step.order}</span>
-                              </div>
-                              <Input
-                                value={step.name}
-                                onChange={(e) => updateStep(step.id, { name: e.target.value })}
-                                className="w-48"
-                                placeholder="Step name"
-                              />
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setActiveStep(activeStep === step.id ? null : step.id)}
-                              >
-                                <Settings className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => removeStep(step.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 mb-3">
-                            <div>
-                              <label className="text-sm font-medium">Recipients</label>
-                              <Select 
-                                value={step.recipientIds[0] || ''}
-                                onValueChange={(value) => updateStep(step.id, { 
-                                  recipientIds: value ? [value] : [] 
-                                })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select recipients" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {recipients.map(recipient => (
-                                    <SelectItem key={recipient.id} value={recipient.id}>
-                                      {recipient.name} ({recipient.role})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium">Timeout (days)</label>
-                              <Input
-                                type="number"
-                                value={Math.floor((step.timeout || 0) / (24 * 60 * 60 * 1000))}
-                                onChange={(e) => updateStep(step.id, { 
-                                  timeout: parseInt(e.target.value) * 24 * 60 * 60 * 1000 
-                                })}
-                                min="1"
-                                max="365"
-                              />
-                            </div>
-                          </div>
-
-                          {activeStep === step.id && (
-                            <div className="border-t pt-3 mt-3 space-y-3">
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  checked={step.requiresAll}
-                                  onChange={(e) => updateStep(step.id, { requiresAll: e.target.checked })}
-                                />
-                                <label className="text-sm">Require all recipients to complete</label>
-                              </div>
-                              
-                              <div>
-                                <label className="text-sm font-medium">Selected Recipients</label>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                  {step.recipientIds.map(recipientId => {
-                                    const recipient = recipients.find(r => r.id === recipientId);
-                                    return recipient ? (
-                                      <Badge key={recipientId} variant="outline">
-                                        <Users className="h-3 w-3 mr-1" />
-                                        {recipient.name}
-                                      </Badge>
-                                    ) : null;
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {index < workflow.steps.length - 1 && (
-                            <div className="flex justify-center mt-4">
-                              <ArrowRight className="h-5 w-5 text-gray-400" />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
+          <div className="space-y-3">
+            {workflow.steps.map((step, index) => (
+              <div
+                key={step.id}
+                className={`border rounded-lg p-4 ${
+                  activeStep === step.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      {getStepIcon(step)}
+                      <span className="font-medium">Step {step.order}</span>
+                    </div>
+                    <Input
+                      value={step.name}
+                      onChange={(e) => updateStep(step.id, { name: e.target.value })}
+                      className="w-48"
+                      placeholder="Step name"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => moveStep(step.id, 'up')}
+                      disabled={index === 0}
+                    >
+                      <MoveUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => moveStep(step.id, 'down')}
+                      disabled={index === workflow.steps.length - 1}
+                    >
+                      <MoveDown className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setActiveStep(activeStep === step.id ? null : step.id)}
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => removeStep(step.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="text-sm font-medium">Recipients</label>
+                    <Select 
+                      value={step.recipientIds[0] || ''}
+                      onValueChange={(value) => updateStep(step.id, { 
+                        recipientIds: value ? [value] : [] 
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select recipients" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {recipients.map(recipient => (
+                          <SelectItem key={recipient.id} value={recipient.id}>
+                            {recipient.name} ({recipient.role})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Timeout (days)</label>
+                    <Input
+                      type="number"
+                      value={Math.floor((step.timeout || 0) / (24 * 60 * 60 * 1000))}
+                      onChange={(e) => updateStep(step.id, { 
+                        timeout: parseInt(e.target.value) * 24 * 60 * 60 * 1000 
+                      })}
+                      min="1"
+                      max="365"
+                    />
+                  </div>
+                </div>
+
+                {activeStep === step.id && (
+                  <div className="border-t pt-3 mt-3 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={step.requiresAll}
+                        onChange={(e) => updateStep(step.id, { requiresAll: e.target.checked })}
+                      />
+                      <label className="text-sm">Require all recipients to complete</label>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium">Selected Recipients</label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {step.recipientIds.map(recipientId => {
+                          const recipient = recipients.find(r => r.id === recipientId);
+                          return recipient ? (
+                            <Badge key={recipientId} variant="outline">
+                              <Users className="h-3 w-3 mr-1" />
+                              {recipient.name}
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {index < workflow.steps.length - 1 && (
+                  <div className="flex justify-center mt-4">
+                    <ArrowRight className="h-5 w-5 text-gray-400" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
 
           {workflow.steps.length > 0 && (
             <div className="bg-gray-50 p-4 rounded-lg">

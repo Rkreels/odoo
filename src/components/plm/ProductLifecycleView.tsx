@@ -131,7 +131,7 @@ const ProductLifecycleView = ({ product, onPhaseUpdate, onMilestoneUpdate, onGat
                         <FileText className="h-3 w-3 text-gray-500" />
                         <span className="text-sm">{deliverable.name}</span>
                       </div>
-                      <Badge size="sm" className={getStatusColor(deliverable.status)}>
+                      <Badge className={getStatusColor(deliverable.status)}>
                         {deliverable.status}
                       </Badge>
                     </div>
@@ -224,7 +224,7 @@ const ProductLifecycleView = ({ product, onPhaseUpdate, onMilestoneUpdate, onGat
                 {gate.criteria.map((criteria) => (
                   <div key={criteria.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <span className="text-sm">{criteria.requirement}</span>
-                    <Badge size="sm" className={getStatusColor(criteria.status)}>
+                    <Badge className={getStatusColor(criteria.status)}>
                       {criteria.status}
                     </Badge>
                   </div>

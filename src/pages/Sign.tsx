@@ -17,48 +17,249 @@ const Sign = () => {
       id: '1',
       title: 'Sales Agreement',
       documentName: 'SalesAgreement_2025.pdf',
+      documentUrl: '/documents/sales-agreement-2025.pdf',
       recipients: [
-        { name: 'John Smith', email: 'john@example.com', signed: true, signedAt: '2025-05-15' },
-        { name: 'Alice Brown', email: 'alice@example.com', signed: false },
+        { 
+          id: '1',
+          name: 'John Smith', 
+          email: 'john@example.com', 
+          role: 'signer',
+          order: 1,
+          signed: true, 
+          signedAt: '2025-05-15',
+          isRequired: true,
+          language: 'en'
+        },
+        { 
+          id: '2',
+          name: 'Alice Brown', 
+          email: 'alice@example.com', 
+          role: 'signer',
+          order: 2,
+          signed: false,
+          isRequired: true,
+          language: 'en'
+        },
       ],
       createdBy: 'Current User',
       createdAt: '2025-05-10',
       status: 'sent',
       expiresAt: '2025-06-10',
+      settings: {
+        allowDecline: true,
+        requireAccessCode: false,
+        enableReminders: true,
+        allowDelegation: false,
+        enableAuditTrail: true,
+        retentionPeriod: 365,
+        language: 'en',
+        timezone: 'UTC'
+      },
+      fields: [],
+      audit: [],
+      reminders: {
+        enabled: true,
+        firstReminder: 3,
+        recurringReminder: 7,
+        finalReminder: 1
+      },
+      security: {
+        requireIdVerification: false,
+        enableGeolocation: false,
+        requireBiometric: false,
+        encryptionLevel: 'standard',
+        watermarkPages: false,
+        preventPrinting: false,
+        preventDownload: false,
+        sessionTimeout: 30
+      },
+      metadata: {
+        tags: ['sales', 'agreement'],
+        category: 'contract',
+        priority: 'medium',
+        department: 'sales',
+        customFields: {}
+      }
     },
     {
       id: '2',
       title: 'Employment Contract',
       documentName: 'EmploymentContract_Adams.pdf',
+      documentUrl: '/documents/employment-contract-adams.pdf',
       recipients: [
-        { name: 'Sarah Adams', email: 'sarah@example.com', signed: false },
+        { 
+          id: '3',
+          name: 'Sarah Adams', 
+          email: 'sarah@example.com', 
+          role: 'signer',
+          order: 1,
+          signed: false,
+          isRequired: true,
+          language: 'en'
+        },
       ],
       createdBy: 'Current User',
       createdAt: '2025-05-19',
       status: 'draft',
+      settings: {
+        allowDecline: true,
+        requireAccessCode: false,
+        enableReminders: true,
+        allowDelegation: false,
+        enableAuditTrail: true,
+        retentionPeriod: 365,
+        language: 'en',
+        timezone: 'UTC'
+      },
+      fields: [],
+      audit: [],
+      reminders: {
+        enabled: true,
+        firstReminder: 3,
+        recurringReminder: 7,
+        finalReminder: 1
+      },
+      security: {
+        requireIdVerification: false,
+        enableGeolocation: false,
+        requireBiometric: false,
+        encryptionLevel: 'standard',
+        watermarkPages: false,
+        preventPrinting: false,
+        preventDownload: false,
+        sessionTimeout: 30
+      },
+      metadata: {
+        tags: ['employment', 'hr'],
+        category: 'contract',
+        priority: 'high',
+        department: 'hr',
+        customFields: {}
+      }
     },
     {
       id: '3',
       title: 'NDA for Project X',
       documentName: 'NDA_ProjectX.pdf',
+      documentUrl: '/documents/nda-project-x.pdf',
       recipients: [
-        { name: 'Robert Johnson', email: 'robert@example.com', signed: true, signedAt: '2025-05-14' },
-        { name: 'Michael Wilson', email: 'michael@example.com', signed: true, signedAt: '2025-05-15' },
+        { 
+          id: '4',
+          name: 'Robert Johnson', 
+          email: 'robert@example.com', 
+          role: 'signer',
+          order: 1,
+          signed: true, 
+          signedAt: '2025-05-14',
+          isRequired: true,
+          language: 'en'
+        },
+        { 
+          id: '5',
+          name: 'Michael Wilson', 
+          email: 'michael@example.com', 
+          role: 'signer',
+          order: 2,
+          signed: true, 
+          signedAt: '2025-05-15',
+          isRequired: true,
+          language: 'en'
+        },
       ],
       createdBy: 'Current User',
       createdAt: '2025-05-12',
       status: 'completed',
+      settings: {
+        allowDecline: false,
+        requireAccessCode: true,
+        enableReminders: true,
+        allowDelegation: false,
+        enableAuditTrail: true,
+        retentionPeriod: 365,
+        language: 'en',
+        timezone: 'UTC'
+      },
+      fields: [],
+      audit: [],
+      reminders: {
+        enabled: true,
+        firstReminder: 3,
+        recurringReminder: 7,
+        finalReminder: 1
+      },
+      security: {
+        requireIdVerification: true,
+        enableGeolocation: true,
+        requireBiometric: false,
+        encryptionLevel: 'advanced',
+        watermarkPages: true,
+        preventPrinting: true,
+        preventDownload: true,
+        sessionTimeout: 15
+      },
+      metadata: {
+        tags: ['nda', 'confidential'],
+        category: 'legal',
+        priority: 'high',
+        department: 'legal',
+        customFields: {}
+      }
     },
     {
       id: '4',
       title: 'Vendor Agreement',
       documentName: 'VendorAgreement_TechSupplies.pdf',
+      documentUrl: '/documents/vendor-agreement-tech.pdf',
       recipients: [
-        { name: 'Emily Clark', email: 'emily@example.com', signed: false },
+        { 
+          id: '6',
+          name: 'Emily Clark', 
+          email: 'emily@example.com', 
+          role: 'signer',
+          order: 1,
+          signed: false,
+          isRequired: true,
+          language: 'en'
+        },
       ],
       createdBy: 'Current User',
       createdAt: '2025-05-05',
       status: 'declined',
+      settings: {
+        allowDecline: true,
+        requireAccessCode: false,
+        enableReminders: true,
+        allowDelegation: true,
+        enableAuditTrail: true,
+        retentionPeriod: 365,
+        language: 'en',
+        timezone: 'UTC'
+      },
+      fields: [],
+      audit: [],
+      reminders: {
+        enabled: true,
+        firstReminder: 3,
+        recurringReminder: 7,
+        finalReminder: 1
+      },
+      security: {
+        requireIdVerification: false,
+        enableGeolocation: false,
+        requireBiometric: false,
+        encryptionLevel: 'standard',
+        watermarkPages: false,
+        preventPrinting: false,
+        preventDownload: false,
+        sessionTimeout: 30
+      },
+      metadata: {
+        tags: ['vendor', 'procurement'],
+        category: 'contract',
+        priority: 'low',
+        department: 'procurement',
+        customFields: {}
+      }
     },
   ]);
 
@@ -89,7 +290,7 @@ const Sign = () => {
     setRequests(prevRequests => 
       prevRequests.map(req => 
         req.id === id 
-          ? { ...req, status: 'declined' as const } 
+          ? { ...req, status: 'cancelled' as const } 
           : req
       )
     );

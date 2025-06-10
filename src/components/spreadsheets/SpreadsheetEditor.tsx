@@ -7,7 +7,7 @@ import { Spreadsheet, SpreadsheetCell, SpreadsheetCollaborator } from '@/types/s
 import { 
   Grid, Save, Share2, Download, Undo, Redo, 
   Bold, Italic, AlignLeft, AlignCenter, AlignRight,
-  Palette, BorderAll, Filter, SortAsc, BarChart3,
+  Palette, Grid3X3, Filter, SortAsc, BarChart3,
   Users, Lock, Unlock, Plus, X
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -240,7 +240,7 @@ const SpreadsheetEditor = ({ spreadsheet, onSave, onShare, currentUserId }: Spre
                 <Palette className="h-4 w-4" />
               </Button>
               <Button size="sm" variant="outline">
-                <BorderAll className="h-4 w-4" />
+                <Grid3X3 className="h-4 w-4" />
               </Button>
             </div>
 
