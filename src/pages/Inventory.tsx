@@ -1,104 +1,172 @@
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
-import { Package, Plus, Filter, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
+import OdooControlPanel from '@/components/layout/OdooControlPanel';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Product, StockMove, StockValuation } from '@/types/inventory';
-import VoiceTrainer from '@/components/voice/VoiceTrainer';
-import { toast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Package, 
+  TrendingDown, 
+  AlertTriangle, 
+  ArrowUpRight,
+  ArrowDownLeft,
+  Truck,
+  Warehouse,
+  BarChart3,
+  Eye,
+  Edit,
+  MoreVertical
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface InventoryProduct {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  onHand: number;
+  reserved: number;
+  available: number;
+  reorderLevel: number;
+  location: string;
+  cost: number;
+  value: number;
+  lastMoveDate: string;
+  supplier: string;
+  status: 'in_stock' | 'low_stock' | 'out_of_stock';
+}
+
+interface StockMove {
+  id: string;
+  product: string;
+  sku: string;
+  type: 'receipt' | 'delivery' | 'internal' | 'adjustment';
+  quantity: number;
+  from: string;
+  to: string;
+  date: string;
+  reference: string;
+  state: 'draft' | 'confirmed' | 'done' | 'cancelled';
+}
+
+interface Location {
+  id: string;
+  name: string;
+  type: 'warehouse' | 'customer' | 'supplier' | 'internal';
+  parent?: string;
+  products: number;
+  totalValue: number;
+}
 
 const Inventory = () => {
   const navigate = useNavigate();
-  const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
-  const [products, setProducts] = useState<Product[]>([
+  const [activeTab, setActiveTab] = useState('products');
+  const [viewType, setViewType] = useState<'list' | 'kanban'>('list');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [products, setProducts] = useState<InventoryProduct[]>([
     {
-      id: 'PROD001',
-      name: 'Office Chair Premium',
-      sku: 'OCP-001',
-      category: 'Furniture',
-      type: 'storable',
-      currentStock: 25,
-      minStock: 10,
-      maxStock: 100,
-      unit: 'pcs',
-      cost: 150,
-      salePrice: 299,
-      location: 'Warehouse A'
-    },
-    {
-      id: 'PROD002',
-      name: 'Laptop Stand',
-      sku: 'LS-002',
-      category: 'Accessories',
-      type: 'storable',
-      currentStock: 5,
-      minStock: 15,
-      maxStock: 50,
-      unit: 'pcs',
-      cost: 25,
-      salePrice: 49,
-      location: 'Warehouse B'
-    },
-    {
-      id: 'PROD003',
-      name: 'Conference Table',
-      sku: 'CT-003',
-      category: 'Furniture',
-      type: 'storable',
-      currentStock: 0,
-      minStock: 5,
-      maxStock: 20,
-      unit: 'pcs',
+      id: '1',
+      name: 'Professional Laptop',
+      sku: 'LAP-001',
+      category: 'Electronics',
+      onHand: 45,
+      reserved: 5,
+      available: 40,
+      reorderLevel: 10,
+      location: 'Main Warehouse',
       cost: 800,
-      salePrice: 1599,
-      location: 'Warehouse A'
+      value: 36000,
+      lastMoveDate: '2024-01-20',
+      supplier: 'Tech Supplier Co.',
+      status: 'in_stock'
+    },
+    {
+      id: '2',
+      name: 'Office Chair',
+      sku: 'CHR-002',
+      category: 'Furniture',
+      onHand: 8,
+      reserved: 2,
+      available: 6,
+      reorderLevel: 15,
+      location: 'Main Warehouse',
+      cost: 150,
+      value: 1200,
+      lastMoveDate: '2024-01-18',
+      supplier: 'Furniture Plus',
+      status: 'low_stock'
+    },
+    {
+      id: '3',
+      name: 'Wireless Mouse',
+      sku: 'MOU-003',
+      category: 'Electronics',
+      onHand: 0,
+      reserved: 0,
+      available: 0,
+      reorderLevel: 20,
+      location: 'Main Warehouse',
+      cost: 25,
+      value: 0,
+      lastMoveDate: '2024-01-15',
+      supplier: 'Electronics Hub',
+      status: 'out_of_stock'
     }
   ]);
 
   const [stockMoves, setStockMoves] = useState<StockMove[]>([
     {
-      id: 'SM001',
-      product: 'Office Chair Premium',
-      type: 'in',
+      id: '1',
+      product: 'Professional Laptop',
+      sku: 'LAP-001',
+      type: 'receipt',
       quantity: 20,
-      date: '2025-05-20',
-      location: 'Warehouse A',
+      from: 'Vendors',
+      to: 'Main Warehouse',
+      date: '2024-01-20',
       reference: 'PO001',
-      responsible: 'John Smith'
+      state: 'done'
     },
     {
-      id: 'SM002',
-      product: 'Laptop Stand',
-      type: 'out',
-      quantity: 10,
-      date: '2025-05-21',
-      location: 'Warehouse B',
+      id: '2',
+      product: 'Office Chair',
+      sku: 'CHR-002',
+      type: 'delivery',
+      quantity: 5,
+      from: 'Main Warehouse',
+      to: 'Customers',
+      date: '2024-01-18',
       reference: 'SO001',
-      responsible: 'Alice Brown'
-    },
-    {
-      id: 'SM003',
-      product: 'Conference Table',
-      type: 'out',
-      quantity: 2,
-      date: '2025-05-22',
-      location: 'Warehouse A',
-      reference: 'SO002',
-      responsible: 'Mike Wilson'
+      state: 'done'
     }
   ]);
 
-  const valuation: StockValuation = {
-    totalValue: products.reduce((sum, p) => sum + (p.currentStock * p.cost), 0),
-    totalProducts: products.length,
-    lowStockItems: products.filter(p => p.currentStock < p.minStock && p.currentStock > 0).length,
-    outOfStockItems: products.filter(p => p.currentStock === 0).length
-  };
+  const [locations, setLocations] = useState<Location[]>([
+    {
+      id: '1',
+      name: 'Main Warehouse',
+      type: 'warehouse',
+      products: 156,
+      totalValue: 485000
+    },
+    {
+      id: '2',
+      name: 'Secondary Storage',
+      type: 'warehouse',
+      products: 89,
+      totalValue: 125000
+    }
+  ]);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
@@ -107,225 +175,286 @@ const Inventory = () => {
     }
   }, [navigate]);
 
-  const handleStockAdjustment = (productId: string, adjustment: number) => {
-    setProducts(prevProducts =>
-      prevProducts.map(product =>
-        product.id === productId
-          ? { ...product, currentStock: Math.max(0, product.currentStock + adjustment) }
-          : product
-      )
-    );
-    
-    const newMove: StockMove = {
-      id: `SM${Date.now()}`,
-      product: products.find(p => p.id === productId)?.name || '',
-      type: adjustment > 0 ? 'in' : 'out',
-      quantity: Math.abs(adjustment),
-      date: new Date().toISOString().split('T')[0],
-      location: 'Manual Adjustment',
-      reference: 'ADJ001',
-      responsible: 'Current User'
+  const productFilters = [
+    { label: 'In Stock', value: 'in_stock', count: products.filter(p => p.status === 'in_stock').length },
+    { label: 'Low Stock', value: 'low_stock', count: products.filter(p => p.status === 'low_stock').length },
+    { label: 'Out of Stock', value: 'out_of_stock', count: products.filter(p => p.status === 'out_of_stock').length },
+    { label: 'To Reorder', value: 'reorder', count: products.filter(p => p.available <= p.reorderLevel).length }
+  ];
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      in_stock: 'bg-green-500',
+      low_stock: 'bg-yellow-500',
+      out_of_stock: 'bg-red-500'
     };
-    
-    setStockMoves(prev => [newMove, ...prev]);
-    
-    toast({
-      title: "Stock adjusted",
-      description: `Stock ${adjustment > 0 ? 'increased' : 'decreased'} by ${Math.abs(adjustment)} units.`,
-    });
+    return colors[status as keyof typeof colors] || 'bg-gray-500';
   };
 
-  const getStockStatus = (product: Product) => {
-    if (product.currentStock === 0) return { status: 'Out of Stock', variant: 'destructive' as const };
-    if (product.currentStock < product.minStock) return { status: 'Low Stock', variant: 'secondary' as const };
-    return { status: 'In Stock', variant: 'default' as const };
+  const getMoveTypeIcon = (type: string) => {
+    const icons = {
+      receipt: ArrowDownLeft,
+      delivery: ArrowUpRight,
+      internal: Package,
+      adjustment: Edit
+    };
+    return icons[type as keyof typeof icons] || Package;
   };
 
-  return (
-    <TopbarDashboardLayout currentApp="Inventory">
-      <div className="p-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <Package className="h-8 w-8 text-odoo-primary mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-odoo-dark">Inventory Management</h1>
-                <p className="text-odoo-gray">
-                  Track stock levels, manage products, and monitor inventory movements.
-                </p>
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline"
-                onClick={() => setShowVoiceTrainer(!showVoiceTrainer)}
-                className="border-odoo-primary text-odoo-primary hover:bg-odoo-primary hover:text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 715 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                </svg>
-                Voice Guide
-              </Button>
-              <Button className="bg-odoo-primary hover:bg-odoo-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Product
-              </Button>
-            </div>
-          </div>
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || 
+                         product.status === selectedFilter ||
+                         (selectedFilter === 'reorder' && product.available <= product.reorderLevel);
+    return matchesSearch && matchesFilter;
+  });
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Total Value</p>
-              <p className="text-2xl font-semibold">${valuation.totalValue.toLocaleString()}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Products</p>
-              <p className="text-2xl font-semibold">{valuation.totalProducts}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Low Stock</p>
-              <p className="text-2xl font-semibold text-orange-500">{valuation.lowStockItems}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Out of Stock</p>
-              <p className="text-2xl font-semibold text-red-500">{valuation.outOfStockItems}</p>
-            </div>
-          </div>
+  const totalValue = products.reduce((sum, p) => sum + p.value, 0);
+  const lowStockCount = products.filter(p => p.status === 'low_stock').length;
+  const outOfStockCount = products.filter(p => p.status === 'out_of_stock').length;
 
-          <Tabs defaultValue="products">
-            <TabsList>
-              <TabsTrigger value="products">Products</TabsTrigger>
-              <TabsTrigger value="movements">Stock Movements</TabsTrigger>
-              <TabsTrigger value="locations">Locations</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="products">
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-64">
-                  <Input placeholder="Search products..." />
-                </div>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {products.map(product => {
-                  const stockStatus = getStockStatus(product);
-                  return (
-                    <Card key={product.id}>
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg">{product.name}</CardTitle>
-                            <p className="text-gray-500">SKU: {product.sku} | Category: {product.category}</p>
-                          </div>
-                          <Badge variant={stockStatus.variant}>
-                            {stockStatus.status}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div>
-                            <p className="text-sm text-gray-500">Current Stock</p>
-                            <p className="text-lg font-semibold">{product.currentStock} {product.unit}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Min/Max Stock</p>
-                            <p className="text-lg">{product.minStock}/{product.maxStock} {product.unit}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Value</p>
-                            <p className="text-lg font-semibold">${(product.currentStock * product.cost).toLocaleString()}</p>
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleStockAdjustment(product.id, -1)}
-                              disabled={product.currentStock === 0}
-                            >
-                              <TrendingDown className="h-3 w-3" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleStockAdjustment(product.id, 1)}
-                            >
-                              <TrendingUp className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="movements">
-              <div className="space-y-4">
-                {stockMoves.map(move => (
-                  <Card key={move.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium">{move.product}</h4>
-                          <p className="text-sm text-gray-500">{move.reference} | {move.responsible}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="flex items-center">
-                            {move.type === 'in' ? (
-                              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-                            )}
-                            <span className="font-medium">
-                              {move.type === 'in' ? '+' : '-'}{move.quantity}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-500">{move.date}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="locations">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {['Warehouse A', 'Warehouse B', 'Store Front'].map(location => (
-                  <Card key={location}>
-                    <CardHeader>
-                      <CardTitle className="text-base">{location}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm text-gray-500">
-                        <p>Products: {products.filter(p => p.location === location).length}</p>
-                        <p>Total Value: ${products.filter(p => p.location === location).reduce((sum, p) => sum + (p.currentStock * p.cost), 0).toLocaleString()}</p>
-                        <p>Capacity: 80%</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+  const renderProductsList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Product</div>
+        <div className="col-span-1">Category</div>
+        <div className="col-span-1">On Hand</div>
+        <div className="col-span-1">Reserved</div>
+        <div className="col-span-1">Available</div>
+        <div className="col-span-1">Reorder Level</div>
+        <div className="col-span-2">Location</div>
+        <div className="col-span-1">Value</div>
+        <div className="col-span-1">Status</div>
+        <div className="col-span-1">Actions</div>
       </div>
       
-      {/* Voice Trainer */}
-      {showVoiceTrainer && (
-        <VoiceTrainer 
-          isOpen={showVoiceTrainer} 
-          onClose={() => setShowVoiceTrainer(false)} 
-          currentScreen="inventory"
+      {filteredProducts.map(product => (
+        <div key={product.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-2">
+            <p className="font-medium text-sm">{product.name}</p>
+            <p className="text-xs text-gray-600">{product.sku}</p>
+          </div>
+          <div className="col-span-1">
+            <Badge variant="outline">{product.category}</Badge>
+          </div>
+          <div className="col-span-1">
+            <p className="font-medium text-sm">{product.onHand}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm text-yellow-600">{product.reserved}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="font-medium text-sm">{product.available}</p>
+          </div>
+          <div className="col-span-1">
+            <div className="flex items-center space-x-1">
+              {product.available <= product.reorderLevel && (
+                <AlertTriangle className="h-3 w-3 text-red-500" />
+              )}
+              <span className="text-sm">{product.reorderLevel}</span>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <div className="flex items-center space-x-1">
+              <Warehouse className="h-3 w-3" />
+              <span className="text-sm">{product.location}</span>
+            </div>
+          </div>
+          <div className="col-span-1">
+            <p className="font-medium text-sm">${product.value.toLocaleString()}</p>
+          </div>
+          <div className="col-span-1">
+            <Badge className={`text-white ${getStatusColor(product.status)}`}>
+              {product.status.replace('_', ' ')}
+            </Badge>
+          </div>
+          <div className="col-span-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Update Stock
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Truck className="h-4 w-4 mr-2" />
+                  Reorder
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderStockMoves = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Product</div>
+        <div className="col-span-1">Type</div>
+        <div className="col-span-1">Quantity</div>
+        <div className="col-span-2">From</div>
+        <div className="col-span-2">To</div>
+        <div className="col-span-1">Date</div>
+        <div className="col-span-1">Reference</div>
+        <div className="col-span-1">State</div>
+        <div className="col-span-1">Actions</div>
+      </div>
+      
+      {stockMoves.map(move => {
+        const MoveIcon = getMoveTypeIcon(move.type);
+        return (
+          <div key={move.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+            <div className="col-span-2">
+              <p className="font-medium text-sm">{move.product}</p>
+              <p className="text-xs text-gray-600">{move.sku}</p>
+            </div>
+            <div className="col-span-1">
+              <div className="flex items-center space-x-1">
+                <MoveIcon className="h-4 w-4" />
+                <span className="text-sm capitalize">{move.type}</span>
+              </div>
+            </div>
+            <div className="col-span-1">
+              <p className="font-medium text-sm">{move.quantity}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-sm">{move.from}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-sm">{move.to}</p>
+            </div>
+            <div className="col-span-1">
+              <p className="text-sm">{move.date}</p>
+            </div>
+            <div className="col-span-1">
+              <p className="text-sm">{move.reference}</p>
+            </div>
+            <div className="col-span-1">
+              <Badge variant={move.state === 'done' ? 'default' : 'secondary'}>
+                {move.state}
+              </Badge>
+            </div>
+            <div className="col-span-1">
+              <Button variant="ghost" size="sm">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <OdooMainLayout currentApp="Inventory">
+      <div className="flex flex-col h-full">
+        <OdooControlPanel
+          title={activeTab === 'products' ? 'Products' : activeTab === 'moves' ? 'Stock Moves' : 'Locations'}
+          subtitle={
+            activeTab === 'products' ? 'Inventory levels and stock management' :
+            activeTab === 'moves' ? 'Track all inventory movements' :
+            'Warehouse and storage locations'
+          }
+          searchPlaceholder={`Search ${activeTab}...`}
+          onSearch={setSearchTerm}
+          onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
+          viewType={viewType}
+          onViewChange={(view) => setViewType(view as any)}
+          filters={activeTab === 'products' ? productFilters : []}
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
+          recordCount={activeTab === 'products' ? filteredProducts.length : stockMoves.length}
         />
-      )}
-    </TopbarDashboardLayout>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="border-b bg-white px-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="moves">Stock Moves</TabsTrigger>
+              <TabsTrigger value="locations">Locations</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="products" className="flex-1 flex flex-col">
+            {/* Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Inventory Value</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Package className="h-5 w-5 text-blue-600" />
+                    <span className="text-2xl font-bold">${totalValue.toLocaleString()}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl font-bold">{products.length}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Low Stock</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <TrendingDown className="h-5 w-5 text-yellow-600" />
+                    <span className="text-2xl font-bold">{lowStockCount}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Out of Stock</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <span className="text-2xl font-bold">{outOfStockCount}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex-1 p-6">
+              {renderProductsList()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="moves" className="flex-1 p-6">
+            {renderStockMoves()}
+          </TabsContent>
+
+          <TabsContent value="locations" className="flex-1 p-6">
+            <div className="text-center text-gray-500">
+              Location management coming soon...
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </OdooMainLayout>
   );
 };
 

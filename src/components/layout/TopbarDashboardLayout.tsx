@@ -1,114 +1,197 @@
 
-import { useState, ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
-import { Search, HelpCircle } from 'lucide-react';
-import VoiceTrainer from '@/components/voice/VoiceTrainer';
-import AppSwitcher from './AppSwitcher';
-import NotificationMenu from './NotificationMenu';
-import MessageMenu from './MessageMenu';
-import UserMenu from './UserMenu';
-import SecondaryNavbar from './SecondaryNavbar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Search, 
+  Bell, 
+  Settings, 
+  User, 
+  LogOut, 
+  Grid3X3,
+  MessageSquare,
+  Calendar,
+  Star,
+  Plus
+} from 'lucide-react';
 
 interface TopbarDashboardLayoutProps {
   children: ReactNode;
   currentApp?: string;
 }
 
-// Define structure for notifications and messages if not already globally available
-interface NotificationItem {
-  id: string; title: string; message: string; time: string; read: boolean;
-}
-interface MessageItem {
-  id: string; sender: string; message: string; time: string; read: boolean;
-}
-
-
 const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDashboardLayoutProps) => {
-  const [showVoiceTrainer, setShowVoiceTrainer] = useState(false);
-  
-  // Initial notifications state
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {id: '1', title: 'New Invoice', message: 'Invoice #INV001 has been created', time: '5 mins ago', read: false},
-    {id: '2', title: 'Meeting Reminder', message: 'Meeting with Client XYZ in 30 minutes', time: '30 mins ago', read: false},
-    {id: '3', title: 'Task Completed', message: 'Project milestone #3 completed', time: '2 hours ago', read: true},
-    {id: '4', title: 'System Update', message: 'System will be updated tonight at 2 AM', time: 'Yesterday', read: true},
-  ]);
-
-  // Initial messages state
-  const [messages, setMessages] = useState<MessageItem[]>([
-    {id: '1', sender: 'John Doe', message: 'Can you review the latest proposal?', time: '10 mins ago', read: false},
-    {id: '2', sender: 'Sarah Brown', message: 'The client approved the design', time: '1 hour ago', read: false},
-    {id: '3', sender: 'Technical Support', message: 'Your ticket #45678 has been resolved', time: '3 hours ago', read: true},
-  ]);
-  
   const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState('');
 
-  const markNotificationAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
-    // Toast is now handled within NotificationMenu
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    navigate('/login');
   };
 
-  const markMessageAsRead = (id: string) => {
-    setMessages(prev => prev.map(m => m.id === id ? {...m, read: true} : m));
-    // Toast is now handled within MessageMenu
+  const handleSearch = (value: string) => {
+    console.log('Global search:', value);
   };
-  
+
+  const favoriteApps = [
+    { name: 'CRM', path: '/apps/crm', icon: '🤝' },
+    { name: 'Sales', path: '/apps/sales', icon: '💰' },
+    { name: 'Inventory', path: '/apps/inventory', icon: '📦' },
+    { name: 'Accounting', path: '/apps/accounting', icon: '💵' }
+  ];
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-50">
       {/* Top Navigation Bar */}
-      <header className="bg-odoo-primary shadow-sm">
-        <div className="px-4 flex h-14 items-center justify-between">
-          {/* Logo and App Selector */}
+      <header className="bg-white border-b border-gray-200 h-14 flex items-center px-4">
+        <div className="flex items-center flex-1">
+          {/* Logo and App Switcher */}
           <div className="flex items-center space-x-4">
-            <Link to="/dashboard" className="flex items-center">
-              <img
-                className="h-7 w-auto"
-                src="https://www.odoo.com/web/image/website/1/logo/Odoo?unique=af51af9"
-                alt="Odoo Logo"
-              />
-              <span className="ml-2 font-bold text-white">
-                odoo
-              </span>
+            <Link to="/dashboard" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-odoo-primary rounded-md flex items-center justify-center">
+                <span className="text-white font-bold text-sm">O</span>
+              </div>
+              <span className="font-semibold text-gray-900 hidden sm:block">OdooEcho</span>
             </Link>
-            <AppSwitcher currentApp={currentApp} />
+            
+            <div className="h-6 w-px bg-gray-300" />
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-gray-700">
+                  <Grid3X3 className="h-4 w-4 mr-2" />
+                  {currentApp}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80 p-4">
+                <div className="mb-3">
+                  <h4 className="font-medium text-sm text-gray-900 mb-2">Favorites</h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    {favoriteApps.map((app) => (
+                      <Link
+                        key={app.name}
+                        to={app.path}
+                        className="flex flex-col items-center p-2 rounded-md hover:bg-gray-100 text-center"
+                      >
+                        <span className="text-2xl mb-1">{app.icon}</span>
+                        <span className="text-xs text-gray-600">{app.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/apps" className="flex items-center">
+                    <Plus className="h-4 w-4 mr-2" />
+                    All Applications
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          
-          {/* Right Side Icons */}
-          <div className="flex items-center space-x-3">
-            <button className="p-1.5 rounded-md text-white hover:bg-white/10">
-              <Search className="h-5 w-5" />
-            </button>
-            <NotificationMenu notifications={notifications} onMarkAsRead={markNotificationAsRead} />
-            <MessageMenu messages={messages} onMarkAsRead={markMessageAsRead} />
-            <button 
-              className="p-1.5 rounded-md text-white hover:bg-white/10"
-              onClick={() => setShowVoiceTrainer(true)}
-            >
-              <HelpCircle className="h-5 w-5" />
-            </button>
-            <UserMenu />
+
+          {/* Global Search */}
+          <div className="flex-1 max-w-lg mx-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search across all apps..."
+                value={searchValue}
+                onChange={(e) => {
+                  setSearchValue(e.target.value);
+                  handleSearch(e.target.value);
+                }}
+                className="pl-10 bg-gray-50 border-gray-200"
+              />
+            </div>
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center space-x-2">
+            {/* Notifications */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="h-4 w-4" />
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-red-500">
+                    3
+                  </Badge>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80">
+                <div className="p-4">
+                  <h4 className="font-medium mb-2">Notifications</h4>
+                  <div className="space-y-2">
+                    <div className="p-2 rounded-md bg-blue-50 text-sm">
+                      <p className="font-medium text-blue-900">New lead assigned</p>
+                      <p className="text-blue-700">John Doe - Tech Corp</p>
+                    </div>
+                    <div className="p-2 rounded-md bg-green-50 text-sm">
+                      <p className="font-medium text-green-900">Invoice paid</p>
+                      <p className="text-green-700">INV-001 - $5,500</p>
+                    </div>
+                  </div>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Messages */}
+            <Button variant="ghost" size="sm">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+
+            {/* Calendar */}
+            <Button variant="ghost" size="sm">
+              <Calendar className="h-4 w-4" />
+            </Button>
+
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                  <Avatar className="w-7 h-7">
+                    <AvatarImage src="/placeholder-avatar.jpg" />
+                    <AvatarFallback>AD</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:block text-sm">Admin</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem>
+                  <User className="h-4 w-4 mr-2" />
+                  My Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Preferences
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
-      
-      <SecondaryNavbar currentApp={currentApp} />
-      
+
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-odoo-light">
+      <div className="flex-1 overflow-hidden">
         {children}
-      </main>
-      
-      {showVoiceTrainer && (
-        <VoiceTrainer 
-          isOpen={showVoiceTrainer} 
-          onClose={() => setShowVoiceTrainer(false)} 
-          currentScreen={typeof currentApp === 'string' ? currentApp.toLowerCase().replace(/\s+/g, '') : 'unknown'}
-        />
-      )}
+      </div>
     </div>
   );
 };
 
 export default TopbarDashboardLayout;
-

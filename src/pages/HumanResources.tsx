@@ -1,23 +1,185 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
+import OdooControlPanel from '@/components/layout/OdooControlPanel';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Plus, Filter, Calendar, Users, User, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  Users, 
+  Calendar, 
+  DollarSign, 
+  TrendingUp,
+  Mail,
+  Phone,
+  MapPin,
+  Briefcase,
+  Clock,
+  CheckCircle,
+  XCircle,
+  MoreVertical,
+  Eye,
+  Edit
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  position: string;
+  manager: string;
+  hireDate: string;
+  salary: number;
+  status: 'active' | 'inactive' | 'on_leave';
+  avatar: string;
+  address: string;
+  workLocation: string;
+  employeeType: 'full_time' | 'part_time' | 'contractor';
+  skills: string[];
+}
+
+interface LeaveRequest {
+  id: string;
+  employee: string;
+  type: 'vacation' | 'sick' | 'personal' | 'maternity';
+  startDate: string;
+  endDate: string;
+  days: number;
+  status: 'pending' | 'approved' | 'rejected';
+  reason: string;
+  approver?: string;
+}
+
+interface Timesheet {
+  id: string;
+  employee: string;
+  date: string;
+  project: string;
+  task: string;
+  hours: number;
+  description: string;
+  status: 'draft' | 'submitted' | 'approved';
+}
 
 const HumanResources = () => {
   const navigate = useNavigate();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [filterDepartment, setFilterDepartment] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [activeTab, setActiveTab] = useState('employees');
+  const [viewType, setViewType] = useState<'list' | 'kanban'>('list');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Check authentication
+  const [employees, setEmployees] = useState<Employee[]>([
+    {
+      id: '1',
+      name: 'Sarah Johnson',
+      email: 'sarah.johnson@company.com',
+      phone: '+1 234 567 8900',
+      department: 'Sales',
+      position: 'Sales Manager',
+      manager: 'John Smith',
+      hireDate: '2022-03-15',
+      salary: 75000,
+      status: 'active',
+      avatar: '/placeholder-avatar.jpg',
+      address: '123 Main St, New York, NY',
+      workLocation: 'New York Office',
+      employeeType: 'full_time',
+      skills: ['Sales', 'CRM', 'Negotiation']
+    },
+    {
+      id: '2',
+      name: 'Mike Wilson',
+      email: 'mike.wilson@company.com',
+      phone: '+1 234 567 8901',
+      department: 'Engineering',
+      position: 'Software Developer',
+      manager: 'Alice Brown',
+      hireDate: '2021-07-20',
+      salary: 85000,
+      status: 'active',
+      avatar: '/placeholder-avatar.jpg',
+      address: '456 Tech Ave, San Francisco, CA',
+      workLocation: 'San Francisco Office',
+      employeeType: 'full_time',
+      skills: ['React', 'Node.js', 'Python']
+    },
+    {
+      id: '3',
+      name: 'Emily Davis',
+      email: 'emily.davis@company.com',
+      phone: '+1 234 567 8902',
+      department: 'Marketing',
+      position: 'Marketing Specialist',
+      manager: 'David Lee',
+      hireDate: '2023-01-10',
+      salary: 60000,
+      status: 'on_leave',
+      avatar: '/placeholder-avatar.jpg',
+      address: '789 Marketing Blvd, Chicago, IL',
+      workLocation: 'Chicago Office',
+      employeeType: 'full_time',
+      skills: ['Digital Marketing', 'SEO', 'Content Creation']
+    }
+  ]);
+
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
+    {
+      id: '1',
+      employee: 'Emily Davis',
+      type: 'vacation',
+      startDate: '2024-02-01',
+      endDate: '2024-02-05',
+      days: 5,
+      status: 'pending',
+      reason: 'Family vacation'
+    },
+    {
+      id: '2',
+      employee: 'Mike Wilson',
+      type: 'sick',
+      startDate: '2024-01-20',
+      endDate: '2024-01-22',
+      days: 3,
+      status: 'approved',
+      reason: 'Flu symptoms',
+      approver: 'Alice Brown'
+    }
+  ]);
+
+  const [timesheets, setTimesheets] = useState<Timesheet[]>([
+    {
+      id: '1',
+      employee: 'Sarah Johnson',
+      date: '2024-01-22',
+      project: 'CRM Implementation',
+      task: 'Client meetings',
+      hours: 8,
+      description: 'Met with potential clients to discuss CRM solutions',
+      status: 'approved'
+    },
+    {
+      id: '2',
+      employee: 'Mike Wilson',
+      date: '2024-01-22',
+      project: 'Website Redesign',
+      task: 'Frontend development',
+      hours: 7.5,
+      description: 'Worked on responsive design components',
+      status: 'submitted'
+    }
+  ]);
+
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     if (!isAuthenticated) {
@@ -25,468 +187,284 @@ const HumanResources = () => {
     }
   }, [navigate]);
 
-  // Mock employees data
-  const employees = [
-    {
-      id: 'EMP001',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      department: 'Development',
-      position: 'Senior Developer',
-      joinDate: '2022-05-15',
-      status: 'Active',
-      avatar: '',
-    },
-    {
-      id: 'EMP002',
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      department: 'Marketing',
-      position: 'Marketing Manager',
-      joinDate: '2023-02-10',
-      status: 'Active',
-      avatar: '',
-    },
-    {
-      id: 'EMP003',
-      name: 'Robert Johnson',
-      email: 'robert.johnson@example.com',
-      department: 'Sales',
-      position: 'Sales Executive',
-      joinDate: '2022-11-05',
-      status: 'Active',
-      avatar: '',
-    },
-    {
-      id: 'EMP004',
-      name: 'Emily Davis',
-      email: 'emily.davis@example.com',
-      department: 'Human Resources',
-      position: 'HR Specialist',
-      joinDate: '2021-08-20',
-      status: 'On Leave',
-      avatar: '',
-    },
-    {
-      id: 'EMP005',
-      name: 'Michael Wilson',
-      email: 'michael.wilson@example.com',
-      department: 'Development',
-      position: 'Junior Developer',
-      joinDate: '2023-09-12',
-      status: 'Active',
-      avatar: '',
-    },
-    {
-      id: 'EMP006',
-      name: 'Sarah Brown',
-      email: 'sarah.brown@example.com',
-      department: 'Finance',
-      position: 'Financial Analyst',
-      joinDate: '2022-03-18',
-      status: 'Inactive',
-      avatar: '',
-    },
+  const employeeFilters = [
+    { label: 'Active', value: 'active', count: employees.filter(e => e.status === 'active').length },
+    { label: 'On Leave', value: 'on_leave', count: employees.filter(e => e.status === 'on_leave').length },
+    { label: 'Full Time', value: 'full_time', count: employees.filter(e => e.employeeType === 'full_time').length },
+    { label: 'Part Time', value: 'part_time', count: employees.filter(e => e.employeeType === 'part_time').length }
   ];
 
-  // Mock time off requests
-  const timeOffRequests = [
-    {
-      id: 'TO001',
-      employee: 'John Doe',
-      type: 'Vacation',
-      startDate: '2025-05-20',
-      endDate: '2025-05-27',
-      duration: '8 days',
-      status: 'Approved',
-    },
-    {
-      id: 'TO002',
-      employee: 'Jane Smith',
-      type: 'Sick Leave',
-      startDate: '2025-05-15',
-      endDate: '2025-05-16',
-      duration: '2 days',
-      status: 'Approved',
-    },
-    {
-      id: 'TO003',
-      employee: 'Emily Davis',
-      type: 'Maternity Leave',
-      startDate: '2025-06-01',
-      endDate: '2025-09-01',
-      duration: '92 days',
-      status: 'Pending',
-    },
-    {
-      id: 'TO004',
-      employee: 'Michael Wilson',
-      type: 'Personal Leave',
-      startDate: '2025-05-25',
-      endDate: '2025-05-26',
-      duration: '2 days',
-      status: 'Pending',
-    },
-  ];
+  const getStatusColor = (status: string) => {
+    const colors = {
+      active: 'bg-green-500',
+      inactive: 'bg-gray-500',
+      on_leave: 'bg-yellow-500',
+      pending: 'bg-blue-500',
+      approved: 'bg-green-500',
+      rejected: 'bg-red-500'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-500';
+  };
 
-  // Filter employees based on search and department filter
   const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = searchTerm === '' || 
-      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.position.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesDepartment = filterDepartment === 'all' || employee.department.toLowerCase() === filterDepartment.toLowerCase();
-    
-    return matchesSearch && matchesDepartment;
+    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || 
+                         employee.status === selectedFilter ||
+                         employee.employeeType === selectedFilter;
+    return matchesSearch && matchesFilter;
   });
 
-  // Toggle item selection
-  const toggleSelectAll = () => {
-    if (selectedItems.length === filteredEmployees.length) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(filteredEmployees.map(emp => emp.id));
-    }
-  };
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter(e => e.status === 'active').length;
+  const avgSalary = employees.reduce((sum, e) => sum + e.salary, 0) / employees.length;
+  const pendingLeaves = leaveRequests.filter(l => l.status === 'pending').length;
 
-  const toggleSelectItem = (id: string) => {
-    if (selectedItems.includes(id)) {
-      setSelectedItems(selectedItems.filter(itemId => itemId !== id));
-    } else {
-      setSelectedItems([...selectedItems, id]);
-    }
-  };
+  const renderEmployeesList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Employee</div>
+        <div className="col-span-2">Department</div>
+        <div className="col-span-1">Position</div>
+        <div className="col-span-1">Manager</div>
+        <div className="col-span-1">Hire Date</div>
+        <div className="col-span-1">Salary</div>
+        <div className="col-span-1">Type</div>
+        <div className="col-span-1">Location</div>
+        <div className="col-span-1">Status</div>
+        <div className="col-span-1">Actions</div>
+      </div>
+      
+      {filteredEmployees.map(employee => (
+        <div key={employee.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-2">
+            <div className="flex items-center space-x-3">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={employee.avatar} />
+                <AvatarFallback>{employee.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium text-sm">{employee.name}</p>
+                <p className="text-xs text-gray-600">{employee.email}</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <Badge variant="outline">{employee.department}</Badge>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{employee.position}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{employee.manager}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{employee.hireDate}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="font-medium text-sm">${employee.salary.toLocaleString()}</p>
+          </div>
+          <div className="col-span-1">
+            <Badge variant="secondary">{employee.employeeType.replace('_', ' ')}</Badge>
+          </div>
+          <div className="col-span-1">
+            <div className="flex items-center space-x-1">
+              <MapPin className="h-3 w-3" />
+              <span className="text-xs">{employee.workLocation.split(' ')[0]}</span>
+            </div>
+          </div>
+          <div className="col-span-1">
+            <Badge className={`text-white ${getStatusColor(employee.status)}`}>
+              {employee.status.replace('_', ' ')}
+            </Badge>
+          </div>
+          <div className="col-span-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  View Schedule
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'bg-green-100 text-green-800';
-      case 'On Leave':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Inactive':
-        return 'bg-red-100 text-red-800';
-      case 'Approved':
-        return 'bg-green-100 text-green-800';
-      case 'Pending':
-        return 'bg-blue-100 text-blue-800';
-      case 'Rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Get initials from name
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
-  };
+  const renderLeaveRequests = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Employee</div>
+        <div className="col-span-1">Type</div>
+        <div className="col-span-2">Start Date</div>
+        <div className="col-span-2">End Date</div>
+        <div className="col-span-1">Days</div>
+        <div className="col-span-2">Reason</div>
+        <div className="col-span-1">Status</div>
+        <div className="col-span-1">Actions</div>
+      </div>
+      
+      {leaveRequests.map(request => (
+        <div key={request.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-2">
+            <p className="font-medium text-sm">{request.employee}</p>
+          </div>
+          <div className="col-span-1">
+            <Badge variant="outline">{request.type}</Badge>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{request.startDate}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{request.endDate}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="font-medium text-sm">{request.days}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{request.reason}</p>
+          </div>
+          <div className="col-span-1">
+            <Badge className={`text-white ${getStatusColor(request.status)}`}>
+              {request.status}
+            </Badge>
+          </div>
+          <div className="col-span-1">
+            {request.status === 'pending' && (
+              <div className="flex space-x-1">
+                <Button size="sm" variant="outline" className="text-green-600">
+                  <CheckCircle className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="outline" className="text-red-600">
+                  <XCircle className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <TopbarDashboardLayout currentApp="Human Resources">
-      <div className="p-6">
-        {/* HR Overview */}
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <h2 className="text-xl font-bold text-odoo-dark mb-4">HR Overview</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { name: 'Total Employees', count: employees.length, color: 'bg-blue-500' },
-              { name: 'Active Employees', count: employees.filter(emp => emp.status === 'Active').length, color: 'bg-green-500' },
-              { name: 'Pending Time Off', count: timeOffRequests.filter(req => req.status === 'Pending').length, color: 'bg-yellow-500' },
-              { name: 'Departments', count: [...new Set(employees.map(emp => emp.department))].length, color: 'bg-purple-500' },
-            ].map((metric) => (
-              <div key={metric.name} className="p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full ${metric.color} mr-2`}></div>
-                  <h3 className="font-medium text-odoo-dark">{metric.name}</h3>
-                </div>
-                <p className="text-2xl font-bold mt-2 text-odoo-dark">{metric.count}</p>
-              </div>
-            ))}
+    <OdooMainLayout currentApp="Human Resources">
+      <div className="flex flex-col h-full">
+        <OdooControlPanel
+          title={
+            activeTab === 'employees' ? 'Employees' :
+            activeTab === 'leaves' ? 'Leave Requests' :
+            'Timesheets'
+          }
+          subtitle={
+            activeTab === 'employees' ? 'Manage employee records and information' :
+            activeTab === 'leaves' ? 'Track and approve time off requests' :
+            'Monitor work hours and project time'
+          }
+          searchPlaceholder={`Search ${activeTab}...`}
+          onSearch={setSearchTerm}
+          onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
+          viewType={viewType}
+          onViewChange={(view) => setViewType(view as any)}
+          filters={activeTab === 'employees' ? employeeFilters : []}
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
+          recordCount={activeTab === 'employees' ? filteredEmployees.length : 
+                      activeTab === 'leaves' ? leaveRequests.length : timesheets.length}
+        />
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="border-b bg-white px-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="employees">Employees</TabsTrigger>
+              <TabsTrigger value="leaves">Leave Requests</TabsTrigger>
+              <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
+            </TabsList>
           </div>
-        </div>
-        
-        {/* Main Content Tabs */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="border-b">
-            <Tabs defaultValue="employees" className="w-full">
-              <div className="px-4 pt-4">
-                <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-2 md:grid-cols-4">
-                  <TabsTrigger value="employees">Employees</TabsTrigger>
-                  <TabsTrigger value="timeoff">Time Off</TabsTrigger>
-                  <TabsTrigger value="recruitment">Recruitment</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
-                </TabsList>
-              </div>
-              
-              {/* Employees Tab */}
-              <TabsContent value="employees" className="p-0">
-                <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="flex items-center">
-                    <Button variant="outline" className="mr-2">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Employee
-                    </Button>
-                    <Button variant="outline" className="mr-2" disabled={selectedItems.length === 0}>
-                      <Users className="h-4 w-4 mr-1" />
-                      Bulk Action
-                    </Button>
-                    <div className="relative ml-2">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
-                      </div>
-                      <input
-                        type="search"
-                        placeholder="Search employees..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-odoo-primary focus:border-odoo-primary w-full sm:w-auto"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 self-end sm:self-auto">
-                    <select 
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-odoo-primary focus:border-odoo-primary"
-                      value={filterDepartment}
-                      onChange={(e) => setFilterDepartment(e.target.value)}
-                    >
-                      <option value="all">All Departments</option>
-                      <option value="development">Development</option>
-                      <option value="marketing">Marketing</option>
-                      <option value="sales">Sales</option>
-                      <option value="human resources">Human Resources</option>
-                      <option value="finance">Finance</option>
-                    </select>
-                    
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-1" />
-                      More Filters
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Employees Table */}
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
-                          <Checkbox 
-                            checked={selectedItems.length === filteredEmployees.length && filteredEmployees.length > 0} 
-                            onCheckedChange={toggleSelectAll} 
-                            aria-label="Select all employees"
-                          />
-                        </TableHead>
-                        <TableHead>Employee</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>Join Date</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredEmployees.length > 0 ? (
-                        filteredEmployees.map((employee) => (
-                          <TableRow key={employee.id} className="cursor-pointer hover:bg-gray-50">
-                            <TableCell>
-                              <Checkbox 
-                                checked={selectedItems.includes(employee.id)} 
-                                onCheckedChange={() => toggleSelectItem(employee.id)} 
-                                aria-label={`Select ${employee.id}`}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center">
-                                <Avatar className="h-8 w-8 mr-3">
-                                  <AvatarImage src={employee.avatar} />
-                                  <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-medium">{employee.name}</div>
-                                  <div className="text-sm text-odoo-gray">{employee.email}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>{employee.department}</TableCell>
-                            <TableCell>{employee.position}</TableCell>
-                            <TableCell>{employee.joinDate}</TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(employee.status)} variant="outline">
-                                {employee.status}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                            No employees found matching your filters. Try adjusting your search criteria.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-                
-                {/* Pagination */}
-                <div className="p-4 border-t flex items-center justify-between">
-                  <div className="text-sm text-odoo-gray">
-                    Showing {filteredEmployees.length} of {employees.length} employees
-                  </div>
+
+          <TabsContent value="employees" className="flex-1 flex flex-col">
+            {/* Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Employees</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" disabled>
-                      Previous
-                    </Button>
-                    <Button variant="outline" size="sm" disabled>
-                      Next
-                    </Button>
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <span className="text-2xl font-bold">{totalEmployees}</span>
                   </div>
-                </div>
-              </TabsContent>
+                </CardContent>
+              </Card>
               
-              {/* Time Off Tab */}
-              <TabsContent value="timeoff" className="p-0">
-                <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="flex items-center">
-                    <Button variant="outline" className="mr-2">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Request Time Off
-                    </Button>
-                    <Button variant="outline" className="mr-2">
-                      <Clock className="h-4 w-4 mr-1" />
-                      Allocate Leave
-                    </Button>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Active Employees</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl font-bold">{activeEmployees}</span>
                   </div>
-                  
-                  <div className="flex items-center space-x-2 self-end sm:self-auto">
-                    <Button variant="outline" size="sm">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Calendar View
-                    </Button>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Average Salary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <DollarSign className="h-5 w-5 text-purple-600" />
+                    <span className="text-2xl font-bold">${Math.round(avgSalary).toLocaleString()}</span>
                   </div>
-                </div>
-                
-                {/* Time Off Table */}
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Reference</TableHead>
-                        <TableHead>Employee</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Period</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {timeOffRequests.map((request) => (
-                        <TableRow key={request.id} className="cursor-pointer hover:bg-gray-50">
-                          <TableCell className="font-medium">{request.id}</TableCell>
-                          <TableCell>{request.employee}</TableCell>
-                          <TableCell>{request.type}</TableCell>
-                          <TableCell>{request.startDate} to {request.endDate}</TableCell>
-                          <TableCell>{request.duration}</TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(request.status)} variant="outline">
-                              {request.status}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
+                </CardContent>
+              </Card>
               
-              {/* Recruitment Tab */}
-              <TabsContent value="recruitment" className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {[
-                    { title: 'Job Positions', count: 8, description: 'Manage open positions and job requirements', icon: <User className="h-8 w-8 text-blue-500" /> },
-                    { title: 'Applications', count: 24, description: 'Review and process candidates applications', icon: <Users className="h-8 w-8 text-green-500" /> },
-                    { title: 'Interviews', count: 5, description: 'Schedule and manage candidate interviews', icon: <Calendar className="h-8 w-8 text-purple-500" /> },
-                  ].map((item, index) => (
-                    <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-start">
-                          <div className="mr-4">
-                            {item.icon}
-                          </div>
-                          <div>
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-medium text-odoo-dark">{item.title}</h3>
-                              <span className="text-lg font-semibold text-odoo-primary">{item.count}</span>
-                            </div>
-                            <p className="text-sm text-odoo-gray mt-2">{item.description}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                <div className="mt-6">
-                  <h3 className="text-lg font-medium mb-4">Recent Applications</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>Applied On</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {[
-                        { name: 'David Lee', position: 'Senior Developer', appliedOn: '2025-05-01', status: 'Interview' },
-                        { name: 'Marie Johnson', position: 'Marketing Specialist', appliedOn: '2025-04-28', status: 'Shortlisted' },
-                        { name: 'James Smith', position: 'Sales Executive', appliedOn: '2025-04-25', status: 'New' },
-                      ].map((application, i) => (
-                        <TableRow key={i} className="cursor-pointer hover:bg-gray-50">
-                          <TableCell className="font-medium">{application.name}</TableCell>
-                          <TableCell>{application.position}</TableCell>
-                          <TableCell>{application.appliedOn}</TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(application.status)} variant="outline">
-                              {application.status}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-              
-              {/* Settings Tab */}
-              <TabsContent value="settings" className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { title: 'Department Structure', description: 'Configure your organization departments and hierarchy' },
-                    { title: 'Leave Types', description: 'Set up different types of leaves and their policies' },
-                    { title: 'Working Hours', description: 'Define working schedules for different employee groups' },
-                    { title: 'Job Positions', description: 'Manage job titles, descriptions and requirements' },
-                  ].map((setting, index) => (
-                    <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <h3 className="text-lg font-medium text-odoo-dark mb-2">{setting.title}</h3>
-                        <p className="text-sm text-odoo-gray">{setting.description}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Pending Leaves</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-5 w-5 text-orange-600" />
+                    <span className="text-2xl font-bold">{pendingLeaves}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex-1 p-6">
+              {renderEmployeesList()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="leaves" className="flex-1 p-6">
+            {renderLeaveRequests()}
+          </TabsContent>
+
+          <TabsContent value="timesheets" className="flex-1 p-6">
+            <div className="text-center text-gray-500">
+              Timesheet management coming soon...
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
-    </TopbarDashboardLayout>
+    </OdooMainLayout>
   );
 };
 

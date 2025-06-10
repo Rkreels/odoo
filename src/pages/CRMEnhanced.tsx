@@ -1,202 +1,229 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import OdooControlPanel from '@/components/layout/OdooControlPanel';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Users, DollarSign, Target, TrendingUp, Phone, Mail, 
-  Calendar, MessageSquare, FileText, MapPin, Star,
-  Activity, Clock, CheckCircle, AlertTriangle
+  Users, 
+  TrendingUp, 
+  DollarSign, 
+  Calendar,
+  Phone,
+  Mail,
+  MapPin,
+  MoreVertical,
+  Edit,
+  Archive,
+  Star
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Lead {
   id: string;
   name: string;
+  company: string;
   email: string;
   phone: string;
-  company: string;
-  source: string;
-  stage: string;
-  expectedRevenue: number;
+  stage: 'new' | 'qualified' | 'proposition' | 'won' | 'lost';
+  value: number;
   probability: number;
   salesperson: string;
+  source: string;
   country: string;
-  tags: string[];
-  activities: Activity[];
   createdDate: string;
-  lastActivity: string;
+  nextActivity?: {
+    type: 'call' | 'meeting' | 'email';
+    date: string;
+    summary: string;
+  };
+  tags: string[];
   priority: 'low' | 'medium' | 'high';
-}
-
-interface Activity {
-  id: string;
-  type: 'call' | 'email' | 'meeting' | 'note';
-  subject: string;
-  date: string;
-  completed: boolean;
-  description?: string;
 }
 
 const CRMEnhanced = () => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState<'list' | 'kanban' | 'calendar'>('kanban');
+  const [viewType, setViewType] = useState<'kanban' | 'list' | 'calendar'>('kanban');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-
-  const leads: Lead[] = [
+  const [leads, setLeads] = useState<Lead[]>([
     {
       id: '1',
       name: 'John Smith',
-      email: 'john.smith@company.com',
-      phone: '+1 234 567 8901',
       company: 'Tech Corp',
+      email: 'john@techcorp.com',
+      phone: '+1 234 567 8900',
+      stage: 'qualified',
+      value: 15000,
+      probability: 60,
+      salesperson: 'Sarah Johnson',
       source: 'Website',
-      stage: 'New',
-      expectedRevenue: 15000,
-      probability: 10,
-      salesperson: 'Alice Johnson',
       country: 'USA',
+      createdDate: '2024-01-15',
+      nextActivity: {
+        type: 'meeting',
+        date: '2024-01-25',
+        summary: 'Product demo'
+      },
       tags: ['enterprise', 'hot'],
-      activities: [
-        { id: '1', type: 'call', subject: 'Initial call', date: '2024-01-15', completed: true },
-        { id: '2', type: 'email', subject: 'Follow up email', date: '2024-01-20', completed: false }
-      ],
-      createdDate: '2024-01-10',
-      lastActivity: '2024-01-15',
       priority: 'high'
     },
     {
       id: '2',
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@startup.com',
-      phone: '+1 234 567 8902',
-      company: 'Startup Inc',
+      name: 'Emily Davis',
+      company: 'StartupXYZ',
+      email: 'emily@startupxyz.com',
+      phone: '+1 234 567 8901',
+      stage: 'proposition',
+      value: 8500,
+      probability: 40,
+      salesperson: 'Mike Wilson',
       source: 'Referral',
-      stage: 'Qualified',
-      expectedRevenue: 8000,
-      probability: 30,
-      salesperson: 'Bob Chen',
       country: 'Canada',
-      tags: ['startup', 'warm'],
-      activities: [
-        { id: '3', type: 'meeting', subject: 'Demo presentation', date: '2024-01-18', completed: true }
-      ],
-      createdDate: '2024-01-08',
-      lastActivity: '2024-01-18',
+      createdDate: '2024-01-10',
+      nextActivity: {
+        type: 'call',
+        date: '2024-01-24',
+        summary: 'Follow up on proposal'
+      },
+      tags: ['startup'],
+      priority: 'medium'
+    },
+    {
+      id: '3',
+      name: 'Robert Johnson',
+      company: 'Global Industries',
+      email: 'robert@global.com',
+      phone: '+1 234 567 8902',
+      stage: 'new',
+      value: 25000,
+      probability: 20,
+      salesperson: 'Sarah Johnson',
+      source: 'Trade Show',
+      country: 'USA',
+      createdDate: '2024-01-20',
+      tags: ['enterprise'],
       priority: 'medium'
     }
-  ];
+  ]);
 
-  const stages = ['New', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
-  
-  const filters = [
-    { label: 'My Pipeline', value: 'my', count: 12 },
-    { label: 'New', value: 'new', count: 5 },
-    { label: 'Qualified', value: 'qualified', count: 8 },
-    { label: 'Won This Month', value: 'won_month', count: 3 },
-    { label: 'Lost', value: 'lost', count: 2 }
-  ];
-
-  const actions = [
-    { label: 'Import', icon: <FileText className="h-4 w-4" />, onClick: () => {} },
-    { label: 'Export', icon: <FileText className="h-4 w-4" />, onClick: () => {} }
-  ];
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-500';
-      case 'medium': return 'text-yellow-500';
-      case 'low': return 'text-green-500';
-      default: return 'text-gray-500';
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated');
+    if (!isAuthenticated) {
+      navigate('/login');
     }
-  };
+  }, [navigate]);
 
-  const getStageColor = (stage: string) => {
-    const colors: Record<string, string> = {
-      'New': 'bg-blue-100 text-blue-800',
-      'Qualified': 'bg-green-100 text-green-800',
-      'Proposal': 'bg-yellow-100 text-yellow-800',
-      'Negotiation': 'bg-orange-100 text-orange-800',
-      'Won': 'bg-emerald-100 text-emerald-800',
-      'Lost': 'bg-red-100 text-red-800'
-    };
-    return colors[stage] || 'bg-gray-100 text-gray-800';
-  };
+  const stages = [
+    { key: 'new', name: 'New', color: 'bg-gray-500' },
+    { key: 'qualified', name: 'Qualified', color: 'bg-blue-500' },
+    { key: 'proposition', name: 'Proposition', color: 'bg-yellow-500' },
+    { key: 'won', name: 'Won', color: 'bg-green-500' },
+    { key: 'lost', name: 'Lost', color: 'bg-red-500' }
+  ];
+
+  const filters = [
+    { label: 'My Pipeline', value: 'my', count: 5 },
+    { label: 'New', value: 'new', count: 3 },
+    { label: 'Qualified', value: 'qualified', count: 8 },
+    { label: 'Won This Month', value: 'won', count: 12 },
+    { label: 'Overdue Activities', value: 'overdue', count: 2 }
+  ];
+
+  const filteredLeads = leads.filter(lead => {
+    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lead.company.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || lead.stage === selectedFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const totalValue = leads.reduce((sum, lead) => sum + lead.value, 0);
+  const expectedRevenue = leads.reduce((sum, lead) => sum + (lead.value * lead.probability / 100), 0);
 
   const renderKanbanView = () => (
-    <div className="flex space-x-4 overflow-x-auto pb-4">
-      {stages.map((stage) => {
-        const stageLeads = leads.filter(lead => lead.stage === stage);
-        const stageRevenue = stageLeads.reduce((sum, lead) => sum + lead.expectedRevenue, 0);
+    <div className="flex space-x-4 p-6 overflow-x-auto">
+      {stages.map(stage => {
+        const stageLeads = filteredLeads.filter(lead => lead.stage === stage.key);
+        const stageValue = stageLeads.reduce((sum, lead) => sum + lead.value, 0);
         
         return (
-          <div key={stage} className="min-w-80 bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-semibold text-gray-900">{stage}</h3>
-                <p className="text-sm text-gray-600">
-                  {stageLeads.length} leads • ${stageRevenue.toLocaleString()}
-                </p>
+          <div key={stage.key} className="flex-shrink-0 w-80">
+            <div className="bg-gray-100 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${stage.color}`} />
+                  <h3 className="font-medium">{stage.name}</h3>
+                  <Badge variant="secondary">{stageLeads.length}</Badge>
+                </div>
+                <span className="text-sm text-gray-600">${stageValue.toLocaleString()}</span>
               </div>
-              <Button variant="ghost" size="sm">
-                <Star className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-3">
-              {stageLeads.map((lead) => (
-                <Card key={lead.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{lead.name}</h4>
-                        <p className="text-sm text-gray-600">{lead.company}</p>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Star className={`h-3 w-3 ${getPriorityColor(lead.priority)}`} />
-                        <span className="text-xs text-gray-500">{lead.probability}%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Expected Revenue</span>
-                        <span className="font-medium">${lead.expectedRevenue.toLocaleString()}</span>
-                      </div>
-                      
-                      <Progress value={lead.probability} className="h-2" />
-                      
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-600">{lead.country}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {lead.source}
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-3 w-3 text-gray-400" />
-                          <span className="text-xs text-gray-600">{lead.lastActivity}</span>
+              
+              <div className="space-y-3">
+                {stageLeads.map(lead => (
+                  <Card key={lead.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-medium text-sm">{lead.name}</h4>
+                          <p className="text-xs text-gray-600">{lead.company}</p>
                         </div>
-                        <div className="flex space-x-1">
-                          <Button variant="ghost" size="sm">
-                            <Phone className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Mail className="h-3 w-3" />
-                          </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Archive className="h-4 w-4 mr-2" />
+                              Archive
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-medium">${lead.value.toLocaleString()}</span>
+                          <Badge variant={lead.priority === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                            {lead.probability}%
+                          </Badge>
+                        </div>
+                        
+                        {lead.nextActivity && (
+                          <div className="flex items-center space-x-1 text-xs text-gray-600">
+                            <Calendar className="h-3 w-3" />
+                            <span>{lead.nextActivity.date} - {lead.nextActivity.summary}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1 text-xs text-gray-600">
+                            <Users className="h-3 w-3" />
+                            <span>{lead.salesperson}</span>
+                          </div>
+                          {lead.tags.map(tag => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </div>
         );
@@ -205,89 +232,83 @@ const CRMEnhanced = () => {
   );
 
   const renderListView = () => (
-    <div className="bg-white rounded-lg border">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Lead
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Stage
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Expected Revenue
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Probability
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Salesperson
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Activity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {leads.map((lead) => (
-              <tr key={lead.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 bg-odoo-primary rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">
-                          {lead.name.charAt(0)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{lead.name}</div>
-                      <div className="text-sm text-gray-500">{lead.company}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Badge className={getStageColor(lead.stage)}>
-                    {lead.stage}
-                  </Badge>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ${lead.expectedRevenue.toLocaleString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <Progress value={lead.probability} className="w-16 h-2 mr-2" />
-                    <span className="text-sm text-gray-600">{lead.probability}%</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {lead.salesperson}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {lead.lastActivity}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <Button variant="ghost" size="sm">
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Calendar className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="p-6">
+      <div className="bg-white rounded-lg border">
+        <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+          <div className="col-span-2">Lead</div>
+          <div className="col-span-2">Company</div>
+          <div className="col-span-1">Stage</div>
+          <div className="col-span-1">Expected Revenue</div>
+          <div className="col-span-1">Probability</div>
+          <div className="col-span-2">Next Activity</div>
+          <div className="col-span-2">Salesperson</div>
+          <div className="col-span-1">Actions</div>
+        </div>
+        
+        {filteredLeads.map(lead => (
+          <div key={lead.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+            <div className="col-span-2">
+              <div className="flex items-center space-x-2">
+                {lead.priority === 'high' && <Star className="h-4 w-4 text-yellow-500" />}
+                <div>
+                  <p className="font-medium text-sm">{lead.name}</p>
+                  <p className="text-xs text-gray-600">{lead.email}</p>
+                </div>
+              </div>
+            </div>
+            <div className="col-span-2">
+              <p className="text-sm">{lead.company}</p>
+              <p className="text-xs text-gray-600">{lead.country}</p>
+            </div>
+            <div className="col-span-1">
+              <Badge variant="secondary">{stages.find(s => s.key === lead.stage)?.name}</Badge>
+            </div>
+            <div className="col-span-1">
+              <p className="font-medium text-sm">${lead.value.toLocaleString()}</p>
+            </div>
+            <div className="col-span-1">
+              <Badge variant={lead.probability > 50 ? 'default' : 'secondary'}>
+                {lead.probability}%
+              </Badge>
+            </div>
+            <div className="col-span-2">
+              {lead.nextActivity ? (
+                <div className="text-xs">
+                  <p className="font-medium">{lead.nextActivity.summary}</p>
+                  <p className="text-gray-600">{lead.nextActivity.date}</p>
+                </div>
+              ) : (
+                <span className="text-xs text-gray-400">No activity</span>
+              )}
+            </div>
+            <div className="col-span-2">
+              <p className="text-sm">{lead.salesperson}</p>
+            </div>
+            <div className="col-span-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem>
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -297,78 +318,80 @@ const CRMEnhanced = () => {
       <div className="flex flex-col h-full">
         <OdooControlPanel
           title="Pipeline"
-          subtitle="Track your sales opportunities"
+          subtitle="Track leads and opportunities"
+          searchPlaceholder="Search opportunities..."
+          onSearch={setSearchTerm}
           onCreateNew={() => console.log('Create new lead')}
-          viewType={activeView}
-          onViewChange={(view) => setActiveView(view as any)}
+          viewType={viewType}
+          onViewChange={(view) => setViewType(view as any)}
           filters={filters}
           selectedFilter={selectedFilter}
           onFilterChange={setSelectedFilter}
-          actions={actions}
-          recordCount={leads.length}
-          onSearch={setSearchTerm}
+          recordCount={filteredLeads.length}
+          actions={[
+            { label: 'Import', onClick: () => console.log('Import') },
+            { label: 'Export', onClick: () => console.log('Export') }
+          ]}
         />
 
-        {/* Stats Cards */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Pipeline</p>
-                  <p className="text-2xl font-bold text-gray-900">$127K</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-500" />
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Total Pipeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <span className="text-2xl font-bold">${totalValue.toLocaleString()}</span>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Won This Month</p>
-                  <p className="text-2xl font-bold text-gray-900">$45K</p>
-                </div>
-                <Target className="h-8 w-8 text-blue-500" />
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Expected Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <span className="text-2xl font-bold">${expectedRevenue.toLocaleString()}</span>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Activities</p>
-                  <p className="text-2xl font-bold text-gray-900">23</p>
-                </div>
-                <Activity className="h-8 w-8 text-purple-500" />
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Total Opportunities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <Users className="h-5 w-5 text-purple-600" />
+                <span className="text-2xl font-bold">{leads.length}</span>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Conversion Rate</p>
-                  <p className="text-2xl font-bold text-gray-900">24%</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-orange-500" />
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Win Rate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <span className="text-2xl font-bold">24%</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 px-6 pb-6">
-          {activeView === 'kanban' && renderKanbanView()}
-          {activeView === 'list' && renderListView()}
-          {activeView === 'calendar' && (
-            <div className="bg-white rounded-lg border p-8 text-center">
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">Calendar View</h3>
-              <p className="text-gray-600">Calendar view coming soon...</p>
+        <div className="flex-1 overflow-auto">
+          {viewType === 'kanban' && renderKanbanView()}
+          {viewType === 'list' && renderListView()}
+          {viewType === 'calendar' && (
+            <div className="p-6 text-center text-gray-500">
+              Calendar view coming soon...
             </div>
           )}
         </div>
