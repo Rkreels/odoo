@@ -1,300 +1,414 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
-import { ShieldCheck, Plus, Filter, Search } from 'lucide-react';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
+import OdooControlPanel from '@/components/layout/OdooControlPanel';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { QualityCheck, QualityControlPoint, QualityCheckStatus, QualityMetrics } from '@/types/quality';
-import CreateQualityCheckForm from '@/components/quality/CreateQualityCheckForm';
-import QualityCheckCard from '@/components/quality/QualityCheckCard';
-import { generateId } from '@/lib/localStorageUtils';
-import { toast } from '@/components/ui/use-toast';
+import { 
+  Shield, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle,
+  FileText,
+  BarChart3,
+  Clock,
+  User,
+  Package,
+  TrendingUp
+} from 'lucide-react';
+
+interface QualityCheck {
+  id: string;
+  checkNumber: string;
+  product: string;
+  batch: string;
+  inspector: string;
+  checkDate: string;
+  status: 'passed' | 'failed' | 'pending' | 'conditional';
+  checkType: 'incoming' | 'in_process' | 'final' | 'random';
+  defectsFound: number;
+  sampleSize: number;
+  notes?: string;
+  location: string;
+  testResults: Array<{
+    parameter: string;
+    specification: string;
+    actual: string;
+    status: 'pass' | 'fail' | 'warning';
+  }>;
+}
+
+interface QualityAlert {
+  id: string;
+  title: string;
+  type: 'nonconformance' | 'customer_complaint' | 'supplier_issue' | 'process_deviation';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'investigating' | 'resolved' | 'closed';
+  reportedBy: string;
+  assignedTo: string;
+  createdDate: string;
+  dueDate: string;
+  description: string;
+  affectedProducts: string[];
+  rootCause?: string;
+  correctedActions: string[];
+}
 
 const Quality = () => {
   const navigate = useNavigate();
-  const [qualityChecks, setQualityChecks] = useState<QualityCheck[]>([]);
-  const [controlPoints] = useState<QualityControlPoint[]>([
+  const [activeTab, setActiveTab] = useState('checks');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  const [checks] = useState<QualityCheck[]>([
     {
-      id: 'cp1',
-      name: 'Incoming Material Inspection',
-      description: 'Check quality of incoming raw materials',
-      type: 'Incoming Inspection',
-      products: ['Raw Material A', 'Component B'],
-      isActive: true,
-      checklistItems: ['Visual inspection', 'Dimensional check', 'Material certificate review'],
-      createdAt: '2025-01-01',
-      createdBy: 'Quality Manager'
+      id: '1',
+      checkNumber: 'QC-001',
+      product: 'Smart Widget Pro',
+      batch: 'SW-2024-001',
+      inspector: 'Quality Inspector A',
+      checkDate: '2024-06-11',
+      status: 'passed',
+      checkType: 'final',
+      defectsFound: 0,
+      sampleSize: 50,
+      location: 'Final Inspection',
+      testResults: [
+        { parameter: 'Dimensions', specification: '100±2mm', actual: '101mm', status: 'pass' },
+        { parameter: 'Weight', specification: '500±10g', actual: '498g', status: 'pass' },
+        { parameter: 'Voltage', specification: '12±0.5V', actual: '12.2V', status: 'pass' }
+      ]
     },
     {
-      id: 'cp2', 
-      name: 'Final Product Quality Check',
-      description: 'Final inspection before packaging',
-      type: 'Final Inspection',
-      products: ['Product X', 'Product Y'],
-      isActive: true,
-      checklistItems: ['Functionality test', 'Appearance check', 'Packaging verification'],
-      createdAt: '2025-01-01',
-      createdBy: 'Quality Manager'
-    },
-    {
-      id: 'cp3',
-      name: 'In-Process Monitoring',
-      description: 'Quality checks during production',
-      type: 'In-Process',
-      products: ['Assembly A', 'Component C'],
-      isActive: true,
-      checklistItems: ['Process parameters', 'Work instructions compliance', 'Equipment calibration'],
-      createdAt: '2025-01-01',
-      createdBy: 'Quality Manager'
+      id: '2',
+      checkNumber: 'QC-002',
+      product: 'Eco Motor V3',
+      batch: 'EM-2024-015',
+      inspector: 'Quality Inspector B',
+      checkDate: '2024-06-10',
+      status: 'failed',
+      checkType: 'in_process',
+      defectsFound: 3,
+      sampleSize: 25,
+      location: 'Assembly Line 2',
+      notes: 'Motor shaft alignment issues detected',
+      testResults: [
+        { parameter: 'Torque', specification: '50±5Nm', actual: '42Nm', status: 'fail' },
+        { parameter: 'RPM', specification: '1800±50', actual: '1780', status: 'pass' },
+        { parameter: 'Noise Level', specification: '<60dB', actual: '65dB', status: 'fail' }
+      ]
     }
   ]);
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  const [alerts] = useState<QualityAlert[]>([
+    {
+      id: '1',
+      title: 'Motor shaft alignment nonconformance',
+      type: 'nonconformance',
+      severity: 'high',
+      status: 'investigating',
+      reportedBy: 'Quality Inspector B',
+      assignedTo: 'Production Manager',
+      createdDate: '2024-06-10',
+      dueDate: '2024-06-17',
+      description: 'Multiple units showing shaft alignment issues in Batch EM-2024-015',
+      affectedProducts: ['Eco Motor V3'],
+      correctedActions: ['Stop production', 'Review assembly process', 'Retrain operators']
+    },
+    {
+      id: '2',
+      title: 'Customer complaint - Widget functionality',
+      type: 'customer_complaint',
+      severity: 'medium',
+      status: 'open',
+      reportedBy: 'Customer Service',
+      assignedTo: 'Quality Manager',
+      createdDate: '2024-06-09',
+      dueDate: '2024-06-16',
+      description: 'Customer reports intermittent functionality issues with Smart Widget Pro',
+      affectedProducts: ['Smart Widget Pro'],
+      correctedActions: ['Investigate field returns', 'Review test procedures']
+    }
+  ]);
 
   useEffect(() => {
-    if (!localStorage.getItem('isAuthenticated')) navigate('/login');
-    
-    // Initialize with sample data
-    const sampleChecks: QualityCheck[] = [
-      {
-        id: 'QC001',
-        controlPointId: 'cp1',
-        controlPointName: 'Incoming Material Inspection',
-        productName: 'Raw Material A',
-        batchNumber: 'RM-2025-001',
-        status: 'Pending',
-        priority: 'High',
-        assignedTo: 'John Smith',
-        createdAt: '2025-05-30',
-        scheduledDate: '2025-05-31',
-        notes: 'Critical batch for urgent order'
-      },
-      {
-        id: 'QC002',
-        controlPointId: 'cp2',
-        controlPointName: 'Final Product Quality Check',
-        productName: 'Product X',
-        status: 'In Progress',
-        priority: 'Medium',
-        assignedTo: 'Jane Doe',
-        createdAt: '2025-05-29',
-        scheduledDate: '2025-05-30'
-      },
-      {
-        id: 'QC003',
-        controlPointId: 'cp2',
-        controlPointName: 'Final Product Quality Check',
-        productName: 'Product Y',
-        status: 'Passed',
-        priority: 'Low',
-        assignedTo: 'Mike Wilson',
-        createdAt: '2025-05-28',
-        scheduledDate: '2025-05-29',
-        completedDate: '2025-05-29'
-      }
-    ];
-    setQualityChecks(sampleChecks);
+    const isAuthenticated = localStorage.getItem('isAuthenticated');
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
   }, [navigate]);
 
-  const handleCreateCheck = (newCheck: QualityCheck) => {
-    setQualityChecks(prev => [newCheck, ...prev]);
-    setShowCreateForm(false);
-    toast({
-      title: "Quality Check Created",
-      description: `Check ${newCheck.id} has been created successfully.`,
-    });
-  };
+  const checkFilters = [
+    { label: 'Passed', value: 'passed', count: checks.filter(c => c.status === 'passed').length },
+    { label: 'Failed', value: 'failed', count: checks.filter(c => c.status === 'failed').length },
+    { label: 'Pending', value: 'pending', count: checks.filter(c => c.status === 'pending').length },
+    { label: 'Final Inspection', value: 'final', count: checks.filter(c => c.checkType === 'final').length }
+  ];
 
-  const handleStatusUpdate = (checkId: string, newStatus: QualityCheckStatus) => {
-    setQualityChecks(prev => prev.map(check => 
-      check.id === checkId 
-        ? { 
-            ...check, 
-            status: newStatus,
-            completedDate: newStatus === 'Passed' || newStatus === 'Failed' ? new Date().toISOString().split('T')[0] : undefined
-          }
-        : check
-    ));
-    toast({
-      title: "Status Updated",
-      description: `Check ${checkId} status updated to ${newStatus}.`,
-    });
-  };
+  const alertFilters = [
+    { label: 'Open', value: 'open', count: alerts.filter(a => a.status === 'open').length },
+    { label: 'Investigating', value: 'investigating', count: alerts.filter(a => a.status === 'investigating').length },
+    { label: 'High Severity', value: 'high', count: alerts.filter(a => a.severity === 'high').length },
+    { label: 'Critical', value: 'critical', count: alerts.filter(a => a.severity === 'critical').length }
+  ];
 
-  const filteredChecks = qualityChecks.filter(check => {
-    const matchesSearch = searchTerm === '' || 
-      check.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      check.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      check.assignedTo.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || check.status.toLowerCase() === statusFilter.toLowerCase();
-    
-    return matchesSearch && matchesStatus;
+  const filteredChecks = checks.filter(check => {
+    const matchesSearch = check.checkNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         check.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         check.batch.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || 
+                         check.status === selectedFilter || 
+                         check.checkType === selectedFilter;
+    return matchesSearch && matchesFilter;
   });
 
-  const metrics: QualityMetrics = {
-    totalChecks: qualityChecks.length,
-    passedChecks: qualityChecks.filter(c => c.status === 'Passed').length,
-    failedChecks: qualityChecks.filter(c => c.status === 'Failed').length,
-    pendingChecks: qualityChecks.filter(c => c.status === 'Pending' || c.status === 'In Progress').length,
-    passRate: qualityChecks.length > 0 ? (qualityChecks.filter(c => c.status === 'Passed').length / qualityChecks.filter(c => c.status === 'Passed' || c.status === 'Failed').length) * 100 : 0,
-    averageCheckTime: 2.5 // Mock data
-  };
+  const filteredAlerts = alerts.filter(alert => {
+    const matchesSearch = alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         alert.assignedTo.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || 
+                         alert.status === selectedFilter || 
+                         alert.severity === selectedFilter;
+    return matchesSearch && matchesFilter;
+  });
 
-  return (
-    <TopbarDashboardLayout currentApp="Quality">
-      <div className="p-6">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <ShieldCheck className="h-8 w-8 text-blue-500 mr-3" />
-              <div>
-                <p className="text-2xl font-bold">{metrics.totalChecks}</p>
-                <p className="text-sm text-gray-600">Total Checks</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                <span className="text-white font-bold">✓</span>
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{metrics.passedChecks}</p>
-                <p className="text-sm text-gray-600">Passed</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
-                <span className="text-white font-bold">✗</span>
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{metrics.failedChecks}</p>
-                <p className="text-sm text-gray-600">Failed</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
-                <span className="text-white font-bold">%</span>
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{metrics.passRate.toFixed(1)}%</p>
-                <p className="text-sm text-gray-600">Pass Rate</p>
-              </div>
-            </div>
-          </div>
-        </div>
+  const passRate = (checks.filter(c => c.status === 'passed').length / checks.length) * 100;
+  const openAlerts = alerts.filter(a => a.status === 'open' || a.status === 'investigating').length;
+  const totalDefects = checks.reduce((sum, check) => sum + check.defectsFound, 0);
+  const avgProcessingTime = 2.5; // days
 
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-4 border-b">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h1 className="text-2xl font-bold text-odoo-dark flex items-center">
-                <ShieldCheck className="h-6 w-6 mr-2" />
-                Quality Control
-              </h1>
-              <Button onClick={() => setShowCreateForm(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                Create Quality Check
-              </Button>
-            </div>
-            
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search checks..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in progress">In Progress</SelectItem>
-                  <SelectItem value="passed">Passed</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="p-4">
-            <Tabs defaultValue="checks" className="w-full">
-              <TabsList>
-                <TabsTrigger value="checks">Quality Checks</TabsTrigger>
-                <TabsTrigger value="control-points">Control Points</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="checks" className="mt-4">
-                {filteredChecks.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredChecks.map((check) => (
-                      <QualityCheckCard
-                        key={check.id}
-                        check={check}
-                        onStatusUpdate={handleStatusUpdate}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    {searchTerm || statusFilter !== 'all' 
-                      ? "No checks match your filters." 
-                      : "No quality checks found. Create your first check to get started."
-                    }
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="control-points" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {controlPoints.map((cp) => (
-                    <div key={cp.id} className="bg-gray-50 p-4 rounded-lg border">
-                      <h3 className="font-semibold text-lg mb-2">{cp.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{cp.description}</p>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{cp.type}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${cp.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {cp.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                      <div className="text-sm">
-                        <p className="font-medium">Products:</p>
-                        <p className="text-gray-600">{cp.products.join(', ')}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+  const renderChecksList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Check #</div>
+        <div className="col-span-3">Product & Batch</div>
+        <div className="col-span-2">Inspector</div>
+        <div className="col-span-2">Type</div>
+        <div className="col-span-2">Status</div>
+        <div className="col-span-1">Actions</div>
       </div>
       
-      <CreateQualityCheckForm
-        isOpen={showCreateForm}
-        onClose={() => setShowCreateForm(false)}
-        onCheckCreate={handleCreateCheck}
-        controlPoints={controlPoints.map(cp => ({id: cp.id, name: cp.name, type: cp.type}))}
-      />
-    </TopbarDashboardLayout>
+      {filteredChecks.map(check => (
+        <div key={check.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-2">
+            <div>
+              <p className="font-medium">{check.checkNumber}</p>
+              <p className="text-sm text-gray-500">{check.checkDate}</p>
+            </div>
+          </div>
+          <div className="col-span-3">
+            <div>
+              <p className="font-medium">{check.product}</p>
+              <p className="text-sm text-gray-500">Batch: {check.batch}</p>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <div className="flex items-center space-x-2">
+              <User className="h-4 w-4 text-gray-400" />
+              <span className="text-sm">{check.inspector}</span>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <div>
+              <Badge variant="outline">{check.checkType}</Badge>
+              <p className="text-xs text-gray-500 mt-1">{check.sampleSize} samples</p>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <div className="space-y-1">
+              <Badge 
+                variant={
+                  check.status === 'passed' ? 'default' :
+                  check.status === 'failed' ? 'destructive' :
+                  check.status === 'conditional' ? 'secondary' : 'outline'
+                }
+              >
+                {check.status === 'passed' && <CheckCircle className="h-3 w-3 mr-1" />}
+                {check.status === 'failed' && <XCircle className="h-3 w-3 mr-1" />}
+                {check.status === 'conditional' && <AlertTriangle className="h-3 w-3 mr-1" />}
+                {check.status}
+              </Badge>
+              {check.defectsFound > 0 && (
+                <p className="text-xs text-red-600">{check.defectsFound} defects</p>
+              )}
+            </div>
+          </div>
+          <div className="col-span-1">
+            <Button variant="ghost" size="sm">
+              <FileText className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderAlertsList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-4">Alert</div>
+        <div className="col-span-2">Type</div>
+        <div className="col-span-2">Severity</div>
+        <div className="col-span-2">Assigned To</div>
+        <div className="col-span-1">Status</div>
+        <div className="col-span-1">Actions</div>
+      </div>
+      
+      {filteredAlerts.map(alert => (
+        <div key={alert.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-4">
+            <div className="flex items-center space-x-3">
+              <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                alert.severity === 'critical' ? 'bg-red-100' :
+                alert.severity === 'high' ? 'bg-orange-100' :
+                alert.severity === 'medium' ? 'bg-yellow-100' : 'bg-blue-100'
+              }`}>
+                <AlertTriangle className={`h-4 w-4 ${
+                  alert.severity === 'critical' ? 'text-red-600' :
+                  alert.severity === 'high' ? 'text-orange-600' :
+                  alert.severity === 'medium' ? 'text-yellow-600' : 'text-blue-600'
+                }`} />
+              </div>
+              <div>
+                <p className="font-medium">{alert.title}</p>
+                <p className="text-sm text-gray-500">Due: {alert.dueDate}</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <Badge variant="outline">{alert.type.replace('_', ' ')}</Badge>
+          </div>
+          <div className="col-span-2">
+            <Badge 
+              variant={
+                alert.severity === 'critical' ? 'destructive' :
+                alert.severity === 'high' ? 'secondary' :
+                'outline'
+              }
+            >
+              {alert.severity}
+            </Badge>
+          </div>
+          <div className="col-span-2">
+            <div className="flex items-center space-x-2">
+              <User className="h-4 w-4 text-gray-400" />
+              <span className="text-sm">{alert.assignedTo}</span>
+            </div>
+          </div>
+          <div className="col-span-1">
+            <Badge 
+              variant={
+                alert.status === 'resolved' ? 'default' :
+                alert.status === 'investigating' ? 'secondary' : 'outline'
+              }
+            >
+              {alert.status}
+            </Badge>
+          </div>
+          <div className="col-span-1">
+            <Button variant="ghost" size="sm">
+              <FileText className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <OdooMainLayout currentApp="Quality">
+      <div className="flex flex-col h-full">
+        <OdooControlPanel
+          title={activeTab === 'checks' ? 'Quality Checks' : activeTab === 'alerts' ? 'Quality Alerts' : 'Control Plans'}
+          subtitle={activeTab === 'checks' ? 'Quality control and inspection results' : activeTab === 'alerts' ? 'Nonconformances and quality issues' : 'Quality control plans and procedures'}
+          searchPlaceholder={`Search ${activeTab}...`}
+          onSearch={setSearchTerm}
+          onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
+          filters={activeTab === 'checks' ? checkFilters : alertFilters}
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
+          recordCount={activeTab === 'checks' ? filteredChecks.length : filteredAlerts.length}
+        />
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="border-b bg-white px-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="checks">Quality Checks</TabsTrigger>
+              <TabsTrigger value="alerts">Alerts</TabsTrigger>
+              <TabsTrigger value="plans">Control Plans</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="checks" className="flex-1 flex flex-col">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Pass Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl font-bold">{passRate.toFixed(1)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Open Alerts</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-5 w-5 text-orange-600" />
+                    <span className="text-2xl font-bold">{openAlerts}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Defects</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <XCircle className="h-5 w-5 text-red-600" />
+                    <span className="text-2xl font-bold">{totalDefects}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Avg Processing</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5 text-purple-600" />
+                    <span className="text-2xl font-bold">{avgProcessingTime}d</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex-1 p-6">
+              {renderChecksList()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="alerts" className="flex-1 p-6">
+            {renderAlertsList()}
+          </TabsContent>
+
+          <TabsContent value="plans" className="flex-1 p-6">
+            <div className="text-center text-gray-500">
+              Quality control plans and procedures coming soon...
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </OdooMainLayout>
   );
 };
 

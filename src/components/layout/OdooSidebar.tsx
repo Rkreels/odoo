@@ -94,6 +94,60 @@ const appModules: AppModule[] = [
     path: '/apps/hr'
   },
   {
+    id: 'website',
+    name: 'Website',
+    icon: '🌐',
+    path: '/apps/website'
+  },
+  {
+    id: 'ecommerce',
+    name: 'eCommerce',
+    icon: '🛍️',
+    path: '/apps/ecommerce'
+  },
+  {
+    id: 'blog',
+    name: 'Blog',
+    icon: '📝',
+    path: '/apps/blog'
+  },
+  {
+    id: 'forum',
+    name: 'Forum',
+    icon: '💭',
+    path: '/apps/forum'
+  },
+  {
+    id: 'elearning',
+    name: 'eLearning',
+    icon: '🎓',
+    path: '/apps/elearning'
+  },
+  {
+    id: 'live-chat',
+    name: 'Live Chat',
+    icon: '💬',
+    path: '/apps/live-chat'
+  },
+  {
+    id: 'subscriptions',
+    name: 'Subscriptions',
+    icon: '🔄',
+    path: '/apps/subscriptions'
+  },
+  {
+    id: 'rental',
+    name: 'Rental',
+    icon: '🏠',
+    path: '/apps/rental'
+  },
+  {
+    id: 'expenses',
+    name: 'Expenses',
+    icon: '💳',
+    path: '/apps/expenses'
+  },
+  {
     id: 'documents',
     name: 'Documents',
     icon: '📄',
@@ -110,6 +164,36 @@ const appModules: AppModule[] = [
     name: 'Sign',
     icon: '✍️',
     path: '/apps/sign'
+  },
+  {
+    id: 'plm',
+    name: 'PLM',
+    icon: '⚙️',
+    path: '/apps/plm'
+  },
+  {
+    id: 'maintenance',
+    name: 'Maintenance',
+    icon: '🔧',
+    path: '/apps/maintenance'
+  },
+  {
+    id: 'quality',
+    name: 'Quality',
+    icon: '🛡️',
+    path: '/apps/quality'
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing',
+    icon: '📢',
+    path: '/apps/marketing'
+  },
+  {
+    id: 'services',
+    name: 'Services',
+    icon: '💼',
+    path: '/apps/services'
   }
 ];
 
