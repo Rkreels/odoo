@@ -1,5 +1,5 @@
 
-export type BlogStatus = 'draft' | 'published';
+export type BlogStatus = 'draft' | 'published' | 'scheduled';
 
 export interface BlogPost {
   id: string;
@@ -12,4 +12,7 @@ export interface BlogPost {
   publishDate: string;
   views: number;
   tags: string[];
+  comments?: number;
+  likes?: number;
+  shares?: number;
 }

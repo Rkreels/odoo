@@ -12,6 +12,16 @@ export interface ServiceProject {
   description: string;
   teamMembers: string[];
   progress: number;
+  spent?: number;
+  projectManager?: string;
+  priority?: string;
+  hoursLogged?: number;
+  estimatedHours?: number;
+  milestones?: Array<{
+    name: string;
+    completed: boolean;
+    dueDate: string;
+  }>;
 }
 
 export interface ProjectTask {

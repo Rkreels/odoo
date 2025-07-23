@@ -15,6 +15,10 @@ export interface ForumTopic {
     author: string;
     date: string;
   };
+  tags?: string[];
+  votes?: number;
+  solved?: boolean;
+  pinned?: boolean;
 }
 
 export interface ForumCategory {
