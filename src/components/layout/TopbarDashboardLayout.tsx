@@ -61,7 +61,7 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
               <div className="w-8 h-8 bg-odoo-primary rounded-md flex items-center justify-center">
                 <span className="text-white font-bold text-sm">O</span>
               </div>
-              <span className="font-semibold text-gray-900 hidden sm:block">OdooEcho</span>
+              <span className="font-semibold text-gray-900 hidden sm:block">Enterprise ERP</span>
             </Link>
             
             <div className="h-6 w-px bg-gray-300" />
@@ -187,7 +187,7 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         {children}
       </div>
     </div>

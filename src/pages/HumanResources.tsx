@@ -78,6 +78,7 @@ const HumanResources = () => {
   const [viewType, setViewType] = useState<'list' | 'kanban'>('list');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const [employees, setEmployees] = useState<Employee[]>([
     {

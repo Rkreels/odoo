@@ -1,14 +1,35 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
+import OdooControlPanel from '@/components/layout/OdooControlPanel';
 import SpreadsheetCard from '@/components/spreadsheets/SpreadsheetCard';
-import { Table, Plus, FileText } from 'lucide-react';
+import { Table, Plus, FileText, Users, Download, Share, Lock, Eye, Edit, MoreVertical, Filter, Grid3X3, BarChart3, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Spreadsheet } from '@/types/spreadsheets';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Spreadsheets = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('spreadsheets');
+  const [viewType, setViewType] = useState<'list' | 'kanban'>('list');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  
   const [spreadsheets, setSpreadsheets] = useState<Spreadsheet[]>([
     {
       id: '1',
@@ -213,74 +234,269 @@ const Spreadsheets = () => {
     setSpreadsheets(prev => [newSpreadsheet, ...prev]);
   };
 
+  const spreadsheetFilters = [
+    { label: 'All Sheets', value: 'all', count: spreadsheets.length },
+    { label: 'Shared', value: 'shared', count: spreadsheets.filter(s => s.status === 'shared').length },
+    { label: 'Private', value: 'private', count: spreadsheets.filter(s => s.status === 'private').length },
+    { label: 'Public', value: 'public', count: spreadsheets.filter(s => s.status === 'public').length }
+  ];
+
+  const filteredSpreadsheets = spreadsheets.filter(sheet => {
+    const matchesSearch = sheet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         sheet.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || sheet.status === selectedFilter;
+    return matchesSearch && matchesFilter;
+  });
+
   const sharedSheets = spreadsheets.filter(s => s.status === 'shared').length;
   const privateSheets = spreadsheets.filter(s => s.status === 'private').length;
-  const publicSheets = spreadsheets.filter(s => s.status === 'public').length;
+  const totalCells = spreadsheets.reduce((sum, s) => sum + (s.rowCount * s.columnCount), 0);
+  const totalCollaborators = spreadsheets.reduce((sum, s) => sum + s.collaborators.length, 0);
+
+  const renderSpreadsheetsList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-3">Name</div>
+        <div className="col-span-2">Owner</div>
+        <div className="col-span-1">Status</div>
+        <div className="col-span-2">Last Modified</div>
+        <div className="col-span-1">Size</div>
+        <div className="col-span-2">Collaborators</div>
+        <div className="col-span-1">Actions</div>
+      </div>
+      
+      {filteredSpreadsheets.map(sheet => (
+        <div key={sheet.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-3">
+            <div className="flex items-center space-x-2">
+              <Grid3X3 className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">{sheet.name}</p>
+                <p className="text-xs text-gray-600">{sheet.description}</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{sheet.owner}</p>
+          </div>
+          <div className="col-span-1">
+            <Badge 
+              variant={sheet.status === 'shared' ? 'default' : sheet.status === 'private' ? 'secondary' : 'outline'}
+              className="text-xs"
+            >
+              {sheet.status}
+            </Badge>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{new Date(sheet.lastModified).toLocaleDateString()}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{sheet.rowCount}x{sheet.columnCount}</p>
+          </div>
+          <div className="col-span-2">
+            <div className="flex items-center space-x-1">
+              <Users className="h-3 w-3 text-gray-400" />
+              <span className="text-sm">{sheet.collaborators.length}</span>
+              {sheet.isLocked && <Lock className="h-3 w-3 text-yellow-500" />}
+            </div>
+          </div>
+          <div className="col-span-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Open
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Share className="h-4 w-4 mr-2" />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderCreateDialog = () => (
+    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Spreadsheet</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" placeholder="Enter spreadsheet name" />
+          </div>
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" placeholder="Enter description" />
+          </div>
+          <div>
+            <Label htmlFor="template">Template</Label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a template" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="blank">Blank Spreadsheet</SelectItem>
+                <SelectItem value="budget">Budget Template</SelectItem>
+                <SelectItem value="sales">Sales Report</SelectItem>
+                <SelectItem value="inventory">Inventory Tracker</SelectItem>
+                <SelectItem value="project">Project Planner</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="privacy">Privacy</Label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select privacy level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="private">Private</SelectItem>
+                <SelectItem value="shared">Shared with team</SelectItem>
+                <SelectItem value="public">Public</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              handleCreateSpreadsheet();
+              setShowCreateDialog(false);
+            }}>
+              Create Spreadsheet
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
-    <TopbarDashboardLayout currentApp="Spreadsheets">
-      <div className="p-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="flex items-center mb-4">
-            <Table className="h-8 w-8 text-odoo-primary mr-3" />
-            <h1 className="text-2xl font-bold text-odoo-dark">Spreadsheets</h1>
-          </div>
-          <p className="text-odoo-gray">Create collaborative spreadsheets integrated with your business data for analysis and reporting.</p>
-          
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-blue-800">Shared</h3>
-              <p className="text-2xl font-bold text-blue-900">{sharedSheets}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-800">Private</h3>
-              <p className="text-2xl font-bold text-gray-900">{privateSheets}</p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-green-800">Public</h3>
-              <p className="text-2xl font-bold text-green-900">{publicSheets}</p>
-            </div>
+    <OdooMainLayout currentApp="Spreadsheets">
+      <div className="flex flex-col h-full">
+        <OdooControlPanel
+          title="Spreadsheets"
+          subtitle="Collaborative spreadsheets with real-time editing and business data integration"
+          searchPlaceholder="Search spreadsheets..."
+          onSearch={setSearchTerm}
+          onCreateNew={() => setShowCreateDialog(true)}
+          viewType={viewType}
+          onViewChange={(view) => setViewType(view as any)}
+          filters={spreadsheetFilters}
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
+          recordCount={filteredSpreadsheets.length}
+          actions={[
+            {
+              label: 'Import',
+              icon: <Download className="h-4 w-4" />,
+              onClick: () => console.log('Import spreadsheet')
+            }
+          ]}
+        />
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="border-b bg-white px-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="spreadsheets">Spreadsheets</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
           </div>
 
-          <div className="mt-6 border-t pt-6">
-            <h2 className="text-xl font-semibold text-odoo-dark mb-3">Quick Actions</h2>
-            <div className="space-x-2">
-              <Button 
-                className="bg-odoo-primary text-white hover:bg-odoo-primary/90"
-                onClick={handleCreateSpreadsheet}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Spreadsheet
-              </Button>
-              <Button variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                View Templates
-              </Button>
+          <TabsContent value="spreadsheets" className="flex-1 flex flex-col">
+            {/* Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Spreadsheets</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Grid3X3 className="h-5 w-5 text-blue-600" />
+                    <span className="text-2xl font-bold">{spreadsheets.length}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Shared Sheets</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Share className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl font-bold">{sharedSheets}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Cells</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Calculator className="h-5 w-5 text-purple-600" />
+                    <span className="text-2xl font-bold">{totalCells.toLocaleString()}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Collaborators</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-5 w-5 text-orange-600" />
+                    <span className="text-2xl font-bold">{totalCollaborators}</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold text-odoo-dark mb-4">My Spreadsheets</h2>
-          {spreadsheets.length === 0 ? (
-            <div className="border rounded-lg p-8 text-center">
-              <Table className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-odoo-gray">No spreadsheets available. Create your first spreadsheet to get started.</p>
+            <div className="flex-1 p-6 overflow-auto">
+              {renderSpreadsheetsList()}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {spreadsheets.map((sheet) => (
-                <SpreadsheetCard
-                  key={sheet.id}
-                  spreadsheet={sheet}
-                  onUpdate={handleUpdateSpreadsheet}
-                />
-              ))}
+          </TabsContent>
+
+          <TabsContent value="templates" className="flex-1 p-6 overflow-auto">
+            <div className="text-center text-gray-500">
+              Spreadsheet templates coming soon...
             </div>
-          )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="flex-1 p-6 overflow-auto">
+            <div className="text-center text-gray-500">
+              Usage analytics coming soon...
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {renderCreateDialog()}
       </div>
-    </TopbarDashboardLayout>
+    </OdooMainLayout>
   );
 };
 

@@ -60,7 +60,7 @@ const appModules: AppModule[] = [
   {
     id: 'point-of-sale',
     name: 'Point of Sale',
-    icon: '🛒',
+    icon: '🏪',
     path: '/apps/point-of-sale'
   },
   {
