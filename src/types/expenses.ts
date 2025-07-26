@@ -10,7 +10,11 @@ export interface Expense {
   employee: string;
   status: ExpenseStatus;
   receiptUrl?: string;
+  receipt?: string;
   notes?: string;
   approvedBy?: string;
   approvedDate?: string;
+  mileage?: number;
+  project?: string;
+  department?: string;
 }
