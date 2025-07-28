@@ -380,10 +380,12 @@ const Manufacturing = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <div className="border-b bg-white px-6">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsList className="grid w-full max-w-2xl grid-cols-5">
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="workcenters">Work Centers</TabsTrigger>
               <TabsTrigger value="bom">Bills of Materials</TabsTrigger>
+              <TabsTrigger value="planning">Planning</TabsTrigger>
+              <TabsTrigger value="quality">Quality</TabsTrigger>
             </TabsList>
           </div>
 
@@ -449,8 +451,300 @@ const Manufacturing = () => {
           </TabsContent>
 
           <TabsContent value="bom" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Bills of Materials management coming soon...
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {billsOfMaterials.map(bom => (
+                <Card key={bom.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{bom.product}</CardTitle>
+                      <Badge variant={bom.active ? 'default' : 'secondary'}>
+                        v{bom.version}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-600">{bom.reference}</div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-medium">{bom.type}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Quantity:</span>
+                        <span className="font-medium">{bom.quantity}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Components:</span>
+                        <span className="font-medium">{bom.components.length}</span>
+                      </div>
+                      <div className="pt-3 border-t">
+                        <h4 className="font-medium mb-2 text-sm">Components</h4>
+                        <div className="space-y-1">
+                          {bom.components.slice(0, 3).map(component => (
+                            <div key={component.id} className="flex justify-between text-xs">
+                              <span>{component.product}</span>
+                              <span>{component.quantity} {component.unit}</span>
+                            </div>
+                          ))}
+                          {bom.components.length > 3 && (
+                            <div className="text-xs text-gray-500">
+                              +{bom.components.length - 3} more...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="planning" className="flex-1 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Production Schedule</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Office Chair Production</p>
+                        <p className="text-xs text-gray-600">Due: 2024-01-25</p>
+                      </div>
+                      <Badge variant="secondary">Scheduled</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Desk Lamp Assembly</p>
+                        <p className="text-xs text-gray-600">Due: 2024-01-30</p>
+                      </div>
+                      <Badge variant="outline">Planning</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Cabinet Manufacturing</p>
+                        <p className="text-xs text-gray-600">Due: 2024-02-05</p>
+                      </div>
+                      <Badge variant="destructive">Delayed</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Resource Utilization</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Assembly Line 1</span>
+                        <span>85%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Quality Control</span>
+                        <span>60%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-green-600 h-2 rounded-full" style={{ width: '60%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Electronics Line</span>
+                        <span>92%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Material Requirements</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Steel Components</p>
+                        <p className="text-xs text-gray-600">Required: 150 kg | Available: 120 kg</p>
+                      </div>
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                    </div>
+                    <div className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Wood Panels</p>
+                        <p className="text-xs text-gray-600">Required: 50 pcs | Available: 60 pcs</p>
+                      </div>
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    </div>
+                    <div className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Electronic Parts</p>
+                        <p className="text-xs text-gray-600">Required: 200 pcs | Available: 180 pcs</p>
+                      </div>
+                      <Clock className="h-4 w-4 text-yellow-500" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Maintenance Schedule</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Next Preventive Maintenance</span>
+                      <span className="font-medium text-sm">2024-01-28</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Equipment Health Score</span>
+                      <span className="font-medium text-sm">94%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Critical Equipment</span>
+                      <span className="font-medium text-sm">2 items</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="quality" className="flex-1 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quality Metrics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Overall Quality Score</span>
+                      <span className="font-medium text-lg">96.8%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">First Pass Yield</span>
+                      <span className="font-medium">94.2%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Defect Rate</span>
+                      <span className="font-medium">2.1%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Customer Returns</span>
+                      <span className="font-medium">0.8%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Quality Checks</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Office Chair - Batch #001</p>
+                        <p className="text-xs text-gray-600">Checked: 2024-01-20</p>
+                      </div>
+                      <Badge variant="default">Passed</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Desk Lamp - Batch #045</p>
+                        <p className="text-xs text-gray-600">Checked: 2024-01-19</p>
+                      </div>
+                      <Badge variant="destructive">Failed</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="font-medium text-sm">Cabinet - Batch #023</p>
+                        <p className="text-xs text-gray-600">Checked: 2024-01-18</p>
+                      </div>
+                      <Badge variant="default">Passed</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quality Control Points</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Incoming Inspection</span>
+                      <Badge variant="default">Active</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">In-Process Check</span>
+                      <Badge variant="default">Active</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Final Inspection</span>
+                      <Badge variant="default">Active</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Customer Audit</span>
+                      <Badge variant="secondary">Scheduled</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Corrective Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="p-2 border rounded">
+                      <p className="font-medium text-sm">CA-2024-001</p>
+                      <p className="text-xs text-gray-600">Dimensional deviation in desk lamp base</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <Badge variant="secondary" className="text-xs">In Progress</Badge>
+                        <span className="text-xs">Due: 2024-01-25</span>
+                      </div>
+                    </div>
+                    <div className="p-2 border rounded">
+                      <p className="font-medium text-sm">CA-2024-002</p>
+                      <p className="text-xs text-gray-600">Surface finish quality issue</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <Badge variant="destructive" className="text-xs">Overdue</Badge>
+                        <span className="text-xs">Due: 2024-01-20</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
