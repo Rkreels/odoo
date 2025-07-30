@@ -493,9 +493,122 @@ const Purchase = () => {
             {renderVendorsList()}
           </TabsContent>
 
-          <TabsContent value="receipts" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Receipt management coming soon...
+          <TabsContent value="receipts" className="flex-1 flex flex-col">
+            {/* Receipts Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Pending Receipts</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5 text-orange-600" />
+                    <span className="text-2xl font-bold">8</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Received Today</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl font-bold">12</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Overdue Deliveries</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <span className="text-2xl font-bold">3</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Quality Issues</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Package className="h-5 w-5 text-purple-600" />
+                    <span className="text-2xl font-bold">1</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex-1 p-6">
+              <div className="bg-white rounded-lg border">
+                <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+                  <div className="col-span-2">Receipt Reference</div>
+                  <div className="col-span-2">Purchase Order</div>
+                  <div className="col-span-2">Vendor</div>
+                  <div className="col-span-1">Receipt Date</div>
+                  <div className="col-span-1">Status</div>
+                  <div className="col-span-2">Location</div>
+                  <div className="col-span-1">Responsible</div>
+                  <div className="col-span-1">Actions</div>
+                </div>
+                
+                {receipts.map(receipt => (
+                  <div key={receipt.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+                    <div className="col-span-2">
+                      <p className="font-medium text-sm">{receipt.reference}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm text-blue-600">{receipt.purchaseOrder}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm">{receipt.vendor}</p>
+                    </div>
+                    <div className="col-span-1">
+                      <p className="text-sm">{receipt.receiptDate}</p>
+                    </div>
+                    <div className="col-span-1">
+                      <Badge className={`text-white ${getStatusColor(receipt.status)}`}>
+                        {receipt.status}
+                      </Badge>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm">{receipt.location}</p>
+                    </div>
+                    <div className="col-span-1">
+                      <p className="text-sm">{receipt.responsible}</p>
+                    </div>
+                    <div className="col-span-1">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Receipt
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Process
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Download className="h-4 w-4 mr-2" />
+                            Print Labels
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
         </Tabs>

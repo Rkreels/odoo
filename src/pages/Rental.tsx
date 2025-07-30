@@ -1,146 +1,157 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import OdooControlPanel from '@/components/layout/OdooControlPanel';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, 
-  Package, 
+  MapPin, 
+  Clock, 
   DollarSign, 
-  Clock,
-  User,
-  MapPin,
+  Package, 
+  TrendingUp,
+  Users,
   AlertTriangle,
   CheckCircle,
-  Truck
+  Eye,
+  Edit,
+  MoreVertical
 } from 'lucide-react';
-
-interface RentalOrder {
-  id: string;
-  orderNumber: string;
-  customer: string;
-  product: string;
-  startDate: string;
-  endDate: string;
-  duration: number;
-  dailyRate: number;
-  totalAmount: number;
-  status: 'draft' | 'confirmed' | 'picked_up' | 'returned' | 'cancelled';
-  paymentStatus: 'pending' | 'paid' | 'overdue';
-  location: string;
-  notes?: string;
-}
-
-interface RentalProduct {
-  id: string;
-  name: string;
-  category: string;
-  dailyRate: number;
-  weeklyRate: number;
-  monthlyRate: number;
-  status: 'available' | 'rented' | 'maintenance' | 'unavailable';
-  quantity: number;
-  rentedQuantity: number;
-  location: string;
-  description: string;
-  image?: string;
-}
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Rental = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('orders');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('products');
+  const [viewType, setViewType] = useState<'list' | 'kanban'>('kanban');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const [orders] = useState<RentalOrder[]>([
+  const [products] = useState([
     {
       id: '1',
-      orderNumber: 'RNT-001',
-      customer: 'ABC Construction',
-      product: 'Excavator - CAT 320',
-      startDate: '2024-06-15',
-      endDate: '2024-06-22',
-      duration: 7,
-      dailyRate: 450,
-      totalAmount: 3150,
-      status: 'confirmed',
-      paymentStatus: 'paid',
-      location: 'Main Depot',
-      notes: 'Customer requires delivery to job site'
+      name: 'Professional Camera Kit',
+      category: 'Photography',
+      image: '/placeholder.svg',
+      dailyRate: '$50',
+      weeklyRate: '$300',
+      monthlyRate: '$1000',
+      status: 'available',
+      features: ['4K Recording', 'Stabilizer', 'Extra Batteries'],
+      location: 'Warehouse A',
+      description: 'Complete professional camera setup with accessories',
+      utilization: 85,
+      revenue: 12500,
+      timesRented: 45
     },
     {
       id: '2',
-      orderNumber: 'RNT-002',
-      customer: 'BuildTech LLC',
-      product: 'Forklift - Toyota 3000lbs',
-      startDate: '2024-06-12',
-      endDate: '2024-06-19',
-      duration: 7,
-      dailyRate: 120,
-      totalAmount: 840,
-      status: 'picked_up',
-      paymentStatus: 'paid',
-      location: 'Warehouse A'
+      name: 'Sound System',
+      category: 'Audio',
+      image: '/placeholder.svg',
+      dailyRate: '$80',
+      weeklyRate: '$500',
+      monthlyRate: '$1800',
+      status: 'rented',
+      features: ['Wireless Mics', 'Speakers', 'Mixing Board'],
+      location: 'Warehouse B',
+      description: 'Professional sound system for events',
+      utilization: 92,
+      revenue: 18400,
+      timesRented: 28
     },
     {
       id: '3',
-      orderNumber: 'RNT-003',
-      customer: 'MegaProjects Inc',
-      product: 'Generator - 100kW',
-      startDate: '2024-06-10',
-      endDate: '2024-06-17',
-      duration: 7,
-      dailyRate: 200,
-      totalAmount: 1400,
-      status: 'returned',
-      paymentStatus: 'paid',
-      location: 'Main Depot'
+      name: 'Drone Set',
+      category: 'Technology',
+      image: '/placeholder.svg',
+      dailyRate: '$120',
+      weeklyRate: '$750',
+      monthlyRate: '$2500',
+      status: 'maintenance',
+      features: ['4K Camera', 'GPS', 'Extended Battery'],
+      location: 'Service Center',
+      description: 'Professional aerial photography drone',
+      utilization: 76,
+      revenue: 9800,
+      timesRented: 22
     }
   ]);
 
-  const [products] = useState<RentalProduct[]>([
+  const [bookings] = useState([
     {
       id: '1',
-      name: 'Excavator - CAT 320',
-      category: 'Heavy Machinery',
-      dailyRate: 450,
-      weeklyRate: 2700,
-      monthlyRate: 9500,
-      status: 'rented',
-      quantity: 3,
-      rentedQuantity: 1,
-      location: 'Main Depot',
-      description: 'Heavy-duty excavator suitable for construction and excavation work'
+      productId: '1',
+      productName: 'Professional Camera Kit',
+      customer: 'John Doe Photography',
+      customerEmail: 'john@doephoto.com',
+      startDate: '2024-06-15',
+      endDate: '2024-06-20',
+      totalPrice: '$250',
+      status: 'confirmed',
+      paymentStatus: 'paid',
+      deposit: 100,
+      notes: 'Special handling required'
     },
     {
       id: '2',
-      name: 'Forklift - Toyota 3000lbs',
-      category: 'Material Handling',
-      dailyRate: 120,
-      weeklyRate: 720,
-      monthlyRate: 2500,
-      status: 'available',
-      quantity: 5,
-      rentedQuantity: 2,
-      location: 'Warehouse A',
-      description: 'Electric forklift with 3000lbs lifting capacity'
+      productId: '2',
+      productName: 'Sound System',
+      customer: 'Event Masters Inc',
+      customerEmail: 'events@masters.com',
+      startDate: '2024-06-18',
+      endDate: '2024-06-25',
+      totalPrice: '$560',
+      status: 'in-progress',
+      paymentStatus: 'pending',
+      deposit: 200,
+      notes: 'Delivery to venue required'
     },
     {
       id: '3',
-      name: 'Generator - 100kW',
-      category: 'Power Equipment',
-      dailyRate: 200,
-      weeklyRate: 1200,
-      monthlyRate: 4200,
-      status: 'maintenance',
-      quantity: 4,
-      rentedQuantity: 0,
-      location: 'Main Depot',
-      description: 'Diesel generator providing 100kW continuous power'
+      productId: '1',
+      productName: 'Professional Camera Kit',
+      customer: 'Creative Studios',
+      customerEmail: 'booking@creative.com',
+      startDate: '2024-06-25',
+      endDate: '2024-06-30',
+      totalPrice: '$300',
+      status: 'reserved',
+      paymentStatus: 'pending',
+      deposit: 150,
+      notes: 'Extended rental period'
+    }
+  ]);
+
+  const [customers] = useState([
+    {
+      id: '1',
+      name: 'John Doe Photography',
+      email: 'john@doephoto.com',
+      phone: '+1 234 567 8900',
+      totalBookings: 12,
+      totalSpent: 3200,
+      rating: 4.8,
+      lastBooking: '2024-06-15',
+      status: 'active'
+    },
+    {
+      id: '2',
+      name: 'Event Masters Inc',
+      email: 'events@masters.com',
+      phone: '+1 234 567 8901',
+      totalBookings: 8,
+      totalSpent: 5600,
+      rating: 4.5,
+      lastBooking: '2024-06-18',
+      status: 'active'
     }
   ]);
 
@@ -151,163 +162,179 @@ const Rental = () => {
     }
   }, [navigate]);
 
-  const orderFilters = [
-    { label: 'Confirmed', value: 'confirmed', count: orders.filter(o => o.status === 'confirmed').length },
-    { label: 'Picked Up', value: 'picked_up', count: orders.filter(o => o.status === 'picked_up').length },
-    { label: 'Returned', value: 'returned', count: orders.filter(o => o.status === 'returned').length }
-  ];
-
   const productFilters = [
     { label: 'Available', value: 'available', count: products.filter(p => p.status === 'available').length },
     { label: 'Rented', value: 'rented', count: products.filter(p => p.status === 'rented').length },
-    { label: 'Maintenance', value: 'maintenance', count: products.filter(p => p.status === 'maintenance').length }
+    { label: 'Maintenance', value: 'maintenance', count: products.filter(p => p.status === 'maintenance').length },
+    { label: 'High Utilization', value: 'high-util', count: products.filter(p => p.utilization > 80).length }
   ];
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.product.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = selectedFilter === 'all' || order.status === selectedFilter;
-    return matchesSearch && matchesFilter;
-  });
+  const bookingFilters = [
+    { label: 'Confirmed', value: 'confirmed', count: bookings.filter(b => b.status === 'confirmed').length },
+    { label: 'In Progress', value: 'in-progress', count: bookings.filter(b => b.status === 'in-progress').length },
+    { label: 'Reserved', value: 'reserved', count: bookings.filter(b => b.status === 'reserved').length },
+    { label: 'Payment Pending', value: 'payment-pending', count: bookings.filter(b => b.paymentStatus === 'pending').length }
+  ];
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      available: 'bg-green-500',
+      rented: 'bg-blue-500',
+      maintenance: 'bg-orange-500',
+      reserved: 'bg-purple-500',
+      confirmed: 'bg-green-500',
+      'in-progress': 'bg-blue-500',
+      completed: 'bg-gray-500',
+      cancelled: 'bg-red-500'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-500';
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = selectedFilter === 'all' || product.status === selectedFilter;
+    const matchesFilter = selectedFilter === 'all' || 
+                         (selectedFilter === 'high-util' ? product.utilization > 80 : product.status === selectedFilter);
     return matchesSearch && matchesFilter;
   });
 
-  const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-  const activeRentals = orders.filter(o => o.status === 'picked_up').length;
-  const availableProducts = products.filter(p => p.status === 'available').length;
-  const utilizationRate = (products.reduce((sum, p) => sum + p.rentedQuantity, 0) / products.reduce((sum, p) => sum + p.quantity, 0)) * 100;
+  const filteredBookings = bookings.filter(booking => {
+    const matchesSearch = booking.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         booking.customer.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || 
+                         (selectedFilter === 'payment-pending' ? booking.paymentStatus === 'pending' : booking.status === selectedFilter);
+    return matchesSearch && matchesFilter;
+  });
 
-  const renderOrdersList = () => (
+  const totalRevenue = products.reduce((sum, product) => sum + product.revenue, 0);
+  const avgUtilization = products.length > 0 ? products.reduce((sum, p) => sum + p.utilization, 0) / products.length : 0;
+
+  const renderProductsList = () => (
     <div className="bg-white rounded-lg border">
       <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
-        <div className="col-span-2">Order</div>
-        <div className="col-span-3">Customer & Product</div>
-        <div className="col-span-2">Duration</div>
-        <div className="col-span-2">Amount</div>
-        <div className="col-span-2">Status</div>
+        <div className="col-span-3">Product</div>
+        <div className="col-span-2">Category</div>
+        <div className="col-span-1">Status</div>
+        <div className="col-span-2">Daily Rate</div>
+        <div className="col-span-1">Utilization</div>
+        <div className="col-span-2">Revenue</div>
         <div className="col-span-1">Actions</div>
       </div>
       
-      {filteredOrders.map(order => (
-        <div key={order.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
-          <div className="col-span-2">
-            <div>
-              <p className="font-medium">{order.orderNumber}</p>
-              <p className="text-sm text-gray-500">{order.location}</p>
-            </div>
-          </div>
+      {filteredProducts.map(product => (
+        <div key={product.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
           <div className="col-span-3">
-            <div>
-              <p className="font-medium">{order.customer}</p>
-              <p className="text-sm text-gray-500">{order.product}</p>
-            </div>
+            <p className="font-medium text-sm">{product.name}</p>
+            <p className="text-xs text-gray-600">{product.location}</p>
           </div>
           <div className="col-span-2">
-            <div>
-              <p className="font-medium">{order.duration} days</p>
-              <p className="text-sm text-gray-500">{order.startDate} - {order.endDate}</p>
-            </div>
-          </div>
-          <div className="col-span-2">
-            <div>
-              <p className="font-semibold">${order.totalAmount.toFixed(2)}</p>
-              <p className="text-sm text-gray-500">${order.dailyRate}/day</p>
-            </div>
-          </div>
-          <div className="col-span-2">
-            <div className="space-y-1">
-              <Badge 
-                variant={
-                  order.status === 'confirmed' ? 'secondary' :
-                  order.status === 'picked_up' ? 'default' :
-                  order.status === 'returned' ? 'outline' :
-                  'destructive'
-                }
-              >
-                {order.status === 'confirmed' && <Clock className="h-3 w-3 mr-1" />}
-                {order.status === 'picked_up' && <Truck className="h-3 w-3 mr-1" />}
-                {order.status === 'returned' && <CheckCircle className="h-3 w-3 mr-1" />}
-                {order.status}
-              </Badge>
-              <Badge 
-                variant={order.paymentStatus === 'paid' ? 'default' : order.paymentStatus === 'overdue' ? 'destructive' : 'secondary'}
-                className="text-xs"
-              >
-                {order.paymentStatus}
-              </Badge>
-            </div>
+            <Badge variant="outline">{product.category}</Badge>
           </div>
           <div className="col-span-1">
-            <Button variant="ghost" size="sm">
-              <Calendar className="h-4 w-4" />
-            </Button>
+            <Badge className={`text-white ${getStatusColor(product.status)}`}>
+              {product.status}
+            </Badge>
+          </div>
+          <div className="col-span-2">
+            <p className="font-medium text-sm">{product.dailyRate}</p>
+            <p className="text-xs text-gray-600">{product.monthlyRate}/month</p>
+          </div>
+          <div className="col-span-1">
+            <div className="flex items-center space-x-1">
+              <div className={`w-2 h-2 rounded-full ${product.utilization > 80 ? 'bg-green-500' : product.utilization > 60 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+              <span className="text-sm">{product.utilization}%</span>
+            </div>
+          </div>
+          <div className="col-span-2">
+            <p className="font-medium text-sm">${product.revenue.toLocaleString()}</p>
+            <p className="text-xs text-gray-600">{product.timesRented} rentals</p>
+          </div>
+          <div className="col-span-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Product
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  View Schedule
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       ))}
     </div>
   );
 
-  const renderProductsList = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {filteredProducts.map(product => (
-        <Card key={product.id} className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+  const renderProductsGrid = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredProducts.map((product) => (
+        <Card key={product.id} className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex justify-between items-start">
               <CardTitle className="text-lg">{product.name}</CardTitle>
-              <Badge 
-                variant={
-                  product.status === 'available' ? 'default' :
-                  product.status === 'rented' ? 'secondary' :
-                  product.status === 'maintenance' ? 'destructive' :
-                  'outline'
-                }
-              >
-                {product.status === 'available' && <CheckCircle className="h-3 w-3 mr-1" />}
-                {product.status === 'maintenance' && <AlertTriangle className="h-3 w-3 mr-1" />}
+              <Badge className={`text-white ${getStatusColor(product.status)}`}>
                 {product.status}
               </Badge>
             </div>
-            <div className="text-sm text-gray-600">{product.category}</div>
+            <p className="text-sm text-gray-600">{product.category}</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">{product.description}</p>
-              
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div>
-                  <span className="text-gray-500">Daily</span>
-                  <p className="font-semibold">${product.dailyRate}</p>
+              <div className="text-sm">
+                <div className="flex justify-between">
+                  <span>Daily:</span>
+                  <span className="font-semibold">{product.dailyRate}</span>
                 </div>
-                <div>
-                  <span className="text-gray-500">Weekly</span>
-                  <p className="font-semibold">${product.weeklyRate}</p>
+                <div className="flex justify-between">
+                  <span>Weekly:</span>
+                  <span className="font-semibold">{product.weeklyRate}</span>
                 </div>
-                <div>
-                  <span className="text-gray-500">Monthly</span>
-                  <p className="font-semibold">${product.monthlyRate}</p>
+                <div className="flex justify-between">
+                  <span>Monthly:</span>
+                  <span className="font-semibold">{product.monthlyRate}</span>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center text-sm">
-                <div className="flex items-center space-x-1">
-                  <Package className="h-4 w-4 text-gray-400" />
-                  <span>{product.quantity - product.rentedQuantity} available</span>
+              <div className="text-sm text-gray-600">
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {product.location}
                 </div>
-                <div className="flex items-center space-x-1">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{product.location}</span>
+                <div className="flex items-center mt-1">
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  {product.utilization}% utilization
                 </div>
               </div>
               
-              <div className="pt-3 border-t">
-                <Button size="sm" className="w-full">
-                  Book Rental
+              <div className="text-sm">
+                <p className="font-medium mb-1">Features:</p>
+                <ul className="list-disc list-inside text-gray-600">
+                  {product.features.slice(0, 3).map((feature, index) => (
+                    <li key={index}>{feature}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Eye className="h-3 w-3 mr-1" />
+                  View
+                </Button>
+                <Button size="sm" className="flex-1">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Book
                 </Button>
               </div>
             </div>
@@ -317,31 +344,187 @@ const Rental = () => {
     </div>
   );
 
+  const renderBookingsList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-2">Product</div>
+        <div className="col-span-2">Customer</div>
+        <div className="col-span-2">Duration</div>
+        <div className="col-span-1">Total</div>
+        <div className="col-span-1">Status</div>
+        <div className="col-span-1">Payment</div>
+        <div className="col-span-2">Notes</div>
+        <div className="col-span-1">Actions</div>
+      </div>
+      
+      {filteredBookings.map(booking => (
+        <div key={booking.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-2">
+            <p className="font-medium text-sm">{booking.productName}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{booking.customer}</p>
+            <p className="text-xs text-gray-600">{booking.customerEmail}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{booking.startDate}</p>
+            <p className="text-xs text-gray-600">to {booking.endDate}</p>
+          </div>
+          <div className="col-span-1">
+            <p className="font-medium text-sm">{booking.totalPrice}</p>
+            <p className="text-xs text-gray-600">${booking.deposit} deposit</p>
+          </div>
+          <div className="col-span-1">
+            <Badge className={`text-white ${getStatusColor(booking.status)}`}>
+              {booking.status}
+            </Badge>
+          </div>
+          <div className="col-span-1">
+            <Badge variant={booking.paymentStatus === 'paid' ? 'default' : 'destructive'}>
+              {booking.paymentStatus}
+            </Badge>
+          </div>
+          <div className="col-span-2">
+            <p className="text-xs text-gray-600">{booking.notes}</p>
+          </div>
+          <div className="col-span-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Booking
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Booking
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Process Payment
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderCustomersList = () => (
+    <div className="bg-white rounded-lg border">
+      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+        <div className="col-span-3">Customer</div>
+        <div className="col-span-2">Contact</div>
+        <div className="col-span-2">Bookings</div>
+        <div className="col-span-2">Total Spent</div>
+        <div className="col-span-1">Rating</div>
+        <div className="col-span-1">Last Booking</div>
+        <div className="col-span-1">Actions</div>
+      </div>
+      
+      {customers.map(customer => (
+        <div key={customer.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+          <div className="col-span-3">
+            <p className="font-medium text-sm">{customer.name}</p>
+            <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
+              {customer.status}
+            </Badge>
+          </div>
+          <div className="col-span-2">
+            <p className="text-sm">{customer.email}</p>
+            <p className="text-xs text-gray-600">{customer.phone}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="font-medium text-sm">{customer.totalBookings} bookings</p>
+          </div>
+          <div className="col-span-2">
+            <p className="font-medium text-sm">${customer.totalSpent.toLocaleString()}</p>
+          </div>
+          <div className="col-span-1">
+            <div className="flex items-center space-x-1">
+              <span className="text-sm font-medium">{customer.rating}</span>
+              <span className="text-yellow-500">★</span>
+            </div>
+          </div>
+          <div className="col-span-1">
+            <p className="text-sm">{customer.lastBooking}</p>
+          </div>
+          <div className="col-span-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Customer
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  New Booking
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <OdooMainLayout currentApp="Rental">
       <div className="flex flex-col h-full">
         <OdooControlPanel
-          title={activeTab === 'orders' ? 'Rental Orders' : activeTab === 'products' ? 'Rental Products' : 'Calendar'}
-          subtitle={activeTab === 'orders' ? 'Manage rental orders and bookings' : activeTab === 'products' ? 'Equipment and product catalog' : 'Rental schedule and availability'}
+          title={
+            activeTab === 'products' ? 'Rental Products' :
+            activeTab === 'bookings' ? 'Bookings' :
+            activeTab === 'customers' ? 'Customers' :
+            'Calendar'
+          }
+          subtitle={
+            activeTab === 'products' ? 'Manage your rental inventory and rates' :
+            activeTab === 'bookings' ? 'Track reservations and rental periods' :
+            activeTab === 'customers' ? 'Customer management and history' :
+            'View rental schedule and availability'
+          }
           searchPlaceholder={`Search ${activeTab}...`}
           onSearch={setSearchTerm}
           onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
-          filters={activeTab === 'orders' ? orderFilters : productFilters}
+          viewType={viewType}
+          onViewChange={(view) => setViewType(view as any)}
+          filters={activeTab === 'products' ? productFilters : activeTab === 'bookings' ? bookingFilters : []}
           selectedFilter={selectedFilter}
           onFilterChange={setSelectedFilter}
-          recordCount={activeTab === 'orders' ? filteredOrders.length : filteredProducts.length}
+          recordCount={
+            activeTab === 'products' ? filteredProducts.length :
+            activeTab === 'bookings' ? filteredBookings.length :
+            customers.length
+          }
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <div className="border-b bg-white px-6">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
-              <TabsTrigger value="orders">Orders</TabsTrigger>
+            <TabsList className="grid w-full max-w-lg grid-cols-4">
               <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="bookings">Bookings</TabsTrigger>
+              <TabsTrigger value="customers">Customers</TabsTrigger>
               <TabsTrigger value="calendar">Calendar</TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="orders" className="flex-1 flex flex-col">
+          <TabsContent value="products" className="flex-1 flex flex-col">
+            {/* Analytics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
               <Card>
                 <CardHeader className="pb-2">
@@ -350,19 +533,7 @@ const Rental = () => {
                 <CardContent>
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-5 w-5 text-green-600" />
-                    <span className="text-2xl font-bold">${totalRevenue.toFixed(2)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">Active Rentals</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Truck className="h-5 w-5 text-blue-600" />
-                    <span className="text-2xl font-bold">{activeRentals}</span>
+                    <span className="text-2xl font-bold">${totalRevenue.toLocaleString()}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -373,37 +544,107 @@ const Rental = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-2">
-                    <Package className="h-5 w-5 text-purple-600" />
-                    <span className="text-2xl font-bold">{availableProducts}</span>
+                    <Package className="h-5 w-5 text-blue-600" />
+                    <span className="text-2xl font-bold">{products.filter(p => p.status === 'available').length}</span>
                   </div>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">Utilization</CardTitle>
+                  <CardTitle className="text-sm font-medium text-gray-600">Avg Utilization</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                    <span className="text-2xl font-bold">{Math.round(avgUtilization)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Active Bookings</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-5 w-5 text-orange-600" />
-                    <span className="text-2xl font-bold">{utilizationRate.toFixed(1)}%</span>
+                    <span className="text-2xl font-bold">{bookings.filter(b => b.status === 'in-progress').length}</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             <div className="flex-1 p-6">
-              {renderOrdersList()}
+              {viewType === 'list' ? renderProductsList() : renderProductsGrid()}
             </div>
           </TabsContent>
 
-          <TabsContent value="products" className="flex-1 p-6">
-            {renderProductsList()}
+          <TabsContent value="bookings" className="flex-1 flex flex-col">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Active Bookings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl font-bold">{bookings.filter(b => b.status === 'in-progress').length}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Pending Payment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <span className="text-2xl font-bold">{bookings.filter(b => b.paymentStatus === 'pending').length}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">This Month Revenue</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <DollarSign className="h-5 w-5 text-blue-600" />
+                    <span className="text-2xl font-bold">$8,450</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Customer Satisfaction</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-5 w-5 text-purple-600" />
+                    <span className="text-2xl font-bold">4.6★</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex-1 p-6">
+              {renderBookingsList()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="customers" className="flex-1 p-6">
+            {renderCustomersList()}
           </TabsContent>
 
           <TabsContent value="calendar" className="flex-1 p-6">
             <div className="text-center text-gray-500">
-              Rental calendar and schedule management coming soon...
+              <Calendar className="h-12 w-12 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Rental Calendar</h3>
+              <p>Interactive calendar view for managing bookings and availability coming soon...</p>
             </div>
           </TabsContent>
         </Tabs>

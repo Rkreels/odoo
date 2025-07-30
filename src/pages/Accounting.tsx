@@ -498,8 +498,64 @@ const Accounting = () => {
           </TabsContent>
 
           <TabsContent value="payments" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Payment management coming soon...
+            <div className="bg-white rounded-lg border">
+              <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+                <div className="col-span-2">Reference</div>
+                <div className="col-span-2">Partner</div>
+                <div className="col-span-1">Date</div>
+                <div className="col-span-1">Amount</div>
+                <div className="col-span-2">Method</div>
+                <div className="col-span-2">Memo</div>
+                <div className="col-span-1">State</div>
+                <div className="col-span-1">Actions</div>
+              </div>
+              
+              {payments.map(payment => (
+                <div key={payment.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+                  <div className="col-span-2">
+                    <p className="font-medium text-sm">{payment.reference}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm">{payment.partner}</p>
+                  </div>
+                  <div className="col-span-1">
+                    <p className="text-sm">{payment.date}</p>
+                  </div>
+                  <div className="col-span-1">
+                    <p className="font-medium text-sm">${payment.amount.toLocaleString()}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Badge variant="outline">{payment.method}</Badge>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm">{payment.memo}</p>
+                  </div>
+                  <div className="col-span-1">
+                    <Badge className={`text-white ${getStateColor(payment.state)}`}>
+                      {payment.state}
+                    </Badge>
+                  </div>
+                  <div className="col-span-1">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
             </div>
           </TabsContent>
 
