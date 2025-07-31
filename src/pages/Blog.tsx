@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import OdooControlPanel from '@/components/layout/OdooControlPanel';
-import { FileText, Plus, Search, Filter, Eye, Users, Calendar, TrendingUp, Edit, Share, Trash } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Eye, Users, Calendar, TrendingUp, Edit, Share, Trash, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -371,7 +371,7 @@ const Blog = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="flex-1 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Popular Posts</CardTitle>
@@ -419,6 +419,87 @@ const Blog = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Engagement Metrics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Comments per Post</span>
+                      <span className="font-medium">{(totalComments / posts.length).toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Likes per Post</span>
+                      <span className="font-medium">{(totalLikes / posts.length).toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Engagement Rate</span>
+                      <span className="font-medium">{((totalLikes + totalComments) / totalViews * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Total Shares</span>
+                      <span className="font-medium">{posts.reduce((sum, p) => sum + (p.shares || 0), 0)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Timeline</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {posts.sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()).slice(0, 6).map(post => (
+                      <div key={post.id} className="border-l-2 border-blue-200 pl-4">
+                        <p className="font-medium text-sm">{post.title}</p>
+                        <p className="text-xs text-gray-600">{post.publishDate} • {post.views} views</p>
+                        <div className="flex space-x-4 text-xs text-gray-500 mt-1">
+                          <span>{post.likes} likes</span>
+                          <span>{post.comments} comments</span>
+                          <span>{post.shares} shares</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Content Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="text-sm text-gray-600">Upcoming Posts</div>
+                    {posts.filter(p => p.status === 'scheduled').map(post => (
+                      <div key={post.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <div>
+                          <p className="font-medium text-sm">{post.title}</p>
+                          <p className="text-xs text-gray-600">by {post.author}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">{post.publishDate}</p>
+                          <Badge variant="outline" className="text-xs">Scheduled</Badge>
+                        </div>
+                      </div>
+                    ))}
+                    {posts.filter(p => p.status === 'draft').slice(0, 3).map(post => (
+                      <div key={post.id} className="flex justify-between items-center p-2 bg-yellow-50 rounded">
+                        <div>
+                          <p className="font-medium text-sm">{post.title}</p>
+                          <p className="text-xs text-gray-600">by {post.author}</p>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">Draft</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -426,33 +507,85 @@ const Blog = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map(category => {
                 const categoryPosts = posts.filter(p => p.category === category);
-                const publishedCount = categoryPosts.filter(p => p.status === 'published').length;
+                const publishedPosts = categoryPosts.filter(p => p.status === 'published');
+                const totalViews = categoryPosts.reduce((sum, p) => sum + (p.views || 0), 0);
+                const avgViews = categoryPosts.length > 0 ? totalViews / categoryPosts.length : 0;
+                
                 return (
                   <Card key={category}>
                     <CardHeader>
-                      <CardTitle className="text-lg">{category}</CardTitle>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg">{category}</CardTitle>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem>Edit Category</DropdownMenuItem>
+                            <DropdownMenuItem>Manage Tags</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Total Posts:</span>
-                          <span className="font-medium">{categoryPosts.length}</span>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Total Posts:</span>
+                            <p className="font-medium">{categoryPosts.length}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Published:</span>
+                            <p className="font-medium">{publishedPosts.length}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Total Views:</span>
+                            <p className="font-medium">{totalViews.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Avg Views:</span>
+                            <p className="font-medium">{avgViews.toFixed(0)}</p>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Published:</span>
-                          <span className="font-medium">{publishedCount}</span>
+                        
+                        <div className="pt-3 border-t">
+                          <p className="text-sm text-gray-600 mb-2">Recent Posts:</p>
+                          <div className="space-y-1">
+                            {categoryPosts.slice(0, 3).map(post => (
+                              <div key={post.id} className="text-xs">
+                                <span className="font-medium">{post.title.substring(0, 40)}...</span>
+                                <span className="text-gray-500 ml-2">{post.views} views</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Total Views:</span>
-                          <span className="font-medium">
-                            {categoryPosts.reduce((sum, p) => sum + (p.views || 0), 0)}
-                          </span>
+                        
+                        <div className="flex space-x-2 pt-2">
+                          <Button variant="outline" size="sm" className="flex-1">
+                            View All
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1">
+                            Create Post
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 );
               })}
+              
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center h-full p-6">
+                  <Plus className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-4">Create New Category</p>
+                  <Button variant="outline" size="sm">
+                    Add Category
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
