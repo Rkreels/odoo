@@ -17,8 +17,16 @@ import {
   Clock,
   User,
   Package,
-  TrendingUp
+  TrendingUp,
+  Plus,
+  Eye,
+  Edit
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 
 interface QualityCheck {
   id: string;
@@ -402,8 +410,210 @@ const Quality = () => {
           </TabsContent>
 
           <TabsContent value="plans" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Quality control plans and procedures coming soon...
+            <div className="space-y-6">
+              {/* Control Plans Header */}
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Quality Control Plans</h3>
+                <Button onClick={() => {
+                  toast({
+                    title: "Create Control Plan",
+                    description: "Opening quality control plan creation form.",
+                  });
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Control Plan
+                </Button>
+              </div>
+
+              {/* Control Plans Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  {
+                    name: 'Incoming Material Inspection',
+                    description: 'Quality checks for all incoming raw materials',
+                    checkpoints: 12,
+                    products: ['All Products'],
+                    status: 'active'
+                  },
+                  {
+                    name: 'Assembly Line QC',
+                    description: 'In-process quality control for assembly operations',
+                    checkpoints: 8,
+                    products: ['Smart Widget Pro', 'Eco Motor V3'],
+                    status: 'active'
+                  },
+                  {
+                    name: 'Final Product Testing',
+                    description: 'Comprehensive testing before shipment',
+                    checkpoints: 15,
+                    products: ['Smart Widget Pro'],
+                    status: 'draft'
+                  }
+                ].map((plan, index) => (
+                  <Card key={index} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{plan.name}</CardTitle>
+                        <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                          {plan.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-4">{plan.description}</p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Checkpoints:</span>
+                          <span className="font-medium">{plan.checkpoints}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Products:</span>
+                          <div className="mt-1">
+                            {plan.products.map(product => (
+                              <Badge key={product} variant="outline" className="text-xs mr-1">
+                                {product}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2 mt-4">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button size="sm" className="flex-1">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Create Control Plan Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Quality Control Plan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="plan-name">Plan Name</Label>
+                      <Input placeholder="Enter control plan name" />
+                    </div>
+                    <div>
+                      <Label htmlFor="plan-type">Plan Type</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select plan type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="incoming">Incoming Inspection</SelectItem>
+                          <SelectItem value="in-process">In-Process Control</SelectItem>
+                          <SelectItem value="final">Final Inspection</SelectItem>
+                          <SelectItem value="audit">Quality Audit</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="products">Applicable Products</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select products" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Products</SelectItem>
+                          <SelectItem value="smart-widget">Smart Widget Pro</SelectItem>
+                          <SelectItem value="eco-motor">Eco Motor V3</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="frequency">Inspection Frequency</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select frequency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="every-batch">Every Batch</SelectItem>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="random">Random Sampling</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea placeholder="Detailed description of the quality control plan..." />
+                  </div>
+                  <div className="mt-4">
+                    <Label htmlFor="checkpoints">Quality Checkpoints</Label>
+                    <div className="border rounded p-4 mt-2">
+                      <div className="space-y-2">
+                        {[
+                          'Visual inspection for defects',
+                          'Dimensional measurements',
+                          'Functional testing',
+                          'Safety compliance check'
+                        ].map((checkpoint, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <input type="checkbox" defaultChecked className="rounded" />
+                            <span className="text-sm">{checkpoint}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <Button variant="outline" size="sm" className="mt-3">
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Checkpoint
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <Button onClick={() => {
+                      toast({
+                        title: "Control Plan Created",
+                        description: "Quality control plan has been created successfully.",
+                      });
+                    }}>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Create Control Plan
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Standards and Procedures */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quality Standards & Procedures</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { name: 'ISO 9001:2015', type: 'Quality Management', status: 'Compliant' },
+                      { name: 'ISO 14001:2015', type: 'Environmental', status: 'Compliant' },
+                      { name: 'OHSAS 18001', type: 'Safety', status: 'In Progress' },
+                      { name: 'Six Sigma', type: 'Process Improvement', status: 'Implemented' }
+                    ].map((standard, index) => (
+                      <div key={index} className="border rounded p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium">{standard.name}</h4>
+                          <Badge variant={standard.status === 'Compliant' ? 'default' : 'secondary'}>
+                            {standard.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{standard.type}</p>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          View Details
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

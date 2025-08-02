@@ -19,8 +19,18 @@ import {
   Eye,
   Edit,
   Lock,
-  Unlock
+  Unlock,
+  Plus,
+  User,
+  MoreVertical,
+  CheckCircle
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from '@/components/ui/use-toast';
 
 interface PLMProduct {
   id: string;
@@ -383,8 +393,166 @@ const PLM = () => {
           </TabsContent>
 
           <TabsContent value="changes" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Change request management coming soon...
+            <div className="space-y-6">
+              {/* Create Change Request */}
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Engineering Change Requests</h3>
+                <Button onClick={() => {
+                  toast({
+                    title: "Create Change Request",
+                    description: "Opening change request creation form.",
+                  });
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Change Request
+                </Button>
+              </div>
+
+              {/* Change Requests List */}
+              <div className="bg-white rounded-lg border">
+                <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+                  <div className="col-span-3">Title</div>
+                  <div className="col-span-2">Type</div>
+                  <div className="col-span-2">Priority</div>
+                  <div className="col-span-2">Assignee</div>
+                  <div className="col-span-2">Status</div>
+                  <div className="col-span-1">Actions</div>
+                </div>
+                
+                {changeRequests.map(request => (
+                  <div key={request.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+                    <div className="col-span-3">
+                      <div>
+                        <p className="font-medium">{request.title}</p>
+                        <p className="text-sm text-gray-500">Due: {request.dueDate}</p>
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <Badge variant="outline">{request.type}</Badge>
+                    </div>
+                    <div className="col-span-2">
+                      <Badge 
+                        variant={
+                          request.priority === 'critical' ? 'destructive' :
+                          request.priority === 'high' ? 'secondary' : 'outline'
+                        }
+                      >
+                        {request.priority}
+                      </Badge>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">{request.assignee}</span>
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <Badge 
+                        variant={
+                          request.status === 'approved' ? 'default' :
+                          request.status === 'review' ? 'secondary' : 'outline'
+                        }
+                      >
+                        {request.status}
+                      </Badge>
+                    </div>
+                    <div className="col-span-1">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Request
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Approve
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Change Request Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submit New Change Request</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="title">Title</Label>
+                      <Input placeholder="Brief description of the change" />
+                    </div>
+                    <div>
+                      <Label htmlFor="type">Type</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select change type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="design">Design Change</SelectItem>
+                          <SelectItem value="specification">Specification</SelectItem>
+                          <SelectItem value="process">Process Change</SelectItem>
+                          <SelectItem value="documentation">Documentation</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="priority">Priority</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="critical">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="assignee">Assignee</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Assign to..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="john">John Designer</SelectItem>
+                          <SelectItem value="sarah">Sarah Engineer</SelectItem>
+                          <SelectItem value="mike">Mike Manager</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea placeholder="Detailed description of the requested change..." />
+                  </div>
+                  <div className="mt-4">
+                    <Button onClick={() => {
+                      toast({
+                        title: "Change Request Submitted",
+                        description: "Your change request has been submitted for review.",
+                      });
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Submit Request
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

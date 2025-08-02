@@ -316,7 +316,12 @@ const Sign = () => {
                 </p>
               </div>
             </div>
-            <Button className="bg-odoo-primary hover:bg-odoo-primary/90">
+            <Button className="bg-odoo-primary hover:bg-odoo-primary/90" onClick={() => {
+              toast({
+                title: "Create Signature Request",
+                description: "Opening signature request creation wizard.",
+              });
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               New Signature Request
             </Button>
@@ -351,9 +356,16 @@ const Sign = () => {
             
             <div className="flex items-center justify-between my-4">
               <div className="w-64">
-                <Input placeholder="Search requests..." />
+                <Input placeholder="Search requests..." onChange={(e) => {
+                  // Search functionality would be implemented here
+                }} />
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => {
+                toast({
+                  title: "Filter Options",
+                  description: "Advanced filtering options would open here.",
+                });
+              }}>
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
               </Button>

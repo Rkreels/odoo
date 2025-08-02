@@ -17,8 +17,14 @@ import {
   User,
   Package,
   TrendingUp,
-  MapPin
+  MapPin,
+  Plus
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 
 interface MaintenanceRequest {
   id: string;
@@ -410,8 +416,158 @@ const Maintenance = () => {
           </TabsContent>
 
           <TabsContent value="schedule" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Maintenance scheduling and calendar coming soon...
+            <div className="space-y-6">
+              {/* Calendar View Toggle */}
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Maintenance Schedule</h3>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Month View
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Week View
+                  </Button>
+                  <Button onClick={() => {
+                    toast({
+                      title: "Schedule Maintenance",
+                      description: "Opening maintenance scheduling form.",
+                    });
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Schedule Maintenance
+                  </Button>
+                </div>
+              </div>
+
+              {/* Upcoming Maintenance */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Upcoming Maintenance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {equipment.map(item => (
+                      <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            item.status === 'operational' ? 'bg-green-500' :
+                            item.status === 'maintenance' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`} />
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-gray-600">{item.location}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">{item.nextMaintenance}</p>
+                          <p className="text-xs text-gray-500">Next maintenance</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Schedule Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Schedule New Maintenance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="equipment">Equipment</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select equipment" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {equipment.map(item => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="type">Maintenance Type</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="preventive">Preventive</SelectItem>
+                          <SelectItem value="corrective">Corrective</SelectItem>
+                          <SelectItem value="predictive">Predictive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="scheduled-date">Scheduled Date</Label>
+                      <Input type="date" />
+                    </div>
+                    <div>
+                      <Label htmlFor="assigned-to">Assigned To</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select technician" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mike">Mike Technician</SelectItem>
+                          <SelectItem value="sarah">Sarah Specialist</SelectItem>
+                          <SelectItem value="john">John Engineer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea placeholder="Maintenance work description..." />
+                  </div>
+                  <div className="mt-4">
+                    <Button onClick={() => {
+                      toast({
+                        title: "Maintenance Scheduled",
+                        description: "Maintenance has been scheduled successfully.",
+                      });
+                    }}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Schedule Maintenance
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Maintenance Calendar Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>This Week's Schedule</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-7 gap-2">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
+                      <div key={day} className="text-center">
+                        <p className="font-medium text-sm mb-2">{day}</p>
+                        <div className="space-y-1">
+                          {index < 3 && (
+                            <div className="bg-blue-100 text-blue-800 text-xs p-1 rounded">
+                              Preventive
+                            </div>
+                          )}
+                          {index === 4 && (
+                            <div className="bg-red-100 text-red-800 text-xs p-1 rounded">
+                              Emergency
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

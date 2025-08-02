@@ -482,14 +482,178 @@ const Spreadsheets = () => {
           </TabsContent>
 
           <TabsContent value="templates" className="flex-1 p-6 overflow-auto">
-            <div className="text-center text-gray-500">
-              Spreadsheet templates coming soon...
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { name: 'Budget Template', description: 'Monthly budget planning with categories and tracking', type: 'Financial' },
+                { name: 'Sales Report', description: 'Quarterly sales analysis with charts and metrics', type: 'Sales' },
+                { name: 'Inventory Tracker', description: 'Product inventory management with alerts', type: 'Operations' },
+                { name: 'Project Planner', description: 'Project timeline and resource management', type: 'Management' },
+                { name: 'Expense Report', description: 'Employee expense tracking and approval workflow', type: 'Finance' },
+                { name: 'Invoice Template', description: 'Professional invoice template with calculations', type: 'Billing' }
+              ].map((template, index) => (
+                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{template.name}</CardTitle>
+                      <Badge variant="outline">{template.type}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-4">{template.description}</p>
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" className="flex-1">
+                        <Eye className="h-4 w-4 mr-1" />
+                        Preview
+                      </Button>
+                      <Button size="sm" className="flex-1" onClick={() => {
+                        handleCreateSpreadsheet();
+                        toast({
+                          title: "Template Applied",
+                          description: `${template.name} has been created from template.`,
+                        });
+                      }}>
+                        Use Template
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="flex-1 p-6 overflow-auto">
-            <div className="text-center text-gray-500">
-              Usage analytics coming soon...
+            <div className="space-y-6">
+              {/* Usage Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">Total Usage Hours</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                      <span className="text-2xl font-bold">247</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">Data Processed</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <Calculator className="h-5 w-5 text-green-600" />
+                      <span className="text-2xl font-bold">1.2TB</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">Formulas Created</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5 text-purple-600" />
+                      <span className="text-2xl font-bold">1,847</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">Active Sessions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-5 w-5 text-orange-600" />
+                      <span className="text-2xl font-bold">12</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Top Spreadsheets */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Most Active Spreadsheets</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {spreadsheets.map(sheet => (
+                      <div key={sheet.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <div className="flex items-center space-x-3">
+                          <Grid3X3 className="h-5 w-5 text-green-600" />
+                          <div>
+                            <p className="font-medium">{sheet.name}</p>
+                            <p className="text-sm text-gray-600">{sheet.collaborators.length} collaborators</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{Math.floor(Math.random() * 100) + 20} hours</p>
+                          <p className="text-sm text-gray-600">this month</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Performance Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Collaboration Statistics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Average Collaborators per Sheet</span>
+                        <span className="font-medium">3.2</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Real-time Sessions Today</span>
+                        <span className="font-medium">47</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Comments Added</span>
+                        <span className="font-medium">156</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Share Actions</span>
+                        <span className="font-medium">89</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Average Load Time</span>
+                        <span className="font-medium">2.3s</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Calculation Speed</span>
+                        <span className="font-medium">0.85s</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Auto-Save Success Rate</span>
+                        <span className="font-medium">99.8%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Sync Conflicts</span>
+                        <span className="font-medium">3</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
