@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import OdooControlPanel from '@/components/layout/OdooControlPanel';
 import SpreadsheetCard from '@/components/spreadsheets/SpreadsheetCard';
-import { Table, Plus, FileText, Users, Download, Share, Lock, Eye, Edit, MoreVertical, Filter, Grid3X3, BarChart3, Calculator } from 'lucide-react';
+import { Table, Plus, FileText, Users, Download, Share, Lock, Eye, Edit, MoreVertical, Filter, Grid3X3, BarChart3, Calculator, Clock } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,7 @@ import {
 
 const Spreadsheets = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('spreadsheets');
   const [viewType, setViewType] = useState<'list' | 'kanban'>('list');
   const [selectedFilter, setSelectedFilter] = useState('all');
