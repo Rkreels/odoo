@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import { GraduationCap, Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,7 +87,7 @@ const Elearning = () => {
   const categories = [...new Set(courses.map(course => course.category))];
 
   return (
-    <TopbarDashboardLayout currentApp="eLearning">
+    <OdooMainLayout currentApp="eLearning">
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex items-center justify-between mb-6">
@@ -148,7 +148,7 @@ const Elearning = () => {
           )}
         </div>
       </div>
-    </TopbarDashboardLayout>
+    </OdooMainLayout>
   );
 };
 

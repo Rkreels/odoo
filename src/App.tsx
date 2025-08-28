@@ -37,6 +37,7 @@ import Maintenance from "./pages/Maintenance";
 import Quality from "./pages/Quality";
 import Marketing from "./pages/Marketing";
 import Services from "./pages/Services";
+import Calendar from "./pages/Calendar";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/apps/invoicing" element={<Invoicing />} />
           <Route path="/apps/purchase" element={<Purchase />} />
           <Route path="/apps/contacts" element={<Contacts />} />
+          <Route path="/apps/calendar" element={<Calendar />} />
           
           {/* New App Routes */}
           <Route path="/apps/live-chat" element={<LiveChat />} />

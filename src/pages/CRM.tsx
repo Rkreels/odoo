@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import LeadsList from '@/components/crm/LeadsList';
 import ActivitiesList from '@/components/crm/ActivitiesList';
 import OpportunitiesList from '@/components/crm/OpportunitiesList';
@@ -109,7 +109,7 @@ const CRM = () => {
   });
 
   return (
-    <TopbarDashboardLayout currentApp="CRM">
+    <OdooMainLayout currentApp="CRM">
       <div className="p-6 space-y-6">
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -223,7 +223,7 @@ const CRM = () => {
           </Tabs>
         </Card>
       </div>
-    </TopbarDashboardLayout>
+    </OdooMainLayout>
   );
 };
 

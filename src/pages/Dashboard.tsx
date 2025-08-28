@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import AppStats from '@/components/dashboard/AppStats';
 import VoiceTrainer from '@/components/voice/VoiceTrainer';
 
@@ -28,7 +28,7 @@ const Dashboard = () => {
   }, [navigate]);
 
   return (
-    <TopbarDashboardLayout currentApp="Dashboard">
+    <OdooMainLayout currentApp="Dashboard">
       <div className="p-6">
         <div className="app-stats">
           <AppStats appName="Dashboard" />
@@ -143,7 +143,7 @@ const Dashboard = () => {
           currentScreen="dashboard"
         />
       )}
-    </TopbarDashboardLayout>
+    </OdooMainLayout>
   );
 };
 

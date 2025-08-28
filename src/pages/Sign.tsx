@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopbarDashboardLayout from '@/components/layout/TopbarDashboardLayout';
+import OdooMainLayout from '@/components/layout/OdooMainLayout';
 import { FileSignature, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -303,7 +303,7 @@ const Sign = () => {
   };
 
   return (
-    <TopbarDashboardLayout currentApp="Sign">
+    <OdooMainLayout currentApp="Sign">
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex items-center justify-between mb-6">
@@ -432,7 +432,7 @@ const Sign = () => {
           </Tabs>
         </div>
       </div>
-    </TopbarDashboardLayout>
+    </OdooMainLayout>
   );
 };
 
