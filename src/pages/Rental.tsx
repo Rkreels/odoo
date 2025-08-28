@@ -641,10 +641,49 @@ const Rental = () => {
           </TabsContent>
 
           <TabsContent value="calendar" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Rental Calendar</h3>
-              <p>Interactive calendar view for managing bookings and availability coming soon...</p>
+            <div className="bg-white rounded-lg border">
+              <div className="p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Rental Calendar</h3>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">Today</Button>
+                    <Button variant="outline" size="sm">Week</Button>
+                    <Button variant="outline" size="sm">Month</Button>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-7 gap-4 mb-4">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div key={day} className="text-center font-medium text-gray-600 p-2">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {Array.from({length: 35}, (_, i) => {
+                    const day = Math.floor(i/7) * 7 + (i%7) + 1;
+                    const hasBooking = Math.random() > 0.7;
+                    return (
+                      <div key={i} className="min-h-[120px] border rounded-lg p-2 hover:bg-gray-50 cursor-pointer">
+                        <div className="text-sm font-medium text-gray-600 mb-2">{day}</div>
+                        {hasBooking && (
+                          <div className="space-y-1">
+                            <div className="p-1 bg-blue-100 text-blue-800 text-xs rounded truncate">
+                              Property A - Booked
+                            </div>
+                            {Math.random() > 0.5 && (
+                              <div className="p-1 bg-green-100 text-green-800 text-xs rounded truncate">
+                                Property B - Available
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

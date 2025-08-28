@@ -22,7 +22,8 @@ import {
   XCircle,
   MoreVertical,
   Eye,
-  Edit
+  Edit,
+  Plus
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -459,8 +460,53 @@ const HumanResources = () => {
           </TabsContent>
 
           <TabsContent value="timesheets" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Timesheet management coming soon...
+            <div className="bg-white rounded-lg border">
+              <div className="p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Timesheet Management</h3>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Log Time
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-900">Today's Hours</h4>
+                    <p className="text-2xl font-bold text-blue-600">7.5h</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-green-900">This Week</h4>
+                    <p className="text-2xl font-bold text-green-600">42h</p>
+                  </div>
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-yellow-900">Overtime</h4>
+                    <p className="text-2xl font-bold text-yellow-600">2h</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-purple-900">Projects</h4>
+                    <p className="text-2xl font-bold text-purple-600">3</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {[1,2,3,4].map(entry => (
+                    <div key={entry} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <Clock className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <h4 className="font-medium">Project Alpha - Development</h4>
+                          <p className="text-sm text-gray-500">Today, 9:00 AM - 5:30 PM</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Badge>8.5 hours</Badge>
+                        <Button variant="ghost" size="sm">Edit</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

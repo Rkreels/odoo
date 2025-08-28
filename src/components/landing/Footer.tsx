@@ -53,12 +53,12 @@ const Footer = () => {
               <img
                 className="h-8 w-auto"
                 src="https://www.odoo.com/web/image/website/1/logo/Odoo?unique=af51af9"
-                alt="OdooEcho Logo"
+                alt="BOS Logo"
               />
-              <span className="ml-2 font-bold text-xl text-white">odoo</span>
+              <span className="ml-2 font-bold text-xl text-white">BOS</span>
             </Link>
             <p className="mt-4 text-gray-400 max-w-xs">
-              OdooEcho is a suite of open source business apps that cover all your company needs.
+              BOS is a suite of open source business apps that cover all your company needs.
             </p>
             <div className="mt-6 flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white">
@@ -100,7 +100,7 @@ const Footer = () => {
         
         <div className="mt-12 pt-8 border-t border-gray-800">
           <p className="text-base text-gray-400 text-center">
-            &copy; {currentYear} OdooEcho - All rights reserved - Privacy - Terms
+            &copy; {currentYear} BOS - All rights reserved - Privacy - Terms
           </p>
         </div>
       </div>

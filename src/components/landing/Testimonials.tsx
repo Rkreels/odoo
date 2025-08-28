@@ -32,7 +32,7 @@ const Testimonial = ({ quote, author, role, company, image }: TestimonialProps) 
 const Testimonials = () => {
   const testimonials = [
     {
-      quote: "OdooEcho transformed how we manage our business. The integrated modules allow us to see the full picture of our operations in one place.",
+      quote: "BOS transformed how we manage our business. The integrated modules allow us to see the full picture of our operations in one place.",
       author: "Sarah Johnson",
       role: "CEO",
       company: "Innovative Solutions",
@@ -46,7 +46,7 @@ const Testimonials = () => {
       image: "https://randomuser.me/api/portraits/men/2.jpg"
     },
     {
-      quote: "As a small business owner, I needed an affordable solution that could grow with us. OdooEcho delivers enterprise-level features at a price we can afford.",
+      quote: "As a small business owner, I needed an affordable solution that could grow with us. BOS delivers enterprise-level features at a price we can afford.",
       author: "Emma Rodriguez",
       role: "Founder",
       company: "Artisan Creations",
@@ -60,7 +60,7 @@ const Testimonials = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-odoo-dark">What Our Customers Say</h2>
           <p className="mt-4 text-lg text-odoo-gray max-w-3xl mx-auto">
-            Thousands of businesses trust OdooEcho to manage their operations and drive growth.
+            Thousands of businesses trust BOS to manage their operations and drive growth.
           </p>
         </div>
         

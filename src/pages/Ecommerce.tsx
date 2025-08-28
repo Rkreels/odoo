@@ -332,8 +332,49 @@ const Ecommerce = () => {
           </TabsContent>
 
           <TabsContent value="customers" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Customer management and analytics coming soon...
+            <div className="bg-white rounded-lg border">
+              <div className="p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Customer Management</h3>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Customer
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-900">Total Customers</h4>
+                    <p className="text-2xl font-bold text-blue-600">1,247</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-green-900">Active This Month</h4>
+                    <p className="text-2xl font-bold text-green-600">892</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-purple-900">Customer Lifetime Value</h4>
+                    <p className="text-2xl font-bold text-purple-600">$8,540</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {[1,2,3,4,5].map(customer => (
+                    <div key={customer} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                        <div>
+                          <h4 className="font-medium">Customer {customer}</h4>
+                          <p className="text-sm text-gray-500">customer{customer}@example.com</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Badge variant="outline">Active</Badge>
+                        <Button variant="ghost" size="sm">View Details</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

@@ -390,8 +390,33 @@ const CRMEnhanced = () => {
           {viewType === 'kanban' && renderKanbanView()}
           {viewType === 'list' && renderListView()}
           {viewType === 'calendar' && (
-            <div className="p-6 text-center text-gray-500">
-              Calendar view coming soon...
+            <div className="p-6">
+              <div className="bg-white rounded-lg border">
+                <div className="p-4 border-b">
+                  <h3 className="text-lg font-semibold">Calendar View</h3>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-7 gap-4 mb-4">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                      <div key={day} className="text-center font-medium text-gray-600 p-2">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-2">
+                    {Array.from({length: 35}, (_, i) => (
+                      <div key={i} className="min-h-[100px] border rounded-lg p-2 hover:bg-gray-50">
+                        <div className="text-sm text-gray-500">{Math.floor(i/7) * 7 + (i%7) + 1}</div>
+                        {Math.random() > 0.7 && (
+                          <div className="mt-1 p-1 bg-blue-100 text-blue-800 text-xs rounded">
+                            Meeting
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

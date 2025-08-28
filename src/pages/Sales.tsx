@@ -19,7 +19,8 @@ import {
   MoreVertical,
   Calendar,
   User,
-  Package
+  Package,
+  Plus
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface SalesOrder {
   id: string;
@@ -442,8 +444,63 @@ const Sales = () => {
           </TabsContent>
 
           <TabsContent value="customers" className="flex-1 p-6">
-            <div className="text-center text-gray-500">
-              Customer management coming soon...
+            <div className="bg-white rounded-lg border">
+              <div className="p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Customer Management</h3>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Customer
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-900">Total Customers</h4>
+                    <p className="text-2xl font-bold text-blue-600">432</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-green-900">Active This Month</h4>
+                    <p className="text-2xl font-bold text-green-600">89</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-purple-900">Average Order Value</h4>
+                    <p className="text-2xl font-bold text-purple-600">$1,245</p>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Total Orders</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Last Order</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {[1,2,3,4,5].map(customer => (
+                        <TableRow key={customer}>
+                          <TableCell>Customer {customer}</TableCell>
+                          <TableCell>customer{customer}@example.com</TableCell>
+                          <TableCell>{Math.floor(Math.random() * 20) + 1}</TableCell>
+                          <TableCell>${(Math.random() * 10000).toFixed(2)}</TableCell>
+                          <TableCell>2024-01-{String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button variant="ghost" size="sm">View</Button>
+                              <Button variant="ghost" size="sm">Edit</Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

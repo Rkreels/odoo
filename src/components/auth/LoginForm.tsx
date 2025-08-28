@@ -24,7 +24,7 @@ const LoginForm = () => {
         localStorage.setItem('isAuthenticated', 'true');
         toast({
           title: "Login successful",
-          description: "Welcome back to OdooEcho!",
+          description: "Welcome back to BOS!",
         });
         navigate('/dashboard');
       }, 1000);

@@ -46,7 +46,7 @@ const Hero = () => {
         </div>
         
         <p className="mt-10 text-odoo-gray text-center max-w-3xl mx-auto">
-          OdooEcho offers a suite of open-source business apps that cover all your company needs: CRM, eCommerce, accounting, inventory, point of sale, project management, etc.
+          BOS offers a suite of open-source business apps that cover all your company needs: CRM, eCommerce, accounting, inventory, point of sale, project management, etc.
         </p>
       </div>
     </div>

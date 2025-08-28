@@ -70,7 +70,12 @@ const Dashboard = () => {
                 <button 
                   key={index}
                   className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-100 hover:bg-odoo-light transition-colors"
-                  onClick={() => toast({ title: `${action.name} clicked`, description: "This is a demo. Feature not implemented." })}
+                  onClick={() => {
+                    if (action.name === 'Create Lead') navigate('/apps/crm');
+                    else if (action.name === 'Schedule Meeting') navigate('/apps/calendar');
+                    else if (action.name === 'Create Invoice') navigate('/apps/invoicing');
+                    else if (action.name === 'Add Contact') navigate('/apps/contacts');
+                  }}
                 >
                   <div className={`h-10 w-10 rounded-full ${action.color} flex items-center justify-center mb-2`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -88,12 +93,12 @@ const Dashboard = () => {
         </div>
         
         <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-          <h2 className="text-lg font-semibold text-odoo-dark mb-4">Getting Started with OdooEcho</h2>
+          <h2 className="text-lg font-semibold text-odoo-dark mb-4">Getting Started with BOS</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { 
                 title: 'Explore Apps', 
-                description: 'Discover all the applications OdooEcho offers for your business needs.',
+                description: 'Discover all the applications BOS offers for your business needs.',
                 icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />

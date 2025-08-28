@@ -38,7 +38,7 @@ const SignupForm = () => {
         localStorage.setItem('isAuthenticated', 'true');
         toast({
           title: "Account created",
-          description: "Welcome to OdooEcho!",
+          description: "Welcome to BOS!",
         });
         navigate('/dashboard');
       }, 1000);
@@ -57,7 +57,7 @@ const SignupForm = () => {
     <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg shadow-md">
       <div className="text-center">
         <h2 className="text-3xl font-bold text-odoo-dark">Create an account</h2>
-        <p className="mt-2 text-odoo-gray">Sign up to start using OdooEcho</p>
+        <p className="mt-2 text-odoo-gray">Sign up to start using BOS</p>
       </div>
       
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

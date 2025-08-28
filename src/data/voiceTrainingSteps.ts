@@ -5,7 +5,7 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
   switch (currentScreen) {
     case 'dashboard':
       steps = [
-        { id: 'welcome', title: 'Welcome to OdooEcho', description: "Welcome to OdooEcho! I'm your voice assistant and I'll help you learn how to use this powerful business management platform. Let me guide you through the main components of the dashboard.", completed: false },
+        { id: 'welcome', title: 'Welcome to BOS', description: "Welcome to BOS! I'm your voice assistant and I'll help you learn how to use this powerful business management platform. Let me guide you through the main components of the dashboard.", completed: false },
         { id: 'navigation', title: 'Navigation', description: "On the left side, you'll find the application menu. This is where you can access different modules like CRM, Sales, Inventory, and more. Click on any app icon to navigate to that application.", element: '.sidebar', completed: false },
         { id: 'app-stats', title: 'Overview Cards', description: "At the top of your dashboard, you'll see overview cards that provide key metrics and statistics. These give you a quick snapshot of your business performance.", element: '.app-stats', completed: false },
         { id: 'header', title: 'Header Controls', description: 'In the top header, you can access quick actions, search functionality, notifications, and your user profile. This navigation bar is always accessible throughout the application.', element: 'header', completed: false },
@@ -189,7 +189,7 @@ export const getTrainingStepsForScreen = (currentScreen: string): TrainingStep[]
       break;
     default:
       steps = [
-        { id: 'default', title: 'Welcome to OdooEcho', description: "Welcome to OdooEcho! I'm your voice assistant and I'll help you learn how to use this platform. Navigate to different sections to get specific guidance.", completed: false },
+        { id: 'default', title: 'Welcome to BOS', description: "Welcome to BOS! I'm your voice assistant and I'll help you learn how to use this platform. Navigate to different sections to get specific guidance.", completed: false },
       ];
   }
   return steps;

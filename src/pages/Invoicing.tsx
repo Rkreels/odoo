@@ -121,11 +121,117 @@ const Invoicing = () => {
           </TabsContent>
 
           <TabsContent value="customers" className="flex-1 p-6">
-            <div className="text-center text-gray-500">Customer management coming soon...</div>
+            <div className="bg-white rounded-lg border">
+              <div className="p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Customer Management</h3>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Customer
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-900">Total Customers</h4>
+                    <p className="text-2xl font-bold text-blue-600">578</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-green-900">Active Invoices</h4>
+                    <p className="text-2xl font-bold text-green-600">123</p>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-red-900">Overdue</h4>
+                    <p className="text-2xl font-bold text-red-600">8</p>
+                  </div>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Total Invoices</TableHead>
+                      <TableHead>Amount Due</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[1,2,3,4,5].map(customer => (
+                      <TableRow key={customer}>
+                        <TableCell>Customer {customer}</TableCell>
+                        <TableCell>customer{customer}@example.com</TableCell>
+                        <TableCell>{Math.floor(Math.random() * 10) + 1}</TableCell>
+                        <TableCell>${(Math.random() * 5000).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm">View</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="payments" className="flex-1 p-6">
-            <div className="text-center text-gray-500">Payment tracking coming soon...</div>
+            <div className="bg-white rounded-lg border">
+              <div className="p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Payment Tracking</h3>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Record Payment
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-green-900">Received Today</h4>
+                    <p className="text-2xl font-bold text-green-600">$12,450</p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-900">This Month</h4>
+                    <p className="text-2xl font-bold text-blue-600">$156,780</p>
+                  </div>
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-yellow-900">Pending</h4>
+                    <p className="text-2xl font-bold text-yellow-600">$23,120</p>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-red-900">Overdue</h4>
+                    <p className="text-2xl font-bold text-red-600">$8,900</p>
+                  </div>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Payment Date</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Invoice</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[1,2,3,4,5].map(payment => (
+                      <TableRow key={payment}>
+                        <TableCell>2024-01-{String(payment).padStart(2, '0')}</TableCell>
+                        <TableCell>Customer {payment}</TableCell>
+                        <TableCell>INV-00{payment}</TableCell>
+                        <TableCell>${(Math.random() * 2000).toFixed(2)}</TableCell>
+                        <TableCell>Credit Card</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-green-50 text-green-700">Received</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

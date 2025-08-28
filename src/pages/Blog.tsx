@@ -21,9 +21,9 @@ import { BlogPost } from '@/types/blog';
 const initialPosts: BlogPost[] = [
   {
     id: '1',
-    title: 'Getting Started with OdooEcho',
-    excerpt: 'Learn how to use OdooEcho for your business management needs.',
-    content: 'This comprehensive guide will walk you through the initial setup and configuration of OdooEcho. You will learn about the main modules, user interface, and best practices for implementation.',
+    title: 'Getting Started with BOS',
+    excerpt: 'Learn how to use BOS for your business management needs.',
+    content: 'This comprehensive guide will walk you through the initial setup and configuration of BOS. You will learn about the main modules, user interface, and best practices for implementation.',
     category: 'Tutorial',
     status: 'published',
     author: 'Admin User',

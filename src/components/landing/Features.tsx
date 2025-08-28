@@ -82,7 +82,7 @@ const Features = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-odoo-dark">Everything Your Business Needs</h2>
           <p className="mt-4 text-lg text-odoo-gray max-w-3xl mx-auto">
-            OdooEcho provides a complete suite of business applications that work together seamlessly to streamline your operations.
+            BOS provides a complete suite of business applications that work together seamlessly to streamline your operations.
           </p>
         </div>
         
