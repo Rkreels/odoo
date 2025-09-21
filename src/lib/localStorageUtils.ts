@@ -4,12 +4,42 @@ import { SalesOrder, SalesOrderStatus, SalesOrderItem, SalesOrderDeliveryStatus,
 
 export const LOCAL_STORAGE_KEYS = {
   OPPORTUNITIES: 'crmOpportunities',
+  LEADS: 'crmLeads',
+  CONTACTS: 'crmContacts',
+  ACTIVITIES: 'crmActivities',
   CHANNELS: 'discussChannels',
   MESSAGES: 'discussMessages',
   POS_SESSIONS: 'posSessions',
   SALES_ORDERS: 'salesOrders',
-  SALES_ORDER_TEMPLATES: 'salesOrderTemplates', // New key for templates
+  SALES_ORDER_TEMPLATES: 'salesOrderTemplates',
   POS_PRODUCTS: 'posProducts',
+  PRODUCTS: 'products',
+  CUSTOMERS: 'customers',
+  INVOICES: 'invoices',
+  PAYMENTS: 'payments',
+  BLOG_POSTS: 'blogPosts',
+  FORUM_TOPICS: 'forumTopics',
+  PROJECTS: 'projects',
+  TASKS: 'tasks',
+  DOCUMENTS: 'documents',
+  CAMPAIGNS: 'marketingCampaigns',
+  SUBSCRIPTIONS: 'subscriptions',
+  EMPLOYEES: 'employees',
+  EXPENSES: 'expenses',
+  MAINTENANCE_REQUESTS: 'maintenanceRequests',
+  QUALITY_CHECKS: 'qualityChecks',
+  BOOKINGS: 'rentalBookings',
+  COURSES: 'eLearningCourses',
+  SIGNATURES: 'signatures',
+  SPREADSHEETS: 'spreadsheets',
+  WEBSITE_PAGES: 'websitePages',
+  CALENDAR_EVENTS: 'calendarEvents',
+  PURCHASE_ORDERS: 'purchaseOrders',
+  INVENTORY_ITEMS: 'inventoryItems',
+  MANUFACTURING_ORDERS: 'manufacturingOrders',
+  PLM_PRODUCTS: 'plmProducts',
+  ACCOUNTING_ENTRIES: 'accountingEntries',
+  LIVECHAT_SESSIONS: 'livechatSessions',
 };
 
 const INITIAL_OPPORTUNITIES: Opportunity[] = [
@@ -325,3 +355,137 @@ export const storeSalesOrderTemplates = (templates: SalesOrderTemplate[]): void 
 };
 
 export const generateId = (): string => Date.now().toString();
+
+// Generic CRUD operations
+export const getStoredData = <T>(key: string, initialData: T[] = []): T[] => {
+  const storedData = localStorage.getItem(key);
+  if (storedData) {
+    return JSON.parse(storedData);
+  }
+  localStorage.setItem(key, JSON.stringify(initialData));
+  return initialData;
+};
+
+export const storeData = <T>(key: string, data: T[]): void => {
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
+export const addRecord = <T extends { id: string }>(key: string, record: T): T[] => {
+  const currentData = getStoredData<T>(key);
+  const newRecord = { ...record, id: record.id || generateId() } as T;
+  const updatedData = [...currentData, newRecord];
+  storeData(key, updatedData);
+  return updatedData;
+};
+
+export const updateRecord = <T extends { id: string }>(key: string, id: string, updates: Partial<T>): T[] => {
+  const currentData = getStoredData<T>(key);
+  const updatedData = currentData.map(item => 
+    item.id === id ? { ...item, ...updates } as T : item
+  );
+  storeData(key, updatedData);
+  return updatedData;
+};
+
+export const deleteRecord = <T extends { id: string }>(key: string, id: string): T[] => {
+  const currentData = getStoredData<T>(key);
+  const updatedData = currentData.filter(item => item.id !== id);
+  storeData(key, updatedData);
+  return updatedData;
+};
+
+// Initial data for different modules
+export const INITIAL_DATA = {
+  CUSTOMERS: [
+    {
+      id: '1',
+      name: 'Acme Corporation',
+      email: 'contact@acme.com',
+      phone: '+1-555-0123',
+      address: '123 Business Ave, NY 10001',
+      type: 'Company',
+      status: 'Active'
+    },
+    {
+      id: '2',
+      name: 'John Smith',
+      email: 'john@techsolutions.com',
+      phone: '+1-555-0124',
+      address: '456 Tech Street, CA 90210',
+      type: 'Individual',
+      status: 'Active'
+    }
+  ],
+  INVOICES: [
+    {
+      id: '1',
+      number: 'INV-001',
+      customer: 'Acme Corporation',
+      customerEmail: 'contact@acme.com',
+      total: 5000,
+      status: 'paid',
+      dueDate: '2024-02-01',
+      issueDate: '2024-01-01',
+      items: [
+        { id: '1', description: 'Consulting Services', quantity: 10, unitPrice: 500, total: 5000 }
+      ]
+    }
+  ],
+  PRODUCTS: [
+    {
+      id: '1',
+      name: 'Professional Software License',
+      sku: 'PSL-001',
+      category: 'Software',
+      price: 1200,
+      cost: 400,
+      stock: 0,
+      type: 'service',
+      status: 'active'
+    },
+    {
+      id: '2',
+      name: 'Industrial Equipment',
+      sku: 'IE-002',
+      category: 'Machinery',
+      price: 15000,
+      cost: 9750,
+      stock: 5,
+      type: 'storable',
+      status: 'active'
+    }
+  ],
+  BLOG_POSTS: [
+    {
+      id: '1',
+      title: 'Getting Started with BOS',
+      content: 'Welcome to our comprehensive business operating system...',
+      author: 'Admin',
+      status: 'published',
+      publishDate: '2024-01-15',
+      tags: ['tutorial', 'getting-started'],
+      views: 1250
+    }
+  ],
+  PROJECTS: [
+    {
+      id: '1',
+      name: 'Website Redesign',
+      description: 'Complete overhaul of company website',
+      status: 'In Progress',
+      startDate: '2024-01-01',
+      endDate: '2024-03-01',
+      manager: 'Jane Doe',
+      team: ['John Smith', 'Alice Johnson'],
+      budget: 50000,
+      progress: 65
+    }
+  ]
+};
+
+// Module-specific getters using generic functions
+export const getStoredCustomers = () => getStoredData(LOCAL_STORAGE_KEYS.CUSTOMERS, INITIAL_DATA.CUSTOMERS);
+export const getStoredInvoices = () => getStoredData(LOCAL_STORAGE_KEYS.INVOICES, INITIAL_DATA.INVOICES);
+export const getStoredProducts = () => getStoredData(LOCAL_STORAGE_KEYS.PRODUCTS, INITIAL_DATA.PRODUCTS);
+export const getStoredBlogPosts = () => getStoredData(LOCAL_STORAGE_KEYS.BLOG_POSTS, INITIAL_DATA.BLOG_POSTS);
+export const getStoredProjects = () => getStoredData(LOCAL_STORAGE_KEYS.PROJECTS, INITIAL_DATA.PROJECTS);

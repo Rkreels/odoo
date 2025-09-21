@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OdooMainLayout from '@/components/layout/OdooMainLayout';
@@ -7,6 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ShoppingCart, 
   DollarSign, 
@@ -20,7 +24,8 @@ import {
   Calendar,
   User,
   Package,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -29,6 +34,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from '@/components/ui/use-toast';
+import { LOCAL_STORAGE_KEYS, getStoredData, addRecord, updateRecord, deleteRecord, generateId, getStoredCustomers, getStoredProducts } from '@/lib/localStorageUtils';
 
 interface SalesOrder {
   id: string;
@@ -74,6 +81,71 @@ interface Product {
   status: 'active' | 'inactive';
 }
 
+const INITIAL_SALES_ORDERS: SalesOrder[] = [
+  {
+    id: '1',
+    number: 'SO001',
+    customer: 'Tech Solutions Inc.',
+    customerEmail: 'contact@techsolutions.com',
+    date: '2024-01-15',
+    validUntil: '2024-02-15',
+    status: 'confirmed',
+    salesperson: 'Sarah Johnson',
+    paymentTerms: 'Net 30',
+    deliveryDate: '2024-01-25',
+    items: [
+      {
+        id: '1',
+        product: 'Professional Software License',
+        description: 'Annual subscription',
+        quantity: 5,
+        unitPrice: 1200,
+        discount: 10,
+        tax: 12,
+        total: 5400
+      }
+    ],
+    subtotal: 6000,
+    tax: 600,
+    discount: 600,
+    total: 6000,
+    margin: 25,
+    source: 'Website',
+    tags: ['enterprise', 'recurring']
+  },
+  {
+    id: '2',
+    number: 'SO002',
+    customer: 'Global Manufacturing Corp',
+    customerEmail: 'procurement@globalmanuf.com',
+    date: '2024-01-20',
+    validUntil: '2024-02-20',
+    status: 'sent',
+    salesperson: 'Mike Wilson',
+    paymentTerms: 'Net 15',
+    deliveryDate: '2024-02-01',
+    items: [
+      {
+        id: '1',
+        product: 'Industrial Equipment',
+        description: 'Heavy duty machinery',
+        quantity: 2,
+        unitPrice: 15000,
+        discount: 0,
+        tax: 15,
+        total: 30000
+      }
+    ],
+    subtotal: 30000,
+    tax: 4500,
+    discount: 0,
+    total: 34500,
+    margin: 35,
+    source: 'Referral',
+    tags: ['manufacturing', 'high-value']
+  }
+];
+
 const Sales = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('orders');
@@ -81,108 +153,57 @@ const Sales = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([
-    {
-      id: '1',
-      number: 'SO001',
-      customer: 'Tech Solutions Inc.',
-      customerEmail: 'contact@techsolutions.com',
-      date: '2024-01-15',
-      validUntil: '2024-02-15',
-      status: 'confirmed',
-      salesperson: 'Sarah Johnson',
-      paymentTerms: 'Net 30',
-      deliveryDate: '2024-01-25',
-      items: [
-        {
-          id: '1',
-          product: 'Professional Software License',
-          description: 'Annual subscription',
-          quantity: 5,
-          unitPrice: 1200,
-          discount: 10,
-          tax: 12,
-          total: 5400
-        }
-      ],
-      subtotal: 6000,
-      tax: 600,
-      discount: 600,
-      total: 6000,
-      margin: 25,
-      source: 'Website',
-      tags: ['enterprise', 'recurring']
-    },
-    {
-      id: '2',
-      number: 'SO002',
-      customer: 'Global Manufacturing Corp',
-      customerEmail: 'procurement@globalmanuf.com',
-      date: '2024-01-20',
-      validUntil: '2024-02-20',
-      status: 'sent',
-      salesperson: 'Mike Wilson',
-      paymentTerms: 'Net 15',
-      deliveryDate: '2024-02-01',
-      items: [
-        {
-          id: '1',
-          product: 'Industrial Equipment',
-          description: 'Heavy duty machinery',
-          quantity: 2,
-          unitPrice: 15000,
-          discount: 0,
-          tax: 15,
-          total: 30000
-        }
-      ],
-      subtotal: 30000,
-      tax: 4500,
-      discount: 0,
-      total: 34500,
-      margin: 35,
-      source: 'Referral',
-      tags: ['manufacturing', 'high-value']
-    }
-  ]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
 
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: '1',
-      name: 'Professional Software License',
-      sku: 'PSL-001',
-      category: 'Software',
-      price: 1200,
-      cost: 400,
-      stock: 0,
-      type: 'service',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Industrial Equipment',
-      sku: 'IE-002',
-      category: 'Machinery',
-      price: 15000,
-      cost: 9750,
-      stock: 5,
-      type: 'storable',
-      status: 'active'
-    }
-  ]);
+  // Dialog states
+  const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
+  const [isEditOrderOpen, setIsEditOrderOpen] = useState(false);
+  const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<SalesOrder | null>(null);
+
+  // Form states
+  const [orderForm, setOrderForm] = useState({
+    customer: '',
+    customerEmail: '',
+    validUntil: '',
+    deliveryDate: '',
+    salesperson: '',
+    paymentTerms: 'Net 30',
+    source: 'Direct',
+    tags: '',
+    items: [{ product: '', description: '', quantity: 1, unitPrice: 0, discount: 0 }]
+  });
+
+  const [productForm, setProductForm] = useState({
+    name: '',
+    sku: '',
+    category: '',
+    price: 0,
+    cost: 0,
+    stock: 0,
+    type: 'storable' as 'storable' | 'consumable' | 'service',
+    status: 'active' as 'active' | 'inactive'
+  });
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     if (!isAuthenticated) {
       navigate('/login');
     }
+    
+    // Load data
+    setSalesOrders(getStoredData(LOCAL_STORAGE_KEYS.SALES_ORDERS, INITIAL_SALES_ORDERS));
+    setProducts(getStoredProducts());
+    setCustomers(getStoredCustomers());
   }, [navigate]);
 
   const orderFilters = [
-    { label: 'Quotations', value: 'draft', count: 8 },
-    { label: 'Sales Orders', value: 'confirmed', count: 15 },
-    { label: 'To Invoice', value: 'to_invoice', count: 5 },
-    { label: 'Fully Invoiced', value: 'invoiced', count: 23 }
+    { label: 'All Orders', value: 'all', count: salesOrders.length },
+    { label: 'Quotations', value: 'draft', count: salesOrders.filter(o => o.status === 'draft').length },
+    { label: 'Sales Orders', value: 'confirmed', count: salesOrders.filter(o => o.status === 'confirmed').length },
+    { label: 'Delivered', value: 'delivered', count: salesOrders.filter(o => o.status === 'delivered').length }
   ];
 
   const getStatusColor = (status: string) => {
@@ -203,8 +224,232 @@ const Sales = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const totalRevenue = salesOrders.filter(o => o.status === 'confirmed').reduce((sum, o) => sum + o.total, 0);
+  const totalRevenue = salesOrders.filter(o => o.status === 'confirmed' || o.status === 'delivered').reduce((sum, o) => sum + o.total, 0);
   const totalQuotations = salesOrders.filter(o => o.status === 'draft' || o.status === 'sent').reduce((sum, o) => sum + o.total, 0);
+
+  const calculateOrderTotal = (items: any[]) => {
+    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const totalDiscount = items.reduce((sum, item) => sum + (item.discount || 0), 0);
+    const totalTax = items.reduce((sum, item) => sum + ((item.quantity * item.unitPrice - (item.discount || 0)) * 0.1), 0);
+    return {
+      subtotal,
+      discount: totalDiscount,
+      tax: totalTax,
+      total: subtotal - totalDiscount + totalTax
+    };
+  };
+
+  const handleCreateOrder = () => {
+    const orderTotals = calculateOrderTotal(orderForm.items);
+    
+    const newOrder: SalesOrder = {
+      id: generateId(),
+      number: `SO${String(salesOrders.length + 1).padStart(3, '0')}`,
+      customer: orderForm.customer,
+      customerEmail: orderForm.customerEmail,
+      date: new Date().toISOString().split('T')[0],
+      validUntil: orderForm.validUntil,
+      status: 'draft',
+      salesperson: orderForm.salesperson,
+      paymentTerms: orderForm.paymentTerms,
+      deliveryDate: orderForm.deliveryDate,
+      items: orderForm.items.map(item => ({
+        id: generateId(),
+        product: item.product,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        tax: (item.quantity * item.unitPrice - item.discount) * 0.1,
+        total: item.quantity * item.unitPrice - item.discount
+      })),
+      subtotal: orderTotals.subtotal,
+      tax: orderTotals.tax,
+      discount: orderTotals.discount,
+      total: orderTotals.total,
+      margin: 20, // Default margin
+      source: orderForm.source,
+      tags: orderForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+    };
+
+    const updatedOrders = addRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, newOrder);
+    setSalesOrders(updatedOrders);
+    setIsCreateOrderOpen(false);
+    
+    // Reset form
+    setOrderForm({
+      customer: '',
+      customerEmail: '',
+      validUntil: '',
+      deliveryDate: '',
+      salesperson: '',
+      paymentTerms: 'Net 30',
+      source: 'Direct',
+      tags: '',
+      items: [{ product: '', description: '', quantity: 1, unitPrice: 0, discount: 0 }]
+    });
+
+    toast({
+      title: "Sales Order Created",
+      description: `Order ${newOrder.number} has been created successfully.`,
+    });
+  };
+
+  const handleEditOrder = () => {
+    if (!selectedOrder) return;
+
+    const orderTotals = calculateOrderTotal(orderForm.items);
+    
+    const updates = {
+      customer: orderForm.customer,
+      customerEmail: orderForm.customerEmail,
+      validUntil: orderForm.validUntil,
+      deliveryDate: orderForm.deliveryDate,
+      salesperson: orderForm.salesperson,
+      paymentTerms: orderForm.paymentTerms,
+      source: orderForm.source,
+      tags: orderForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      items: orderForm.items.map(item => ({
+        id: item.id || generateId(),
+        product: item.product,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        tax: (item.quantity * item.unitPrice - item.discount) * 0.1,
+        total: item.quantity * item.unitPrice - item.discount
+      })),
+      subtotal: orderTotals.subtotal,
+      tax: orderTotals.tax,
+      discount: orderTotals.discount,
+      total: orderTotals.total
+    };
+
+    const updatedOrders = updateRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, selectedOrder.id, updates);
+    setSalesOrders(updatedOrders);
+    setIsEditOrderOpen(false);
+    setSelectedOrder(null);
+
+    toast({
+      title: "Sales Order Updated",
+      description: `Order ${selectedOrder.number} has been updated successfully.`,
+    });
+  };
+
+  const handleCreateProduct = () => {
+    const newProduct: Product = {
+      id: generateId(),
+      name: productForm.name,
+      sku: productForm.sku,
+      category: productForm.category,
+      price: productForm.price,
+      cost: productForm.cost,
+      stock: productForm.stock,
+      type: productForm.type,
+      status: productForm.status
+    };
+
+    const updatedProducts = addRecord(LOCAL_STORAGE_KEYS.PRODUCTS, newProduct);
+    setProducts(updatedProducts);
+    setIsCreateProductOpen(false);
+    
+    // Reset form
+    setProductForm({
+      name: '',
+      sku: '',
+      category: '',
+      price: 0,
+      cost: 0,
+      stock: 0,
+      type: 'storable',
+      status: 'active'
+    });
+
+    toast({
+      title: "Product Created",
+      description: `Product ${newProduct.name} has been created successfully.`,
+    });
+  };
+
+  const handleDeleteOrder = (id: string) => {
+    const updatedOrders = deleteRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, id);
+    setSalesOrders(updatedOrders);
+    
+    toast({
+      title: "Sales Order Deleted",
+      description: "Sales order has been deleted successfully.",
+    });
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    const updatedProducts = deleteRecord(LOCAL_STORAGE_KEYS.PRODUCTS, id);
+    setProducts(updatedProducts);
+    
+    toast({
+      title: "Product Deleted",
+      description: "Product has been deleted successfully.",
+    });
+  };
+
+  const handleSendOrder = (order: SalesOrder) => {
+    const updatedOrders = updateRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, order.id, { status: 'sent' });
+    setSalesOrders(updatedOrders);
+    
+    toast({
+      title: "Order Sent",
+      description: `Order ${order.number} has been sent to ${order.customer}.`,
+    });
+  };
+
+  const handleConfirmOrder = (order: SalesOrder) => {
+    const updatedOrders = updateRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, order.id, { status: 'confirmed' });
+    setSalesOrders(updatedOrders);
+    
+    toast({
+      title: "Order Confirmed",
+      description: `Order ${order.number} has been confirmed.`,
+    });
+  };
+
+  const openEditDialog = (order: SalesOrder) => {
+    setSelectedOrder(order);
+    setOrderForm({
+      customer: order.customer,
+      customerEmail: order.customerEmail,
+      validUntil: order.validUntil,
+      deliveryDate: order.deliveryDate,
+      salesperson: order.salesperson,
+      paymentTerms: order.paymentTerms,
+      source: order.source,
+      tags: order.tags.join(', '),
+      items: order.items.map(item => ({
+        product: item.product,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount
+      }))
+    });
+    setIsEditOrderOpen(true);
+  };
+
+  const addOrderItem = () => {
+    setOrderForm({
+      ...orderForm,
+      items: [...orderForm.items, { product: '', description: '', quantity: 1, unitPrice: 0, discount: 0 }]
+    });
+  };
+
+  const removeOrderItem = (index: number) => {
+    const newItems = orderForm.items.filter((_, i) => i !== index);
+    setOrderForm({ ...orderForm, items: newItems });
+  };
+
+  const updateOrderItem = (index: number, field: string, value: any) => {
+    const newItems = [...orderForm.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setOrderForm({ ...orderForm, items: newItems });
+  };
 
   const renderOrdersList = () => (
     <div className="bg-white rounded-lg border">
@@ -267,21 +512,25 @@ const Sales = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View
-                </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openEditDialog(order)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSendOrder(order)}>
                   <Send className="h-4 w-4 mr-2" />
                   Send by Email
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleConfirmOrder(order)}>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Confirm Order
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: 'Download', description: 'PDF downloaded successfully' })}>
                   <Download className="h-4 w-4 mr-2" />
                   Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDeleteOrder(order.id)} className="text-red-600">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -338,13 +587,17 @@ const Sales = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: 'Edit Product', description: `Editing ${product.name}` })}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: 'View Stock', description: `Current stock: ${product.stock}` })}>
                   <Package className="h-4 w-4 mr-2" />
                   View Stock
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)} className="text-red-600">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -362,7 +615,13 @@ const Sales = () => {
           subtitle={activeTab === 'orders' ? 'Manage quotations and sales orders' : 'Product catalog and pricing'}
           searchPlaceholder={`Search ${activeTab}...`}
           onSearch={setSearchTerm}
-          onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
+          onCreateNew={() => {
+            if (activeTab === 'orders') {
+              setIsCreateOrderOpen(true);
+            } else if (activeTab === 'products') {
+              setIsCreateProductOpen(true);
+            }
+          }}
           viewType={viewType}
           onViewChange={(view) => setViewType(view as any)}
           filters={activeTab === 'orders' ? orderFilters : []}
@@ -448,7 +707,7 @@ const Sales = () => {
               <div className="p-4 border-b">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Customer Management</h3>
-                  <Button>
+                  <Button onClick={() => toast({ title: 'Add Customer', description: 'Customer creation form would open here.' })}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Customer
                   </Button>
@@ -458,11 +717,11 @@ const Sales = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <h4 className="text-sm font-medium text-blue-900">Total Customers</h4>
-                    <p className="text-2xl font-bold text-blue-600">432</p>
+                    <p className="text-2xl font-bold text-blue-600">{customers.length}</p>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg">
                     <h4 className="text-sm font-medium text-green-900">Active This Month</h4>
-                    <p className="text-2xl font-bold text-green-600">89</p>
+                    <p className="text-2xl font-bold text-green-600">{customers.filter(c => c.status === 'Active').length}</p>
                   </div>
                   <div className="bg-purple-50 p-4 rounded-lg">
                     <h4 className="text-sm font-medium text-purple-900">Average Order Value</h4>
@@ -474,26 +733,32 @@ const Sales = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Customer</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Total Orders</TableHead>
-                        <TableHead>Revenue</TableHead>
-                        <TableHead>Last Order</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {[1,2,3,4,5].map(customer => (
-                        <TableRow key={customer}>
-                          <TableCell>Customer {customer}</TableCell>
-                          <TableCell>customer{customer}@example.com</TableCell>
-                          <TableCell>{Math.floor(Math.random() * 20) + 1}</TableCell>
-                          <TableCell>${(Math.random() * 10000).toFixed(2)}</TableCell>
-                          <TableCell>2024-01-{String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}</TableCell>
+                      {customers.map(customer => (
+                        <TableRow key={customer.id}>
+                          <TableCell className="font-medium">{customer.name}</TableCell>
                           <TableCell>
-                            <div className="flex space-x-2">
-                              <Button variant="ghost" size="sm">View</Button>
-                              <Button variant="ghost" size="sm">Edit</Button>
-                            </div>
+                            <Badge variant="outline">{customer.type}</Badge>
+                          </TableCell>
+                          <TableCell>{customer.email}</TableCell>
+                          <TableCell>{customer.phone}</TableCell>
+                          <TableCell>
+                            <Badge variant={customer.status === 'Active' ? 'default' : 'secondary'}>
+                              {customer.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" onClick={() => toast({ title: 'Customer Details', description: `Viewing ${customer.name}` })}>
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -504,6 +769,445 @@ const Sales = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Create Order Dialog */}
+        <Dialog open={isCreateOrderOpen} onOpenChange={setIsCreateOrderOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Sales Order</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customer">Customer</Label>
+                <Select value={orderForm.customer} onValueChange={(value) => {
+                  const customer = customers.find(c => c.name === value);
+                  setOrderForm({
+                    ...orderForm,
+                    customer: value,
+                    customerEmail: customer?.email || ''
+                  });
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map(customer => (
+                      <SelectItem key={customer.id} value={customer.name}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="customerEmail">Customer Email</Label>
+                <Input
+                  value={orderForm.customerEmail}
+                  onChange={(e) => setOrderForm({ ...orderForm, customerEmail: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="validUntil">Valid Until</Label>
+                <Input
+                  type="date"
+                  value={orderForm.validUntil}
+                  onChange={(e) => setOrderForm({ ...orderForm, validUntil: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="deliveryDate">Delivery Date</Label>
+                <Input
+                  type="date"
+                  value={orderForm.deliveryDate}
+                  onChange={(e) => setOrderForm({ ...orderForm, deliveryDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="salesperson">Salesperson</Label>
+                <Input
+                  value={orderForm.salesperson}
+                  onChange={(e) => setOrderForm({ ...orderForm, salesperson: e.target.value })}
+                  placeholder="Enter salesperson name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="paymentTerms">Payment Terms</Label>
+                <Select value={orderForm.paymentTerms} onValueChange={(value) => setOrderForm({ ...orderForm, paymentTerms: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Net 15">Net 15</SelectItem>
+                    <SelectItem value="Net 30">Net 30</SelectItem>
+                    <SelectItem value="Net 60">Net 60</SelectItem>
+                    <SelectItem value="Due on Receipt">Due on Receipt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="source">Source</Label>
+                <Select value={orderForm.source} onValueChange={(value) => setOrderForm({ ...orderForm, source: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Direct">Direct</SelectItem>
+                    <SelectItem value="Website">Website</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="Partner">Partner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="tags">Tags (comma separated)</Label>
+                <Input
+                  value={orderForm.tags}
+                  onChange={(e) => setOrderForm({ ...orderForm, tags: e.target.value })}
+                  placeholder="e.g., enterprise, urgent"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <div className="flex justify-between items-center mb-2">
+                <Label>Order Items</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addOrderItem}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Item
+                </Button>
+              </div>
+              {orderForm.items.map((item, index) => (
+                <div key={index} className="grid grid-cols-6 gap-2 mb-2">
+                  <Select value={item.product} onValueChange={(value) => {
+                    const product = products.find(p => p.name === value);
+                    updateOrderItem(index, 'product', value);
+                    if (product) {
+                      updateOrderItem(index, 'description', product.name);
+                      updateOrderItem(index, 'unitPrice', product.price);
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map(product => (
+                        <SelectItem key={product.id} value={product.name}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder="Qty"
+                    value={item.quantity}
+                    onChange={(e) => updateOrderItem(index, 'quantity', Number(e.target.value))}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Unit Price"
+                    value={item.unitPrice}
+                    onChange={(e) => updateOrderItem(index, 'unitPrice', Number(e.target.value))}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Discount"
+                    value={item.discount}
+                    onChange={(e) => updateOrderItem(index, 'discount', Number(e.target.value))}
+                  />
+                  <div className="flex items-center">
+                    <span>${((item.quantity * item.unitPrice) - item.discount).toFixed(2)}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeOrderItem(index)}
+                    disabled={orderForm.items.length === 1}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateOrderOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateOrder}>
+                Create Order
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Order Dialog */}
+        <Dialog open={isEditOrderOpen} onOpenChange={setIsEditOrderOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Sales Order {selectedOrder?.number}</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customer">Customer</Label>
+                <Select value={orderForm.customer} onValueChange={(value) => {
+                  const customer = customers.find(c => c.name === value);
+                  setOrderForm({
+                    ...orderForm,
+                    customer: value,
+                    customerEmail: customer?.email || ''
+                  });
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map(customer => (
+                      <SelectItem key={customer.id} value={customer.name}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="customerEmail">Customer Email</Label>
+                <Input
+                  value={orderForm.customerEmail}
+                  onChange={(e) => setOrderForm({ ...orderForm, customerEmail: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="validUntil">Valid Until</Label>
+                <Input
+                  type="date"
+                  value={orderForm.validUntil}
+                  onChange={(e) => setOrderForm({ ...orderForm, validUntil: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="deliveryDate">Delivery Date</Label>
+                <Input
+                  type="date"
+                  value={orderForm.deliveryDate}
+                  onChange={(e) => setOrderForm({ ...orderForm, deliveryDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="salesperson">Salesperson</Label>
+                <Input
+                  value={orderForm.salesperson}
+                  onChange={(e) => setOrderForm({ ...orderForm, salesperson: e.target.value })}
+                  placeholder="Enter salesperson name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="paymentTerms">Payment Terms</Label>
+                <Select value={orderForm.paymentTerms} onValueChange={(value) => setOrderForm({ ...orderForm, paymentTerms: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Net 15">Net 15</SelectItem>
+                    <SelectItem value="Net 30">Net 30</SelectItem>
+                    <SelectItem value="Net 60">Net 60</SelectItem>
+                    <SelectItem value="Due on Receipt">Due on Receipt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="source">Source</Label>
+                <Select value={orderForm.source} onValueChange={(value) => setOrderForm({ ...orderForm, source: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Direct">Direct</SelectItem>
+                    <SelectItem value="Website">Website</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="Partner">Partner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="tags">Tags (comma separated)</Label>
+                <Input
+                  value={orderForm.tags}
+                  onChange={(e) => setOrderForm({ ...orderForm, tags: e.target.value })}
+                  placeholder="e.g., enterprise, urgent"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <div className="flex justify-between items-center mb-2">
+                <Label>Order Items</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addOrderItem}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Item
+                </Button>
+              </div>
+              {orderForm.items.map((item, index) => (
+                <div key={index} className="grid grid-cols-6 gap-2 mb-2">
+                  <Select value={item.product} onValueChange={(value) => {
+                    const product = products.find(p => p.name === value);
+                    updateOrderItem(index, 'product', value);
+                    if (product) {
+                      updateOrderItem(index, 'description', product.name);
+                      updateOrderItem(index, 'unitPrice', product.price);
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map(product => (
+                        <SelectItem key={product.id} value={product.name}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder="Qty"
+                    value={item.quantity}
+                    onChange={(e) => updateOrderItem(index, 'quantity', Number(e.target.value))}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Unit Price"
+                    value={item.unitPrice}
+                    onChange={(e) => updateOrderItem(index, 'unitPrice', Number(e.target.value))}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Discount"
+                    value={item.discount}
+                    onChange={(e) => updateOrderItem(index, 'discount', Number(e.target.value))}
+                  />
+                  <div className="flex items-center">
+                    <span>${((item.quantity * item.unitPrice) - item.discount).toFixed(2)}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeOrderItem(index)}
+                    disabled={orderForm.items.length === 1}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditOrderOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditOrder}>
+                Update Order
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Product Dialog */}
+        <Dialog open={isCreateProductOpen} onOpenChange={setIsCreateProductOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Product</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Product Name</Label>
+                <Input
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                  placeholder="Enter product name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="sku">SKU</Label>
+                <Input
+                  value={productForm.sku}
+                  onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                  placeholder="Enter SKU"
+                />
+              </div>
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Input
+                  value={productForm.category}
+                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                  placeholder="Enter category"
+                />
+              </div>
+              <div>
+                <Label htmlFor="type">Type</Label>
+                <Select value={productForm.type} onValueChange={(value) => setProductForm({ ...productForm, type: value as any })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="storable">Storable Product</SelectItem>
+                    <SelectItem value="consumable">Consumable</SelectItem>
+                    <SelectItem value="service">Service</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="price">Sales Price</Label>
+                <Input
+                  type="number"
+                  value={productForm.price}
+                  onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="cost">Cost</Label>
+                <Input
+                  type="number"
+                  value={productForm.cost}
+                  onChange={(e) => setProductForm({ ...productForm, cost: Number(e.target.value) })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="stock">Stock Quantity</Label>
+                <Input
+                  type="number"
+                  value={productForm.stock}
+                  onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select value={productForm.status} onValueChange={(value) => setProductForm({ ...productForm, status: value as any })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateProductOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateProduct}>
+                Create Product
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </OdooMainLayout>
   );
