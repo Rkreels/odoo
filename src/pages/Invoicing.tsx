@@ -140,8 +140,8 @@ const Invoicing = () => {
   }, [navigate]);
 
   const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.customer.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (invoice.number?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (invoice.customer?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesFilter = selectedFilter === 'all' || invoice.status === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -163,7 +163,7 @@ const Invoicing = () => {
       dueDate: invoiceForm.dueDate,
       issueDate: new Date().toISOString().split('T')[0],
       status: 'draft',
-      items: invoiceForm.items.map(item => ({
+      items: invoiceForm.items.map((item: any) => ({
         id: generateId(),
         description: item.description,
         quantity: item.quantity,
@@ -205,7 +205,7 @@ const Invoicing = () => {
       customer: invoiceForm.customer,
       customerEmail: invoiceForm.customerEmail,
       dueDate: invoiceForm.dueDate,
-      items: invoiceForm.items.map(item => ({
+      items: invoiceForm.items.map((item: any) => ({
         id: item.id || generateId(),
         description: item.description,
         quantity: item.quantity,
@@ -218,7 +218,7 @@ const Invoicing = () => {
       total
     };
 
-    const updatedInvoices = updateRecord(LOCAL_STORAGE_KEYS.INVOICES, selectedInvoice.id, updates);
+    const updatedInvoices = updateRecord<Invoice>(LOCAL_STORAGE_KEYS.INVOICES, selectedInvoice.id, updates);
     setInvoices(updatedInvoices);
     setIsEditInvoiceOpen(false);
     setSelectedInvoice(null);
@@ -230,7 +230,7 @@ const Invoicing = () => {
   };
 
   const handleDeleteInvoice = (id: string) => {
-    const updatedInvoices = deleteRecord(LOCAL_STORAGE_KEYS.INVOICES, id);
+    const updatedInvoices = deleteRecord<Invoice>(LOCAL_STORAGE_KEYS.INVOICES, id);
     setInvoices(updatedInvoices);
     
     toast({
@@ -240,7 +240,7 @@ const Invoicing = () => {
   };
 
   const handleSendInvoice = (invoice: Invoice) => {
-    const updatedInvoices = updateRecord(LOCAL_STORAGE_KEYS.INVOICES, invoice.id, { status: 'sent' });
+    const updatedInvoices = updateRecord<Invoice>(LOCAL_STORAGE_KEYS.INVOICES, invoice.id, { status: 'sent' });
     setInvoices(updatedInvoices);
     
     toast({
@@ -271,7 +271,7 @@ const Invoicing = () => {
       .reduce((sum, p) => sum + p.amount, 0);
 
     if (totalPaid >= selectedInvoice.total) {
-      const updatedInvoices = updateRecord(LOCAL_STORAGE_KEYS.INVOICES, selectedInvoice.id, { status: 'paid' });
+      const updatedInvoices = updateRecord<Invoice>(LOCAL_STORAGE_KEYS.INVOICES, selectedInvoice.id, { status: 'paid' });
       setInvoices(updatedInvoices);
     }
 

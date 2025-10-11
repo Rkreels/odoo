@@ -195,7 +195,13 @@ const Sales = () => {
     
     // Load data
     setSalesOrders(getStoredData(LOCAL_STORAGE_KEYS.SALES_ORDERS, INITIAL_SALES_ORDERS));
-    setProducts(getStoredProducts());
+    const loadedProducts = getStoredProducts();
+    // Ensure product types are properly typed
+    setProducts(loadedProducts.map(p => ({
+      ...p,
+      type: (p.type as 'storable' | 'consumable' | 'service') || 'storable',
+      status: (p.status as 'active' | 'inactive') || 'active'
+    })));
     setCustomers(getStoredCustomers());
   }, [navigate]);
 
@@ -218,8 +224,8 @@ const Sales = () => {
   };
 
   const filteredOrders = salesOrders.filter(order => {
-    const matchesSearch = order.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (order.number?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (order.customer?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesFilter = selectedFilter === 'all' || order.status === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -253,7 +259,7 @@ const Sales = () => {
       salesperson: orderForm.salesperson,
       paymentTerms: orderForm.paymentTerms,
       deliveryDate: orderForm.deliveryDate,
-      items: orderForm.items.map(item => ({
+      items: orderForm.items.map((item: any) => ({
         id: generateId(),
         product: item.product,
         description: item.description,
@@ -309,7 +315,7 @@ const Sales = () => {
       paymentTerms: orderForm.paymentTerms,
       source: orderForm.source,
       tags: orderForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      items: orderForm.items.map(item => ({
+      items: orderForm.items.map((item: any) => ({
         id: item.id || generateId(),
         product: item.product,
         description: item.description,
@@ -325,7 +331,7 @@ const Sales = () => {
       total: orderTotals.total
     };
 
-    const updatedOrders = updateRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, selectedOrder.id, updates);
+    const updatedOrders = updateRecord<SalesOrder>(LOCAL_STORAGE_KEYS.SALES_ORDERS, selectedOrder.id, updates);
     setSalesOrders(updatedOrders);
     setIsEditOrderOpen(false);
     setSelectedOrder(null);
@@ -372,7 +378,7 @@ const Sales = () => {
   };
 
   const handleDeleteOrder = (id: string) => {
-    const updatedOrders = deleteRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, id);
+    const updatedOrders = deleteRecord<SalesOrder>(LOCAL_STORAGE_KEYS.SALES_ORDERS, id);
     setSalesOrders(updatedOrders);
     
     toast({
@@ -382,7 +388,7 @@ const Sales = () => {
   };
 
   const handleDeleteProduct = (id: string) => {
-    const updatedProducts = deleteRecord(LOCAL_STORAGE_KEYS.PRODUCTS, id);
+    const updatedProducts = deleteRecord<Product>(LOCAL_STORAGE_KEYS.PRODUCTS, id);
     setProducts(updatedProducts);
     
     toast({
@@ -392,7 +398,7 @@ const Sales = () => {
   };
 
   const handleSendOrder = (order: SalesOrder) => {
-    const updatedOrders = updateRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, order.id, { status: 'sent' });
+    const updatedOrders = updateRecord<SalesOrder>(LOCAL_STORAGE_KEYS.SALES_ORDERS, order.id, { status: 'sent' });
     setSalesOrders(updatedOrders);
     
     toast({
@@ -402,7 +408,7 @@ const Sales = () => {
   };
 
   const handleConfirmOrder = (order: SalesOrder) => {
-    const updatedOrders = updateRecord(LOCAL_STORAGE_KEYS.SALES_ORDERS, order.id, { status: 'confirmed' });
+    const updatedOrders = updateRecord<SalesOrder>(LOCAL_STORAGE_KEYS.SALES_ORDERS, order.id, { status: 'confirmed' });
     setSalesOrders(updatedOrders);
     
     toast({
