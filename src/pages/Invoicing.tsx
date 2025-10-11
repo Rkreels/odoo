@@ -17,6 +17,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from '@/components/ui/use-toast';
 import { LOCAL_STORAGE_KEYS, getStoredData, addRecord, updateRecord, deleteRecord, generateId, getStoredCustomers } from '@/lib/localStorageUtils';
 
+interface InvoiceFormItem {
+  id?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 interface Invoice {
   id: string;
   number: string;
@@ -111,7 +118,14 @@ const Invoicing = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   
   // Form states
-  const [invoiceForm, setInvoiceForm] = useState({
+  const [invoiceForm, setInvoiceForm] = useState<{
+    customer: string;
+    customerEmail: string;
+    dueDate: string;
+    items: InvoiceFormItem[];
+    notes: string;
+    taxRate: number;
+  }>({
     customer: '',
     customerEmail: '',
     dueDate: '',
@@ -291,7 +305,8 @@ const Invoicing = () => {
       customer: invoice.customer,
       customerEmail: invoice.customerEmail,
       dueDate: invoice.dueDate,
-      items: invoice.items.map(item => ({
+      items: (invoice.items || []).map(item => ({
+        id: item.id,
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice

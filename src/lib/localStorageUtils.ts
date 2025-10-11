@@ -378,7 +378,7 @@ export const addRecord = <T extends { id: string }>(key: string, record: T): T[]
   return updatedData;
 };
 
-export const updateRecord = <T extends { id: string }>(key: string, id: string, updates: Partial<Omit<T, 'id'>>): T[] => {
+export const updateRecord = <T extends { id: string }>(key: string, id: string, updates: Partial<T>): T[] => {
   const currentData = getStoredData<T>(key);
   const updatedData = currentData.map(item => 
     item.id === id ? { ...item, ...updates } : item

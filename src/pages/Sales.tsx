@@ -37,6 +37,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from '@/components/ui/use-toast';
 import { LOCAL_STORAGE_KEYS, getStoredData, addRecord, updateRecord, deleteRecord, generateId, getStoredCustomers, getStoredProducts } from '@/lib/localStorageUtils';
 
+interface SalesOrderFormItem {
+  id?: string;
+  product: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+}
+
+interface InvoiceFormItem {
+  id?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 interface SalesOrder {
   id: string;
   number: string;
@@ -164,7 +180,17 @@ const Sales = () => {
   const [selectedOrder, setSelectedOrder] = useState<SalesOrder | null>(null);
 
   // Form states
-  const [orderForm, setOrderForm] = useState({
+  const [orderForm, setOrderForm] = useState<{
+    customer: string;
+    customerEmail: string;
+    validUntil: string;
+    deliveryDate: string;
+    salesperson: string;
+    paymentTerms: string;
+    source: string;
+    tags: string;
+    items: SalesOrderFormItem[];
+  }>({
     customer: '',
     customerEmail: '',
     validUntil: '',
@@ -427,8 +453,9 @@ const Sales = () => {
       salesperson: order.salesperson,
       paymentTerms: order.paymentTerms,
       source: order.source,
-      tags: order.tags.join(', '),
-      items: order.items.map(item => ({
+      tags: (order.tags || []).join(', '),
+      items: (order.items || []).map(item => ({
+        id: item.id,
         product: item.product,
         description: item.description,
         quantity: item.quantity,
@@ -475,7 +502,7 @@ const Sales = () => {
           <div className="col-span-2">
             <p className="font-medium text-sm">{order.number}</p>
             <div className="flex space-x-1 mt-1">
-              {order.tags.map(tag => (
+              {(order.tags || []).map(tag => (
                 <Badge key={tag} variant="outline" className="text-xs">
                   {tag}
                 </Badge>
