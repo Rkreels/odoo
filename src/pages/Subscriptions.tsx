@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   RefreshCw, 
   DollarSign, 
@@ -16,8 +19,13 @@ import {
   CreditCard,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Plus,
+  Edit,
+  Trash
 } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { LOCAL_STORAGE_KEYS, getStoredData, addRecord, updateRecord, deleteRecord, generateId } from '@/lib/localStorageUtils';
 
 interface Subscription {
   id: string;
@@ -44,93 +52,170 @@ interface SubscriptionPlan {
   status: 'active' | 'inactive';
 }
 
+const INITIAL_SUBSCRIPTIONS: Subscription[] = [
+  {
+    id: '1',
+    customer: 'Acme Corp',
+    plan: 'Business Pro',
+    status: 'active',
+    amount: 99.99,
+    interval: 'monthly',
+    startDate: '2024-01-15',
+    nextBilling: '2024-07-15',
+    paymentMethod: '**** 1234',
+    renewals: 6,
+    mrr: 99.99
+  },
+  {
+    id: '2',
+    customer: 'Tech Solutions Ltd',
+    plan: 'Enterprise',
+    status: 'active',
+    amount: 299.99,
+    interval: 'monthly',
+    startDate: '2024-03-01',
+    nextBilling: '2024-07-01',
+    paymentMethod: '**** 5678',
+    renewals: 4,
+    mrr: 299.99
+  },
+];
+
+const INITIAL_PLANS: SubscriptionPlan[] = [
+  {
+    id: '1',
+    name: 'Basic',
+    price: 29.99,
+    interval: 'monthly',
+    features: ['Up to 10 users', 'Basic support', '10GB storage'],
+    subscribers: 45,
+    revenue: 1349.55,
+    status: 'active'
+  },
+  {
+    id: '2',
+    name: 'Business Pro',
+    price: 99.99,
+    interval: 'monthly',
+    features: ['Up to 50 users', 'Priority support', '100GB storage', 'Advanced analytics'],
+    subscribers: 23,
+    revenue: 2299.77,
+    status: 'active'
+  },
+];
+
 const Subscriptions = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('subscriptions');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-
-  const [subscriptions] = useState<Subscription[]>([
-    {
-      id: '1',
-      customer: 'Acme Corp',
-      plan: 'Business Pro',
-      status: 'active',
-      amount: 99.99,
-      interval: 'monthly',
-      startDate: '2024-01-15',
-      nextBilling: '2024-07-15',
-      paymentMethod: '**** 1234',
-      renewals: 6,
-      mrr: 99.99
-    },
-    {
-      id: '2',
-      customer: 'Tech Solutions Ltd',
-      plan: 'Enterprise',
-      status: 'active',
-      amount: 299.99,
-      interval: 'monthly',
-      startDate: '2024-03-01',
-      nextBilling: '2024-07-01',
-      paymentMethod: '**** 5678',
-      renewals: 4,
-      mrr: 299.99
-    },
-    {
-      id: '3',
-      customer: 'Startup Inc',
-      plan: 'Basic',
-      status: 'past_due',
-      amount: 29.99,
-      interval: 'monthly',
-      startDate: '2024-02-10',
-      nextBilling: '2024-06-10',
-      paymentMethod: '**** 9012',
-      renewals: 5,
-      mrr: 29.99
-    }
-  ]);
-
-  const [plans] = useState<SubscriptionPlan[]>([
-    {
-      id: '1',
-      name: 'Basic',
-      price: 29.99,
-      interval: 'monthly',
-      features: ['Up to 10 users', 'Basic support', '10GB storage'],
-      subscribers: 45,
-      revenue: 1349.55,
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Business Pro',
-      price: 99.99,
-      interval: 'monthly',
-      features: ['Up to 50 users', 'Priority support', '100GB storage', 'Advanced analytics'],
-      subscribers: 23,
-      revenue: 2299.77,
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'Enterprise',
-      price: 299.99,
-      interval: 'monthly',
-      features: ['Unlimited users', '24/7 support', 'Unlimited storage', 'Custom integrations'],
-      subscribers: 8,
-      revenue: 2399.92,
-      status: 'active'
-    }
-  ]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  
+  // Form states
+  const [formData, setFormData] = useState<{
+    customer: string;
+    plan: string;
+    status: 'active' | 'cancelled' | 'past_due' | 'paused';
+    amount: number;
+    interval: 'monthly' | 'yearly';
+    startDate: string;
+    nextBilling: string;
+    paymentMethod: string;
+  }>({
+    customer: '',
+    plan: '',
+    status: 'active',
+    amount: 0,
+    interval: 'monthly',
+    startDate: new Date().toISOString().split('T')[0],
+    nextBilling: new Date().toISOString().split('T')[0],
+    paymentMethod: ''
+  });
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
+    if (!localStorage.getItem('isAuthenticated')) navigate('/login');
+    loadData();
   }, [navigate]);
+
+  const loadData = () => {
+    const loadedSubs = getStoredData<Subscription>(LOCAL_STORAGE_KEYS.SUBSCRIPTIONS, INITIAL_SUBSCRIPTIONS);
+    const loadedPlans = getStoredData<SubscriptionPlan>(LOCAL_STORAGE_KEYS.SUBSCRIPTION_PLANS, INITIAL_PLANS);
+    setSubscriptions(loadedSubs);
+    setPlans(loadedPlans);
+  };
+
+  const handleCreate = () => {
+    const newSubscription: Subscription = {
+      id: generateId(),
+      ...formData,
+      renewals: 0,
+      mrr: formData.interval === 'monthly' ? formData.amount : formData.amount / 12
+    };
+    
+    const updated = addRecord<Subscription>(LOCAL_STORAGE_KEYS.SUBSCRIPTIONS, newSubscription);
+    setSubscriptions(updated);
+    setShowCreateDialog(false);
+    resetForm();
+    toast({ title: 'Success', description: 'Subscription created successfully' });
+  };
+
+  const handleEdit = (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+    setFormData({
+      customer: subscription.customer,
+      plan: subscription.plan,
+      status: subscription.status,
+      amount: subscription.amount,
+      interval: subscription.interval,
+      startDate: subscription.startDate,
+      nextBilling: subscription.nextBilling,
+      paymentMethod: subscription.paymentMethod
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdate = () => {
+    if (!selectedSubscription) return;
+    
+    const updated = updateRecord<Subscription>(LOCAL_STORAGE_KEYS.SUBSCRIPTIONS, selectedSubscription.id, {
+      ...formData,
+      mrr: formData.interval === 'monthly' ? formData.amount : formData.amount / 12
+    });
+    setSubscriptions(updated);
+    setShowEditDialog(false);
+    setSelectedSubscription(null);
+    resetForm();
+    toast({ title: 'Success', description: 'Subscription updated successfully' });
+  };
+
+  const handleDelete = (id: string) => {
+    const updated = deleteRecord<Subscription>(LOCAL_STORAGE_KEYS.SUBSCRIPTIONS, id);
+    setSubscriptions(updated);
+    toast({ title: 'Success', description: 'Subscription deleted' });
+  };
+
+  const handleStatusChange = (id: string, newStatus: Subscription['status']) => {
+    const updated = updateRecord<Subscription>(LOCAL_STORAGE_KEYS.SUBSCRIPTIONS, id, { status: newStatus });
+    setSubscriptions(updated);
+    toast({ title: 'Success', description: `Subscription ${newStatus}` });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      customer: '',
+      plan: '',
+      status: 'active',
+      amount: 0,
+      interval: 'monthly',
+      startDate: new Date().toISOString().split('T')[0],
+      nextBilling: new Date().toISOString().split('T')[0],
+      paymentMethod: ''
+    });
+  };
 
   const subscriptionFilters = [
     { label: 'Active', value: 'active', count: subscriptions.filter(s => s.status === 'active').length },
@@ -147,8 +232,8 @@ const Subscriptions = () => {
 
   const totalMRR = subscriptions.filter(s => s.status === 'active').reduce((sum, s) => sum + s.mrr, 0);
   const totalSubscribers = subscriptions.filter(s => s.status === 'active').length;
-  const churnRate = 3.2; // percentage
-  const growthRate = 15.5; // percentage
+  const churnRate = 3.2;
+  const growthRate = 15.5;
 
   const renderSubscriptionsList = () => (
     <div className="bg-white rounded-lg border">
@@ -200,64 +285,16 @@ const Subscriptions = () => {
             <span className="text-sm">{subscription.nextBilling}</span>
           </div>
           <div className="col-span-1">
-            <Button variant="ghost" size="sm">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            <div className="flex space-x-1">
+              <Button variant="ghost" size="sm" onClick={() => handleEdit(subscription)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => handleDelete(subscription.id)}>
+                <Trash className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
           </div>
         </div>
-      ))}
-    </div>
-  );
-
-  const renderPlansList = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {plans.map(plan => (
-        <Card key={plan.id} className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">{plan.name}</CardTitle>
-              <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
-                {plan.status}
-              </Badge>
-            </div>
-            <div className="text-3xl font-bold">
-              ${plan.price}
-              <span className="text-sm font-normal text-gray-500">/{plan.interval}</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Subscribers</span>
-                  <p className="font-semibold">{plan.subscribers}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600">Revenue</span>
-                  <p className="font-semibold">${plan.revenue.toFixed(2)}</p>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-2">Features</h4>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <CheckCircle className="h-3 w-3 text-green-500 mr-2" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <Button variant="outline" className="w-full">
-                  Edit Plan
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       ))}
     </div>
   );
@@ -266,15 +303,15 @@ const Subscriptions = () => {
     <OdooMainLayout currentApp="Subscriptions">
       <div className="flex flex-col h-full">
         <OdooControlPanel
-          title={activeTab === 'subscriptions' ? 'Subscriptions' : 'Plans'}
-          subtitle={activeTab === 'subscriptions' ? 'Manage recurring subscriptions and billing' : 'Subscription plans and pricing'}
-          searchPlaceholder={`Search ${activeTab}...`}
+          title="Subscriptions"
+          subtitle="Manage recurring subscriptions and billing"
+          searchPlaceholder="Search subscriptions..."
           onSearch={setSearchTerm}
-          onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
-          filters={activeTab === 'subscriptions' ? subscriptionFilters : []}
+          onCreateNew={() => setShowCreateDialog(true)}
+          filters={subscriptionFilters}
           selectedFilter={selectedFilter}
           onFilterChange={setSelectedFilter}
-          recordCount={activeTab === 'subscriptions' ? filteredSubscriptions.length : plans.length}
+          recordCount={filteredSubscriptions.length}
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
@@ -343,7 +380,56 @@ const Subscriptions = () => {
           </TabsContent>
 
           <TabsContent value="plans" className="flex-1 p-6">
-            {renderPlansList()}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {plans.map(plan => (
+                <Card key={plan.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl">{plan.name}</CardTitle>
+                      <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                        {plan.status}
+                      </Badge>
+                    </div>
+                    <div className="text-3xl font-bold">
+                      ${plan.price}
+                      <span className="text-sm font-normal text-gray-500">/{plan.interval}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Subscribers</span>
+                          <p className="font-semibold">{plan.subscribers}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Revenue</span>
+                          <p className="font-semibold">${plan.revenue.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium mb-2">Features</h4>
+                        <ul className="space-y-1 text-sm text-gray-600">
+                          {plan.features.map((feature, index) => (
+                            <li key={index} className="flex items-center">
+                              <CheckCircle className="h-3 w-3 text-green-500 mr-2" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="pt-4 border-t">
+                        <Button variant="outline" className="w-full">
+                          Edit Plan
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="flex-1 p-6">
@@ -372,7 +458,7 @@ const Subscriptions = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Average Revenue Per User</span>
-                      <span className="font-medium">${(totalMRR / totalSubscribers).toFixed(2)}</span>
+                      <span className="font-medium">${totalSubscribers > 0 ? (totalMRR / totalSubscribers).toFixed(2) : '0.00'}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Customer Lifetime Value</span>
@@ -388,6 +474,99 @@ const Subscriptions = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Create Dialog */}
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Subscription</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Customer</label>
+                <Input value={formData.customer} onChange={(e) => setFormData({...formData, customer: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Plan</label>
+                <Select value={formData.plan} onValueChange={(value) => setFormData({...formData, plan: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans.map(plan => (
+                      <SelectItem key={plan.id} value={plan.name}>{plan.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Amount</label>
+                <Input type="number" value={formData.amount} onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value)})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Interval</label>
+                <Select value={formData.interval} onValueChange={(value: any) => setFormData({...formData, interval: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Payment Method</label>
+                <Input value={formData.paymentMethod} onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
+              <Button onClick={handleCreate}>Create</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Subscription</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Customer</label>
+                <Input value={formData.customer} onChange={(e) => setFormData({...formData, customer: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Plan</label>
+                <Input value={formData.plan} onChange={(e) => setFormData({...formData, plan: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Amount</label>
+                <Input type="number" value={formData.amount} onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value)})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="past_due">Past Due</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+              <Button onClick={handleUpdate}>Update</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </OdooMainLayout>
   );

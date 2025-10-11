@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Calendar, 
   MapPin, 
@@ -18,7 +22,9 @@ import {
   CheckCircle,
   Eye,
   Edit,
-  MoreVertical
+  MoreVertical,
+  Plus,
+  Trash
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -26,6 +32,76 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast } from '@/components/ui/use-toast';
+import { LOCAL_STORAGE_KEYS, getStoredData, addRecord, updateRecord, deleteRecord, generateId } from '@/lib/localStorageUtils';
+
+interface RentalProduct {
+  id: string;
+  name: string;
+  category: string;
+  image: string;
+  dailyRate: number;
+  weeklyRate: number;
+  monthlyRate: number;
+  status: string;
+  features: string[];
+  location: string;
+  description: string;
+  utilization: number;
+  revenue: number;
+  timesRented: number;
+}
+
+interface RentalBooking {
+  id: string;
+  productId: string;
+  productName: string;
+  customer: string;
+  customerEmail: string;
+  startDate: string;
+  endDate: string;
+  totalPrice: string;
+  status: string;
+  paymentStatus: string;
+  deposit: number;
+  notes: string;
+}
+
+const INITIAL_PRODUCTS: RentalProduct[] = [
+  {
+    id: '1',
+    name: 'Professional Camera Kit',
+    category: 'Photography',
+    image: '/placeholder.svg',
+    dailyRate: 50,
+    weeklyRate: 300,
+    monthlyRate: 1000,
+    status: 'available',
+    features: ['4K Recording', 'Stabilizer', 'Extra Batteries'],
+    location: 'Warehouse A',
+    description: 'Complete professional camera setup with accessories',
+    utilization: 85,
+    revenue: 12500,
+    timesRented: 45
+  }
+];
+
+const INITIAL_BOOKINGS: RentalBooking[] = [
+  {
+    id: '1',
+    productId: '1',
+    productName: 'Professional Camera Kit',
+    customer: 'John Doe Photography',
+    customerEmail: 'john@doephoto.com',
+    startDate: '2024-06-15',
+    endDate: '2024-06-20',
+    totalPrice: '$250',
+    status: 'confirmed',
+    paymentStatus: 'paid',
+    deposit: 100,
+    notes: 'Special handling required'
+  }
+];
 
 const Rental = () => {
   const navigate = useNavigate();
@@ -33,498 +109,138 @@ const Rental = () => {
   const [viewType, setViewType] = useState<'list' | 'kanban'>('kanban');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [products, setProducts] = useState<RentalProduct[]>([]);
+  const [bookings, setBookings] = useState<RentalBooking[]>([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  const [products] = useState([
-    {
-      id: '1',
-      name: 'Professional Camera Kit',
-      category: 'Photography',
-      image: '/placeholder.svg',
-      dailyRate: '$50',
-      weeklyRate: '$300',
-      monthlyRate: '$1000',
-      status: 'available',
-      features: ['4K Recording', 'Stabilizer', 'Extra Batteries'],
-      location: 'Warehouse A',
-      description: 'Complete professional camera setup with accessories',
-      utilization: 85,
-      revenue: 12500,
-      timesRented: 45
-    },
-    {
-      id: '2',
-      name: 'Sound System',
-      category: 'Audio',
-      image: '/placeholder.svg',
-      dailyRate: '$80',
-      weeklyRate: '$500',
-      monthlyRate: '$1800',
-      status: 'rented',
-      features: ['Wireless Mics', 'Speakers', 'Mixing Board'],
-      location: 'Warehouse B',
-      description: 'Professional sound system for events',
-      utilization: 92,
-      revenue: 18400,
-      timesRented: 28
-    },
-    {
-      id: '3',
-      name: 'Drone Set',
-      category: 'Technology',
-      image: '/placeholder.svg',
-      dailyRate: '$120',
-      weeklyRate: '$750',
-      monthlyRate: '$2500',
-      status: 'maintenance',
-      features: ['4K Camera', 'GPS', 'Extended Battery'],
-      location: 'Service Center',
-      description: 'Professional aerial photography drone',
-      utilization: 76,
-      revenue: 9800,
-      timesRented: 22
-    }
-  ]);
-
-  const [bookings] = useState([
-    {
-      id: '1',
-      productId: '1',
-      productName: 'Professional Camera Kit',
-      customer: 'John Doe Photography',
-      customerEmail: 'john@doephoto.com',
-      startDate: '2024-06-15',
-      endDate: '2024-06-20',
-      totalPrice: '$250',
-      status: 'confirmed',
-      paymentStatus: 'paid',
-      deposit: 100,
-      notes: 'Special handling required'
-    },
-    {
-      id: '2',
-      productId: '2',
-      productName: 'Sound System',
-      customer: 'Event Masters Inc',
-      customerEmail: 'events@masters.com',
-      startDate: '2024-06-18',
-      endDate: '2024-06-25',
-      totalPrice: '$560',
-      status: 'in-progress',
-      paymentStatus: 'pending',
-      deposit: 200,
-      notes: 'Delivery to venue required'
-    },
-    {
-      id: '3',
-      productId: '1',
-      productName: 'Professional Camera Kit',
-      customer: 'Creative Studios',
-      customerEmail: 'booking@creative.com',
-      startDate: '2024-06-25',
-      endDate: '2024-06-30',
-      totalPrice: '$300',
-      status: 'reserved',
-      paymentStatus: 'pending',
-      deposit: 150,
-      notes: 'Extended rental period'
-    }
-  ]);
-
-  const [customers] = useState([
-    {
-      id: '1',
-      name: 'John Doe Photography',
-      email: 'john@doephoto.com',
-      phone: '+1 234 567 8900',
-      totalBookings: 12,
-      totalSpent: 3200,
-      rating: 4.8,
-      lastBooking: '2024-06-15',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Event Masters Inc',
-      email: 'events@masters.com',
-      phone: '+1 234 567 8901',
-      totalBookings: 8,
-      totalSpent: 5600,
-      rating: 4.5,
-      lastBooking: '2024-06-18',
-      status: 'active'
-    }
-  ]);
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    dailyRate: 0,
+    weeklyRate: 0,
+    monthlyRate: 0,
+    location: '',
+    description: '',
+    features: ''
+  });
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
+    if (!localStorage.getItem('isAuthenticated')) navigate('/login');
+    const loadedProducts = getStoredData<RentalProduct>(LOCAL_STORAGE_KEYS.RENTAL_PRODUCTS, INITIAL_PRODUCTS);
+    const loadedBookings = getStoredData<RentalBooking>(LOCAL_STORAGE_KEYS.BOOKINGS, INITIAL_BOOKINGS);
+    setProducts(loadedProducts);
+    setBookings(loadedBookings);
   }, [navigate]);
+
+  const handleCreateProduct = () => {
+    const newProduct: RentalProduct = {
+      id: generateId(),
+      ...formData,
+      features: formData.features.split(',').map(f => f.trim()),
+      image: '/placeholder.svg',
+      status: 'available',
+      utilization: 0,
+      revenue: 0,
+      timesRented: 0
+    };
+    const updated = addRecord<RentalProduct>(LOCAL_STORAGE_KEYS.RENTAL_PRODUCTS, newProduct);
+    setProducts(updated);
+    setShowCreateDialog(false);
+    resetForm();
+    toast({ title: 'Success', description: 'Product created successfully' });
+  };
+
+  const handleUpdateProduct = () => {
+    if (!selectedItem) return;
+    const updated = updateRecord<RentalProduct>(LOCAL_STORAGE_KEYS.RENTAL_PRODUCTS, selectedItem.id, {
+      ...formData,
+      features: formData.features.split(',').map(f => f.trim())
+    });
+    setProducts(updated);
+    setShowEditDialog(false);
+    setSelectedItem(null);
+    resetForm();
+    toast({ title: 'Success', description: 'Product updated successfully' });
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    const updated = deleteRecord<RentalProduct>(LOCAL_STORAGE_KEYS.RENTAL_PRODUCTS, id);
+    setProducts(updated);
+    toast({ title: 'Success', description: 'Product deleted' });
+  };
+
+  const handleEditProduct = (product: RentalProduct) => {
+    setSelectedItem(product);
+    setFormData({
+      name: product.name,
+      category: product.category,
+      dailyRate: product.dailyRate,
+      weeklyRate: product.weeklyRate,
+      monthlyRate: product.monthlyRate,
+      location: product.location,
+      description: product.description,
+      features: product.features.join(', ')
+    });
+    setShowEditDialog(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      category: '',
+      dailyRate: 0,
+      weeklyRate: 0,
+      monthlyRate: 0,
+      location: '',
+      description: '',
+      features: ''
+    });
+  };
 
   const productFilters = [
     { label: 'Available', value: 'available', count: products.filter(p => p.status === 'available').length },
     { label: 'Rented', value: 'rented', count: products.filter(p => p.status === 'rented').length },
-    { label: 'Maintenance', value: 'maintenance', count: products.filter(p => p.status === 'maintenance').length },
-    { label: 'High Utilization', value: 'high-util', count: products.filter(p => p.utilization > 80).length }
+    { label: 'Maintenance', value: 'maintenance', count: products.filter(p => p.status === 'maintenance').length }
   ];
-
-  const bookingFilters = [
-    { label: 'Confirmed', value: 'confirmed', count: bookings.filter(b => b.status === 'confirmed').length },
-    { label: 'In Progress', value: 'in-progress', count: bookings.filter(b => b.status === 'in-progress').length },
-    { label: 'Reserved', value: 'reserved', count: bookings.filter(b => b.status === 'reserved').length },
-    { label: 'Payment Pending', value: 'payment-pending', count: bookings.filter(b => b.paymentStatus === 'pending').length }
-  ];
-
-  const getStatusColor = (status: string) => {
-    const colors = {
-      available: 'bg-green-500',
-      rented: 'bg-blue-500',
-      maintenance: 'bg-orange-500',
-      reserved: 'bg-purple-500',
-      confirmed: 'bg-green-500',
-      'in-progress': 'bg-blue-500',
-      completed: 'bg-gray-500',
-      cancelled: 'bg-red-500'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-500';
-  };
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = selectedFilter === 'all' || 
-                         (selectedFilter === 'high-util' ? product.utilization > 80 : product.status === selectedFilter);
-    return matchesSearch && matchesFilter;
-  });
-
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = booking.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.customer.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = selectedFilter === 'all' || 
-                         (selectedFilter === 'payment-pending' ? booking.paymentStatus === 'pending' : booking.status === selectedFilter);
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = selectedFilter === 'all' || product.status === selectedFilter;
     return matchesSearch && matchesFilter;
   });
 
   const totalRevenue = products.reduce((sum, product) => sum + product.revenue, 0);
   const avgUtilization = products.length > 0 ? products.reduce((sum, p) => sum + p.utilization, 0) / products.length : 0;
 
-  const renderProductsList = () => (
-    <div className="bg-white rounded-lg border">
-      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
-        <div className="col-span-3">Product</div>
-        <div className="col-span-2">Category</div>
-        <div className="col-span-1">Status</div>
-        <div className="col-span-2">Daily Rate</div>
-        <div className="col-span-1">Utilization</div>
-        <div className="col-span-2">Revenue</div>
-        <div className="col-span-1">Actions</div>
-      </div>
-      
-      {filteredProducts.map(product => (
-        <div key={product.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
-          <div className="col-span-3">
-            <p className="font-medium text-sm">{product.name}</p>
-            <p className="text-xs text-gray-600">{product.location}</p>
-          </div>
-          <div className="col-span-2">
-            <Badge variant="outline">{product.category}</Badge>
-          </div>
-          <div className="col-span-1">
-            <Badge className={`text-white ${getStatusColor(product.status)}`}>
-              {product.status}
-            </Badge>
-          </div>
-          <div className="col-span-2">
-            <p className="font-medium text-sm">{product.dailyRate}</p>
-            <p className="text-xs text-gray-600">{product.monthlyRate}/month</p>
-          </div>
-          <div className="col-span-1">
-            <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full ${product.utilization > 80 ? 'bg-green-500' : product.utilization > 60 ? 'bg-yellow-500' : 'bg-red-500'}`} />
-              <span className="text-sm">{product.utilization}%</span>
-            </div>
-          </div>
-          <div className="col-span-2">
-            <p className="font-medium text-sm">${product.revenue.toLocaleString()}</p>
-            <p className="text-xs text-gray-600">{product.timesRented} rentals</p>
-          </div>
-          <div className="col-span-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Product
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  View Schedule
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderProductsGrid = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredProducts.map((product) => (
-        <Card key={product.id} className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <CardTitle className="text-lg">{product.name}</CardTitle>
-              <Badge className={`text-white ${getStatusColor(product.status)}`}>
-                {product.status}
-              </Badge>
-            </div>
-            <p className="text-sm text-gray-600">{product.category}</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="text-sm">
-                <div className="flex justify-between">
-                  <span>Daily:</span>
-                  <span className="font-semibold">{product.dailyRate}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Weekly:</span>
-                  <span className="font-semibold">{product.weeklyRate}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Monthly:</span>
-                  <span className="font-semibold">{product.monthlyRate}</span>
-                </div>
-              </div>
-              
-              <div className="text-sm text-gray-600">
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {product.location}
-                </div>
-                <div className="flex items-center mt-1">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  {product.utilization}% utilization
-                </div>
-              </div>
-              
-              <div className="text-sm">
-                <p className="font-medium mb-1">Features:</p>
-                <ul className="list-disc list-inside text-gray-600">
-                  {product.features.slice(0, 3).map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Eye className="h-3 w-3 mr-1" />
-                  View
-                </Button>
-                <Button size="sm" className="flex-1">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Book
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-
-  const renderBookingsList = () => (
-    <div className="bg-white rounded-lg border">
-      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
-        <div className="col-span-2">Product</div>
-        <div className="col-span-2">Customer</div>
-        <div className="col-span-2">Duration</div>
-        <div className="col-span-1">Total</div>
-        <div className="col-span-1">Status</div>
-        <div className="col-span-1">Payment</div>
-        <div className="col-span-2">Notes</div>
-        <div className="col-span-1">Actions</div>
-      </div>
-      
-      {filteredBookings.map(booking => (
-        <div key={booking.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
-          <div className="col-span-2">
-            <p className="font-medium text-sm">{booking.productName}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-sm">{booking.customer}</p>
-            <p className="text-xs text-gray-600">{booking.customerEmail}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-sm">{booking.startDate}</p>
-            <p className="text-xs text-gray-600">to {booking.endDate}</p>
-          </div>
-          <div className="col-span-1">
-            <p className="font-medium text-sm">{booking.totalPrice}</p>
-            <p className="text-xs text-gray-600">${booking.deposit} deposit</p>
-          </div>
-          <div className="col-span-1">
-            <Badge className={`text-white ${getStatusColor(booking.status)}`}>
-              {booking.status}
-            </Badge>
-          </div>
-          <div className="col-span-1">
-            <Badge variant={booking.paymentStatus === 'paid' ? 'default' : 'destructive'}>
-              {booking.paymentStatus}
-            </Badge>
-          </div>
-          <div className="col-span-2">
-            <p className="text-xs text-gray-600">{booking.notes}</p>
-          </div>
-          <div className="col-span-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Booking
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Booking
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Process Payment
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderCustomersList = () => (
-    <div className="bg-white rounded-lg border">
-      <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
-        <div className="col-span-3">Customer</div>
-        <div className="col-span-2">Contact</div>
-        <div className="col-span-2">Bookings</div>
-        <div className="col-span-2">Total Spent</div>
-        <div className="col-span-1">Rating</div>
-        <div className="col-span-1">Last Booking</div>
-        <div className="col-span-1">Actions</div>
-      </div>
-      
-      {customers.map(customer => (
-        <div key={customer.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
-          <div className="col-span-3">
-            <p className="font-medium text-sm">{customer.name}</p>
-            <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
-              {customer.status}
-            </Badge>
-          </div>
-          <div className="col-span-2">
-            <p className="text-sm">{customer.email}</p>
-            <p className="text-xs text-gray-600">{customer.phone}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="font-medium text-sm">{customer.totalBookings} bookings</p>
-          </div>
-          <div className="col-span-2">
-            <p className="font-medium text-sm">${customer.totalSpent.toLocaleString()}</p>
-          </div>
-          <div className="col-span-1">
-            <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium">{customer.rating}</span>
-              <span className="text-yellow-500">★</span>
-            </div>
-          </div>
-          <div className="col-span-1">
-            <p className="text-sm">{customer.lastBooking}</p>
-          </div>
-          <div className="col-span-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Customer
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  New Booking
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
   return (
     <OdooMainLayout currentApp="Rental">
       <div className="flex flex-col h-full">
         <OdooControlPanel
-          title={
-            activeTab === 'products' ? 'Rental Products' :
-            activeTab === 'bookings' ? 'Bookings' :
-            activeTab === 'customers' ? 'Customers' :
-            'Calendar'
-          }
-          subtitle={
-            activeTab === 'products' ? 'Manage your rental inventory and rates' :
-            activeTab === 'bookings' ? 'Track reservations and rental periods' :
-            activeTab === 'customers' ? 'Customer management and history' :
-            'View rental schedule and availability'
-          }
-          searchPlaceholder={`Search ${activeTab}...`}
+          title="Rental Management"
+          subtitle="Manage rental products and bookings"
+          searchPlaceholder="Search products..."
           onSearch={setSearchTerm}
-          onCreateNew={() => console.log(`Create new ${activeTab.slice(0, -1)}`)}
+          onCreateNew={() => setShowCreateDialog(true)}
           viewType={viewType}
           onViewChange={(view) => setViewType(view as any)}
-          filters={activeTab === 'products' ? productFilters : activeTab === 'bookings' ? bookingFilters : []}
+          filters={productFilters}
           selectedFilter={selectedFilter}
           onFilterChange={setSelectedFilter}
-          recordCount={
-            activeTab === 'products' ? filteredProducts.length :
-            activeTab === 'bookings' ? filteredBookings.length :
-            customers.length
-          }
+          recordCount={filteredProducts.length}
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <div className="border-b bg-white px-6">
-            <TabsList className="grid w-full max-w-lg grid-cols-4">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
-              <TabsTrigger value="customers">Customers</TabsTrigger>
-              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="products" className="flex-1 flex flex-col">
-            {/* Analytics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
               <Card>
                 <CardHeader className="pb-2">
@@ -537,19 +253,17 @@ const Rental = () => {
                   </div>
                 </CardContent>
               </Card>
-              
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">Available Products</CardTitle>
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Products</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-2">
                     <Package className="h-5 w-5 text-blue-600" />
-                    <span className="text-2xl font-bold">{products.filter(p => p.status === 'available').length}</span>
+                    <span className="text-2xl font-bold">{products.length}</span>
                   </div>
                 </CardContent>
               </Card>
-              
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">Avg Utilization</CardTitle>
@@ -557,11 +271,10 @@ const Rental = () => {
                 <CardContent>
                   <div className="flex items-center space-x-2">
                     <TrendingUp className="h-5 w-5 text-purple-600" />
-                    <span className="text-2xl font-bold">{Math.round(avgUtilization)}%</span>
+                    <span className="text-2xl font-bold">{avgUtilization.toFixed(0)}%</span>
                   </div>
                 </CardContent>
               </Card>
-              
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">Active Bookings</CardTitle>
@@ -569,124 +282,278 @@ const Rental = () => {
                 <CardContent>
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-5 w-5 text-orange-600" />
-                    <span className="text-2xl font-bold">{bookings.filter(b => b.status === 'in-progress').length}</span>
+                    <span className="text-2xl font-bold">{bookings.length}</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             <div className="flex-1 p-6">
-              {viewType === 'list' ? renderProductsList() : renderProductsGrid()}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="bookings" className="flex-1 flex flex-col">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-white border-b">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">Active Bookings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="text-2xl font-bold">{bookings.filter(b => b.status === 'in-progress').length}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">Pending Payment</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
-                    <span className="text-2xl font-bold">{bookings.filter(b => b.paymentStatus === 'pending').length}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">This Month Revenue</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-blue-600" />
-                    <span className="text-2xl font-bold">$8,450</span>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">Customer Satisfaction</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-5 w-5 text-purple-600" />
-                    <span className="text-2xl font-bold">4.6★</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="flex-1 p-6">
-              {renderBookingsList()}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="customers" className="flex-1 p-6">
-            {renderCustomersList()}
-          </TabsContent>
-
-          <TabsContent value="calendar" className="flex-1 p-6">
-            <div className="bg-white rounded-lg border">
-              <div className="p-4 border-b">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Rental Calendar</h3>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">Today</Button>
-                    <Button variant="outline" size="sm">Week</Button>
-                    <Button variant="outline" size="sm">Month</Button>
-                  </div>
+              {viewType === 'kanban' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredProducts.map((product) => (
+                    <Card key={product.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg">{product.name}</CardTitle>
+                          <Badge variant={product.status === 'available' ? 'default' : product.status === 'rented' ? 'secondary' : 'destructive'}>
+                            {product.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{product.category}</p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="text-sm">
+                            <div className="flex justify-between">
+                              <span>Daily:</span>
+                              <span className="font-semibold">${product.dailyRate}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Weekly:</span>
+                              <span className="font-semibold">${product.weeklyRate}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Monthly:</span>
+                              <span className="font-semibold">${product.monthlyRate}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600">
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 mr-1" />
+                              {product.location}
+                            </div>
+                          </div>
+                          
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEditProduct(product)}>
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleDeleteProduct(product.id)}>
+                              <Trash className="h-3 w-3 text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-7 gap-4 mb-4">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                    <div key={day} className="text-center font-medium text-gray-600 p-2">
-                      {day}
+              ) : (
+                <div className="bg-white rounded-lg border">
+                  <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+                    <div className="col-span-3">Product</div>
+                    <div className="col-span-2">Category</div>
+                    <div className="col-span-1">Status</div>
+                    <div className="col-span-2">Daily Rate</div>
+                    <div className="col-span-2">Location</div>
+                    <div className="col-span-2">Actions</div>
+                  </div>
+                  {filteredProducts.map(product => (
+                    <div key={product.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+                      <div className="col-span-3">
+                        <p className="font-medium text-sm">{product.name}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <Badge variant="outline">{product.category}</Badge>
+                      </div>
+                      <div className="col-span-1">
+                        <Badge variant={product.status === 'available' ? 'default' : 'secondary'}>
+                          {product.status}
+                        </Badge>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="font-medium text-sm">${product.dailyRate}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-sm">{product.location}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="flex space-x-1">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product.id)}>
+                            <Trash className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {Array.from({length: 35}, (_, i) => {
-                    const day = Math.floor(i/7) * 7 + (i%7) + 1;
-                    const hasBooking = Math.random() > 0.7;
-                    return (
-                      <div key={i} className="min-h-[120px] border rounded-lg p-2 hover:bg-gray-50 cursor-pointer">
-                        <div className="text-sm font-medium text-gray-600 mb-2">{day}</div>
-                        {hasBooking && (
-                          <div className="space-y-1">
-                            <div className="p-1 bg-blue-100 text-blue-800 text-xs rounded truncate">
-                              Property A - Booked
-                            </div>
-                            {Math.random() > 0.5 && (
-                              <div className="p-1 bg-green-100 text-green-800 text-xs rounded truncate">
-                                Property B - Available
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="bookings" className="flex-1 p-6">
+            <div className="bg-white rounded-lg border">
+              <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+                <div className="col-span-2">Product</div>
+                <div className="col-span-2">Customer</div>
+                <div className="col-span-2">Duration</div>
+                <div className="col-span-2">Total</div>
+                <div className="col-span-2">Status</div>
+                <div className="col-span-2">Actions</div>
               </div>
+              {bookings.map(booking => (
+                <div key={booking.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 items-center">
+                  <div className="col-span-2">
+                    <p className="font-medium text-sm">{booking.productName}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm">{booking.customer}</p>
+                    <p className="text-xs text-gray-600">{booking.customerEmail}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm">{booking.startDate}</p>
+                    <p className="text-xs text-gray-600">to {booking.endDate}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="font-medium text-sm">{booking.totalPrice}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Badge variant="default">{booking.status}</Badge>
+                  </div>
+                  <div className="col-span-2">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="flex-1 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue by Product</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {products.map(product => (
+                      <div key={product.id} className="flex justify-between items-center">
+                        <span className="text-sm">{product.name}</span>
+                        <span className="font-medium">${product.revenue.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Utilization Rates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {products.map(product => (
+                      <div key={product.id} className="flex justify-between items-center">
+                        <span className="text-sm">{product.name}</span>
+                        <span className="font-medium">{product.utilization}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Create Dialog */}
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Product</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <Input value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-sm font-medium">Daily Rate</label>
+                  <Input type="number" value={formData.dailyRate} onChange={(e) => setFormData({...formData, dailyRate: parseFloat(e.target.value)})} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Weekly Rate</label>
+                  <Input type="number" value={formData.weeklyRate} onChange={(e) => setFormData({...formData, weeklyRate: parseFloat(e.target.value)})} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Monthly Rate</label>
+                  <Input type="number" value={formData.monthlyRate} onChange={(e) => setFormData({...formData, monthlyRate: parseFloat(e.target.value)})} />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Location</label>
+                <Input value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Features (comma-separated)</label>
+                <Input value={formData.features} onChange={(e) => setFormData({...formData, features: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Description</label>
+                <Textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
+              <Button onClick={handleCreateProduct}>Create</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Product</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <Input value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-sm font-medium">Daily Rate</label>
+                  <Input type="number" value={formData.dailyRate} onChange={(e) => setFormData({...formData, dailyRate: parseFloat(e.target.value)})} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Weekly Rate</label>
+                  <Input type="number" value={formData.weeklyRate} onChange={(e) => setFormData({...formData, weeklyRate: parseFloat(e.target.value)})} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Monthly Rate</label>
+                  <Input type="number" value={formData.monthlyRate} onChange={(e) => setFormData({...formData, monthlyRate: parseFloat(e.target.value)})} />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Location</label>
+                <Input value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Features (comma-separated)</label>
+                <Input value={formData.features} onChange={(e) => setFormData({...formData, features: e.target.value})} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+              <Button onClick={handleUpdateProduct}>Update</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </OdooMainLayout>
   );

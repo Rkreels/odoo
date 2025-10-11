@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from '@/components/ui/use-toast';
 import ExpenseCard from '@/components/expenses/ExpenseCard';
 import { Expense } from '@/types/expenses';
+import { LOCAL_STORAGE_KEYS, getStoredData, addRecord, updateRecord, deleteRecord, generateId } from '@/lib/localStorageUtils';
 
 const initialExpenses: Expense[] = [
   {
@@ -111,7 +112,7 @@ const initialExpenses: Expense[] = [
 
 const Expenses = () => {
   const navigate = useNavigate();
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [activeTab, setActiveTab] = useState('expenses');
@@ -122,27 +123,37 @@ const Expenses = () => {
 
   useEffect(() => {
     if (!localStorage.getItem('isAuthenticated')) navigate('/login');
+    const loaded = getStoredData<Expense>(LOCAL_STORAGE_KEYS.EXPENSES, initialExpenses);
+    setExpenses(loaded);
   }, [navigate]);
 
   const handleApprove = (id: string) => {
-    setExpenses(prev => prev.map(expense => 
-      expense.id === id 
-        ? { ...expense, status: 'approved' as const, approvedBy: 'Current User', approvedDate: new Date().toLocaleDateString() }
-        : expense
-    ));
+    const updated = updateRecord<Expense>(LOCAL_STORAGE_KEYS.EXPENSES, id, {
+      status: 'approved',
+      approvedBy: 'Current User',
+      approvedDate: new Date().toLocaleDateString()
+    });
+    setExpenses(updated);
+    toast({ title: 'Success', description: 'Expense approved' });
   };
 
   const handleReject = (id: string) => {
-    setExpenses(prev => prev.map(expense => 
-      expense.id === id 
-        ? { ...expense, status: 'rejected' as const }
-        : expense
-    ));
+    const updated = updateRecord<Expense>(LOCAL_STORAGE_KEYS.EXPENSES, id, {
+      status: 'rejected'
+    });
+    setExpenses(updated);
+    toast({ title: 'Success', description: 'Expense rejected' });
   };
 
   const handleView = (expense: Expense) => {
-    console.log('View expense details:', expense);
-    // Future: Implement expense detail view
+    setSelectedExpense(expense);
+    toast({ title: 'Viewing Expense', description: expense.description });
+  };
+
+  const handleDelete = (id: string) => {
+    const updated = deleteRecord<Expense>(LOCAL_STORAGE_KEYS.EXPENSES, id);
+    setExpenses(updated);
+    toast({ title: 'Success', description: 'Expense deleted', variant: 'destructive' });
   };
 
   const categories = Array.from(new Set(expenses.map(expense => expense.category)));
