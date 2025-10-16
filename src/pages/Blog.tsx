@@ -108,44 +108,53 @@ const Blog = () => {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [navigate]);
+    // Auth check handled by context
+  }, []);
+
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handlePostCreate = (newPost: BlogPost) => {
     setPosts(prevPosts => [newPost, ...prevPosts]);
-    toast({
-      title: "Post created",
-      description: "Your blog post has been created successfully.",
-    });
+    setIsCreatePostModalOpen(false);
   };
 
   const handleEditPost = (post: BlogPost) => {
-    toast({
-      title: "Edit post",
-      description: `Editing ${post.title}`,
-    });
+    setEditingPost(post);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdatePost = (updatedPost: BlogPost) => {
+    setPosts(prevPosts => prevPosts.map(post => 
+      post.id === updatedPost.id ? updatedPost : post
+    ));
+    setIsEditModalOpen(false);
+    setEditingPost(null);
   };
 
   const handleDeletePost = (id: string) => {
     setPosts(prevPosts => prevPosts.filter(post => post.id !== id));
-    toast({
-      title: "Post deleted",
-      description: "The blog post has been deleted.",
-      variant: "destructive",
-    });
   };
 
   const handlePublishPost = (id: string) => {
     setPosts(prevPosts => prevPosts.map(post => 
       post.id === id ? { ...post, status: 'published' as const, publishDate: new Date().toISOString().split('T')[0] } : post
     ));
-    toast({
-      title: "Post published",
-      description: "The blog post is now live.",
-    });
+  };
+
+  const handleDuplicatePost = (post: BlogPost) => {
+    const duplicated: BlogPost = {
+      ...post,
+      id: Date.now().toString(),
+      title: post.title + ' (Copy)',
+      status: 'draft',
+      publishDate: new Date().toISOString().split('T')[0],
+      views: 0,
+      comments: 0,
+      likes: 0,
+      shares: 0
+    };
+    setPosts(prevPosts => [duplicated, ...prevPosts]);
   };
 
   const categories = Array.from(new Set(posts.map(post => post.category)));
@@ -229,10 +238,10 @@ const Blog = () => {
                     <Eye className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>
+                <DropdownMenuContent className="bg-white z-50">
+                  <DropdownMenuItem onClick={() => handleDuplicatePost(post)}>
                     <Share className="h-4 w-4 mr-2" />
-                    Share
+                    Duplicate
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDeletePost(post.id)} className="text-red-600">
                     <Trash className="h-4 w-4 mr-2" />

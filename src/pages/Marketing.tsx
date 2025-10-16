@@ -179,20 +179,13 @@ const Marketing = () => {
   ]);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [navigate]);
+    // Auth check handled by context
+  }, []);
 
   const handleUpdateCampaign = (updatedCampaign: MarketingCampaign) => {
     setCampaigns(prev => prev.map(campaign => 
       campaign.id === updatedCampaign.id ? updatedCampaign : campaign
     ));
-    toast({
-      title: "Campaign updated",
-      description: "Marketing campaign has been successfully updated.",
-    });
   };
 
   const handleCreateCampaign = (campaignData: any) => {
@@ -206,29 +199,35 @@ const Marketing = () => {
     };
     setCampaigns(prev => [newCampaign, ...prev]);
     setShowCreateCampaign(false);
-    toast({
-      title: "Campaign created",
-      description: "New marketing campaign has been successfully created.",
-    });
   };
 
   const handleDeleteCampaign = (id: string) => {
     setCampaigns(prev => prev.filter(c => c.id !== id));
-    toast({
-      title: "Campaign deleted",
-      description: "Marketing campaign has been removed.",
-      variant: "destructive",
-    });
   };
 
   const handleUpdateLead = (leadId: string, updates: Partial<Lead>) => {
     setLeads(prev => prev.map(lead => 
       lead.id === leadId ? { ...lead, ...updates } : lead
     ));
-    toast({
-      title: "Lead updated",
-      description: "Lead information has been updated.",
-    });
+  };
+
+  const handleEditCampaign = (campaign: MarketingCampaign) => {
+    setSelectedCampaign(campaign);
+    setShowCreateCampaign(true);
+  };
+
+  const handleDuplicateCampaign = (campaign: MarketingCampaign) => {
+    const duplicated: MarketingCampaign = {
+      ...campaign,
+      id: Date.now().toString(),
+      name: campaign.name + ' (Copy)',
+      status: 'draft',
+      spent: 0,
+      impressions: 0,
+      clicks: 0,
+      conversions: 0
+    };
+    setCampaigns(prev => [duplicated, ...prev]);
   };
 
   const filteredCampaigns = campaigns.filter(campaign => {
@@ -309,15 +308,15 @@ const Marketing = () => {
                 <Button variant="outline" size="sm" onClick={() => setSelectedCampaign(campaign)}>
                   <Eye className="h-3 w-3" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleEditCampaign(campaign)}>
                   <Edit className="h-3 w-3" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm">⋮</Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                  <DropdownMenuContent className="bg-white z-50">
+                    <DropdownMenuItem onClick={() => handleDuplicateCampaign(campaign)}>Duplicate</DropdownMenuItem>
                     <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteCampaign(campaign.id)}>
                       Delete
                     </DropdownMenuItem>

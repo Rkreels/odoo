@@ -99,8 +99,8 @@ const Documents = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   useEffect(() => {
-    if (!localStorage.getItem('isAuthenticated')) navigate('/login');
-  }, [navigate]);
+    // Auth check handled by context
+  }, []);
 
   const handleUpload = () => {
     const fileInput = document.createElement('input');
@@ -135,10 +135,6 @@ const Documents = () => {
           };
           setDocuments(prev => [newDoc, ...prev]);
         });
-        toast({
-          title: "Files uploaded",
-          description: `${files.length} file(s) uploaded successfully.`,
-        });
       }
     };
     fileInput.click();
@@ -146,56 +142,34 @@ const Documents = () => {
 
   const handleView = (document: Document) => {
     setSelectedDocument(document);
-    toast({
-      title: "Document opened",
-      description: `Viewing ${document.name}`,
-    });
   };
 
-  const handleDownload = (document: Document) => {
-    toast({
-      title: "Download started",
-      description: `Downloading ${document.name}`,
-    });
+  const handleDownload = (doc: Document) => {
+    // Simulate download
+    const link = window.document.createElement('a');
+    link.download = doc.name;
+    link.click();
   };
 
   const handleShare = (document: Document) => {
     const updatedDoc = { ...document, isShared: !document.isShared };
     setDocuments(prev => prev.map(doc => doc.id === document.id ? updatedDoc : doc));
-    toast({
-      title: document.isShared ? "Sharing disabled" : "Document shared",
-      description: `${document.name} ${document.isShared ? 'is no longer shared' : 'is now shared'}`,
-    });
   };
 
   const handleDelete = (id: string) => {
     setDocuments(prev => prev.filter(doc => doc.id !== id));
-    toast({
-      title: "Document deleted",
-      description: "Document has been moved to trash.",
-      variant: "destructive",
-    });
   };
 
   const handleApprove = (id: string) => {
     setDocuments(prev => prev.map(doc => 
       doc.id === id ? { ...doc, status: 'approved' } : doc
     ));
-    toast({
-      title: "Document approved",
-      description: "Document has been approved.",
-    });
   };
 
   const handleReject = (id: string) => {
     setDocuments(prev => prev.map(doc => 
       doc.id === id ? { ...doc, status: 'archived' as const } : doc
     ));
-    toast({
-      title: "Document rejected",
-      description: "Document has been archived.",
-      variant: "destructive",
-    });
   };
 
   const handleCreateDocument = (docData: any) => {
@@ -214,10 +188,6 @@ const Documents = () => {
     };
     setDocuments(prev => [newDoc, ...prev]);
     setShowCreateDocument(false);
-    toast({
-      title: "Document created",
-      description: "New document has been created successfully.",
-    });
   };
 
   const filteredDocuments = documents.filter(doc => {
@@ -297,7 +267,7 @@ const Documents = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">⋮</Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="bg-white z-50">
                 <DropdownMenuItem onClick={() => handleView(document)}>
                   <Eye className="h-4 w-4 mr-2" />
                   View

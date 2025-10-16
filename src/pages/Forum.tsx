@@ -157,22 +157,37 @@ const Forum = () => {
   ]);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [navigate]);
+    // Auth check handled by context
+  }, []);
   
   const handleCreateTopic = (newTopic: ForumTopic) => {
     setTopics([newTopic, ...topics]);
-    toast({
-      title: "Topic created",
-      description: "Your discussion topic has been successfully created.",
-    });
+    setShowCreateForm(false);
   };
   
   const handleViewTopic = (topic: ForumTopic) => {
     setSelectedTopic(topic);
+  };
+
+  const handleDeleteTopic = (id: string) => {
+    setTopics(topics.filter(t => t.id !== id));
+  };
+
+  const handleEditTopic = (topic: ForumTopic) => {
+    setSelectedTopic(topic);
+    setShowCreateForm(true);
+  };
+
+  const handleTogglePin = (id: string) => {
+    setTopics(topics.map(t => t.id === id ? { ...t, pinned: !t.pinned } : t));
+  };
+
+  const handleToggleSolved = (id: string) => {
+    setTopics(topics.map(t => t.id === id ? { ...t, solved: !t.solved } : t));
+  };
+
+  const handleLockTopic = (id: string) => {
+    setTopics(topics.map(t => t.id === id ? { ...t, status: t.status === 'locked' ? 'active' : 'locked' } : t));
   };
 
   const filteredTopics = topics.filter(topic => {

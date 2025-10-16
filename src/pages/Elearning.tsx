@@ -61,20 +61,41 @@ const Elearning = () => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [navigate]);
+    // Auth check handled by context
+  }, []);
 
   const handleEnroll = (courseId: string) => {
-    console.log('Enroll in course:', courseId);
-    // Future: Implement enrollment logic
+    setCourses(courses.map(course => 
+      course.id === courseId 
+        ? { ...course, enrolledStudents: course.enrolledStudents + 1 } 
+        : course
+    ));
   };
 
   const handleViewCourse = (course: Course) => {
-    console.log('View course:', course);
-    // Future: Implement course preview
+    // View course details
+  };
+
+  const handleDeleteCourse = (courseId: string) => {
+    setCourses(courses.filter(course => course.id !== courseId));
+  };
+
+  const handlePublishCourse = (courseId: string) => {
+    setCourses(courses.map(course => 
+      course.id === courseId 
+        ? { ...course, status: 'published' } 
+        : course
+    ));
+  };
+
+  const handleCreateCourse = (courseData: any) => {
+    const newCourse: Course = {
+      id: Date.now().toString(),
+      ...courseData,
+      enrolledStudents: 0,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    setCourses([newCourse, ...courses]);
   };
 
   const filteredCourses = courses.filter(course => {

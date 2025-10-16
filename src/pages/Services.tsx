@@ -147,26 +147,29 @@ const Services = () => {
   ]);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [navigate]);
+    // Auth check handled by context
+  }, []);
 
   const handleCreateProject = (newProject: ServiceProject) => {
     setProjects([newProject, ...projects]);
-    toast({
-      title: "Project created",
-      description: "New service project has been successfully created.",
-    });
+    setShowCreateForm(false);
   };
 
   const handleUpdateProject = (updatedProject: ServiceProject) => {
     setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
-    toast({
-      title: "Project updated",
-      description: "Project has been successfully updated.",
-    });
+  };
+
+  const handleDeleteProject = (id: string) => {
+    setProjects(projects.filter(p => p.id !== id));
+  };
+
+  const handleEditProject = (project: ServiceProject) => {
+    setSelectedProject(project);
+    setShowCreateForm(true);
+  };
+
+  const handleChangeStatus = (id: string, status: string) => {
+    setProjects(projects.map(p => p.id === id ? { ...p, status: status as any } : p));
   };
 
   const filteredProjects = projects.filter(project => {

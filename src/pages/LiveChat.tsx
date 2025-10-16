@@ -114,11 +114,8 @@ const LiveChat = () => {
   ]);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [navigate]);
+    // Auth check handled by context
+  }, []);
 
   const sessionFilters = [
     { label: 'Active', value: 'active', count: sessions.filter(s => s.status === 'active').length },
