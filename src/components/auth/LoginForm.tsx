@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { useApp } from '@/contexts/AppContext';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useApp();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,8 +22,7 @@ const LoginForm = () => {
     try {
       // In a real app, this would connect to a backend
       setTimeout(() => {
-        // Simulate login success
-        localStorage.setItem('isAuthenticated', 'true');
+        setIsAuthenticated(true);
         toast({
           title: "Login successful",
           description: "Welcome back to BOS!",

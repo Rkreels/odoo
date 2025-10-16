@@ -12,13 +12,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Settings, LogOut, User } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useApp } from '@/contexts/AppContext';
 
 
 const UserMenu: React.FC = () => {
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useApp();
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
+    setIsAuthenticated(false);
     navigate('/login');
     toast({
       title: "Logged out successfully",

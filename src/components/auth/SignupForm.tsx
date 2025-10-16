@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useApp } from '@/contexts/AppContext';
 
 const SignupForm = () => {
   const [name, setName] = useState('');
@@ -17,6 +18,7 @@ const SignupForm = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useApp();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +36,7 @@ const SignupForm = () => {
     try {
       // In a real app, this would connect to a backend
       setTimeout(() => {
-        // Simulate signup success
-        localStorage.setItem('isAuthenticated', 'true');
+        setIsAuthenticated(true);
         toast({
           title: "Account created",
           description: "Welcome to BOS!",
