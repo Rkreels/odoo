@@ -3,7 +3,7 @@ import Navbar from '@/components/navigation/Navbar';
 import Footer from '@/components/landing/Footer';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useApp } from '@/contexts/AppContext';
 
 interface AppModuleProps {
   icon: string;
@@ -15,12 +15,7 @@ interface AppModuleProps {
 
 const AppModule = ({ icon, color, title, description, path }: AppModuleProps) => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated');
-    setIsAuthenticated(!!authStatus);
-  }, []);
+  const { isAuthenticated } = useApp();
 
   const handleAppClick = () => {
     if (!isAuthenticated) {
@@ -62,48 +57,12 @@ const Apps = () => {
           <section className="mb-16">
             <h2 className="text-3xl font-bold italic mb-8">Website</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AppModule 
-                icon="🌐" 
-                color="#28BDBE" 
-                title="Website" 
-                description="Create stunning websites with our drag & drop builder"
-                path="/apps/website"
-              />
-              <AppModule 
-                icon="🛍️" 
-                color="#875A7B" 
-                title="eCommerce" 
-                description="Sell your products online with a fully featured store"
-                path="/apps/ecommerce"
-              />
-              <AppModule 
-                icon="📝" 
-                color="#5D8DA8" 
-                title="Blog" 
-                description="Publish content and grow your online presence"
-                path="/apps/blog"
-              />
-              <AppModule 
-                icon="💬" 
-                color="#32A350" 
-                title="Forum" 
-                description="Build a community around your brand"
-                path="/apps/forum"
-              />
-              <AppModule 
-                icon="🎓" 
-                color="#3461AA" 
-                title="eLearning" 
-                description="Create and sell online courses"
-                path="/apps/elearning"
-              />
-              <AppModule 
-                icon="💻" 
-                color="#8F4B99" 
-                title="Live Chat" 
-                description="Connect with your visitors in real-time"
-                path="/apps/live-chat"
-              />
+              <AppModule icon="🌐" color="#28BDBE" title="Website" description="Create stunning websites with our drag & drop builder" path="/apps/website" />
+              <AppModule icon="🛍️" color="#875A7B" title="eCommerce" description="Sell your products online with a fully featured store" path="/apps/ecommerce" />
+              <AppModule icon="📝" color="#5D8DA8" title="Blog" description="Publish content and grow your online presence" path="/apps/blog" />
+              <AppModule icon="💬" color="#32A350" title="Forum" description="Build a community around your brand" path="/apps/forum" />
+              <AppModule icon="🎓" color="#3461AA" title="eLearning" description="Create and sell online courses" path="/apps/elearning" />
+              <AppModule icon="💻" color="#8F4B99" title="Live Chat" description="Connect with your visitors in real-time" path="/apps/live-chat" />
             </div>
           </section>
           
@@ -111,41 +70,11 @@ const Apps = () => {
           <section className="mb-16">
             <h2 className="text-3xl font-bold italic mb-8">Sales</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AppModule 
-                icon="🔰" 
-                color="#00A09D" 
-                title="CRM" 
-                description="Boost your sales with lead automation"
-                path="/apps/crm"
-              />
-              <AppModule 
-                icon="📊" 
-                color="#D5653E" 
-                title="Sales" 
-                description="From quotation to invoice"
-                path="/apps/sales"
-              />
-              <AppModule 
-                icon="🛒" 
-                color="#5D8DA8" 
-                title="Point of Sale" 
-                description="Modern point of sale for retailers"
-                path="/apps/point-of-sale"
-              />
-              <AppModule 
-                icon="🔄" 
-                color="#54B948" 
-                title="Subscriptions" 
-                description="Manage recurring billing efficiently"
-                path="/apps/subscriptions"
-              />
-              <AppModule 
-                icon="🏠" 
-                color="#8F4B99" 
-                title="Rental" 
-                description="Rent products and manage your rental business"
-                path="/apps/rental"
-              />
+              <AppModule icon="🔰" color="#00A09D" title="CRM" description="Boost your sales with lead automation" path="/apps/crm" />
+              <AppModule icon="📊" color="#D5653E" title="Sales" description="From quotation to invoice" path="/apps/sales" />
+              <AppModule icon="🛒" color="#5D8DA8" title="Point of Sale" description="Modern point of sale for retailers" path="/apps/point-of-sale" />
+              <AppModule icon="🔄" color="#54B948" title="Subscriptions" description="Manage recurring billing efficiently" path="/apps/subscriptions" />
+              <AppModule icon="🏠" color="#8F4B99" title="Rental" description="Rent products and manage your rental business" path="/apps/rental" />
             </div>
           </section>
           
@@ -153,48 +82,12 @@ const Apps = () => {
           <section className="mb-16">
             <h2 className="text-3xl font-bold italic mb-8">Finance</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AppModule 
-                icon="📝" 
-                color="#54B948" 
-                title="Accounting" 
-                description="Manage your finances and automate accounting"
-                path="/apps/accounting"
-              />
-              <AppModule 
-                icon="💰" 
-                color="#28BDBE" 
-                title="Invoicing" 
-                description="Create and send professional invoices"
-                path="/apps/invoicing"
-              />
-              <AppModule 
-                icon="💸" 
-                color="#5D8DA8" 
-                title="Expenses" 
-                description="Streamline employee expense reporting"
-                path="/apps/expenses"
-              />
-              <AppModule 
-                icon="📄" 
-                color="#3461AA" 
-                title="Documents" 
-                description="Organize, share, and secure documents"
-                path="/apps/documents"
-              />
-              <AppModule 
-                icon="📊" 
-                color="#D5653E" 
-                title="Spreadsheets" 
-                description="Collaborative spreadsheets integrated with your data"
-                path="/apps/spreadsheets"
-              />
-              <AppModule 
-                icon="✍️" 
-                color="#00A09D" 
-                title="Sign" 
-                description="Electronic signatures for your documents"
-                path="/apps/sign"
-              />
+              <AppModule icon="📝" color="#54B948" title="Accounting" description="Manage your finances and automate accounting" path="/apps/accounting" />
+              <AppModule icon="💰" color="#28BDBE" title="Invoicing" description="Create and send professional invoices" path="/apps/invoicing" />
+              <AppModule icon="💸" color="#5D8DA8" title="Expenses" description="Streamline employee expense reporting" path="/apps/expenses" />
+              <AppModule icon="📄" color="#3461AA" title="Documents" description="Organize, share, and secure documents" path="/apps/documents" />
+              <AppModule icon="📊" color="#D5653E" title="Spreadsheets" description="Collaborative spreadsheets integrated with your data" path="/apps/spreadsheets" />
+              <AppModule icon="✍️" color="#00A09D" title="Sign" description="Electronic signatures for your documents" path="/apps/sign" />
             </div>
           </section>
           
@@ -202,48 +95,12 @@ const Apps = () => {
           <section className="mb-16">
             <h2 className="text-3xl font-bold italic mb-8">Inventory & Manufacturing</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AppModule 
-                icon="📦" 
-                color="#2C8397" 
-                title="Inventory" 
-                description="Track stock levels and optimize logistics"
-                path="/apps/inventory"
-              />
-              <AppModule 
-                icon="🔧" 
-                color="#D5653E" 
-                title="Manufacturing" 
-                description="Plan, track and optimize your production"
-                path="/apps/manufacturing"
-              />
-              <AppModule 
-                icon="📋" 
-                color="#8F4B99" 
-                title="PLM" 
-                description="Manage your product lifecycle"
-                path="/apps/plm"
-              />
-              <AppModule 
-                icon="🛒" 
-                color="#3461AA" 
-                title="Purchase" 
-                description="Keep track of suppliers and purchases"
-                path="/apps/purchase"
-              />
-              <AppModule 
-                icon="🔧" 
-                color="#32A350" 
-                title="Maintenance" 
-                description="Track equipment maintenance efficiently"
-                path="/apps/maintenance"
-              />
-              <AppModule 
-                icon="✓" 
-                color="#5D8DA8" 
-                title="Quality" 
-                description="Quality control for manufacturing processes"
-                path="/apps/quality"
-              />
+              <AppModule icon="📦" color="#2C8397" title="Inventory" description="Track stock levels and optimize logistics" path="/apps/inventory" />
+              <AppModule icon="🔧" color="#D5653E" title="Manufacturing" description="Plan, track and optimize your production" path="/apps/manufacturing" />
+              <AppModule icon="📋" color="#8F4B99" title="PLM" description="Manage your product lifecycle" path="/apps/plm" />
+              <AppModule icon="🛒" color="#3461AA" title="Purchase" description="Keep track of suppliers and purchases" path="/apps/purchase" />
+              <AppModule icon="🔧" color="#32A350" title="Maintenance" description="Track equipment maintenance efficiently" path="/apps/maintenance" />
+              <AppModule icon="✓" color="#5D8DA8" title="Quality" description="Quality control for manufacturing processes" path="/apps/quality" />
             </div>
           </section>
 
@@ -251,27 +108,19 @@ const Apps = () => {
           <section className="mb-16">
             <h2 className="text-3xl font-bold italic mb-8">Human Resources</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AppModule 
-                icon="👥" 
-                color="#875A7B" 
-                title="Human Resources" 
-                description="Manage employees, leaves, and performance"
-                path="/apps/hr"
-              />
-              <AppModule 
-                icon="📧" 
-                color="#32A350" 
-                title="Marketing" 
-                description="Create campaigns and track performance"
-                path="/apps/marketing"
-              />
-              <AppModule 
-                icon="🎫" 
-                color="#5D8DA8" 
-                title="Services" 
-                description="Project management and service delivery"
-                path="/apps/services"
-              />
+              <AppModule icon="👥" color="#875A7B" title="Human Resources" description="Manage employees, leaves, and performance" path="/apps/hr" />
+              <AppModule icon="📧" color="#32A350" title="Marketing" description="Create campaigns and track performance" path="/apps/marketing" />
+              <AppModule icon="🎫" color="#5D8DA8" title="Services" description="Project management and service delivery" path="/apps/services" />
+            </div>
+          </section>
+          
+          {/* Productivity Section */}
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold italic mb-8">Productivity</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AppModule icon="💬" color="#875A7B" title="Discuss" description="Team communication and messaging" path="/apps/discuss" />
+              <AppModule icon="📅" color="#00A09D" title="Calendar" description="Schedule meetings and manage events" path="/apps/calendar" />
+              <AppModule icon="👤" color="#D5653E" title="Contacts" description="Manage customers, vendors, and partners" path="/apps/contacts" />
             </div>
           </section>
           
