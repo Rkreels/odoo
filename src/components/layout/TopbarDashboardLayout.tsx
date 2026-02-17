@@ -89,7 +89,6 @@ const TopbarDashboardLayout = ({ children, currentApp = 'Dashboard' }: TopbarDas
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
     navigate('/login');
   };
 
